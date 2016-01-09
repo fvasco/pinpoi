@@ -33,9 +33,9 @@ public class ImporterFacade {
      */
     public int importPlacemarks(final String resource, final long collectionId) throws IOException {
         final AbstractImporter importer;
-        if (resource.endsWith(".kml")) {
+        if (resource.endsWith("kml")) {
             importer = new KmlImporter();
-        } else if (resource.endsWith(".kmz")) {
+        } else if (resource.endsWith("kmz")) {
             importer = new KmzImporter();
         } else {
             importer = new TextImporter();
