@@ -10,17 +10,19 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.ZipGuardInputStream;
 
 /**
  * Import {@linkplain io.github.fvasco.pinpoi.model.PlacemarkCollection} listo from URL
@@ -53,11 +55,16 @@ public class PlacemarkCollectionParser {
 
     public List<PlacemarkCollection> read(final URL url) throws IOException {
         Log.i(PlacemarkCollectionParser.class.getSimpleName(), "Read " + url + " using locale " + locale);
-        try (final InputStream is = url.openStream()) {
+        try (final ZipInputStream zipInputStream = new ZipInputStream(url.openStream())) {
             placemarkCollections = new ArrayList<>();
             XMLReader xmlReader = saxParser.getXMLReader();
             xmlReader.setContentHandler(new CollectionContentHandler());
-            xmlReader.parse(new InputSource(is));
+            ZipEntry zipEntry;
+            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                if (!zipEntry.isDirectory() && zipEntry.getName().endsWith(".xml")) {
+                    xmlReader.parse(new InputSource(new ZipGuardInputStream(zipInputStream)));
+                }
+            }
             return placemarkCollections;
         } catch (SAXException ex) {
             throw new IOException("Error reading XML file", ex);

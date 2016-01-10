@@ -8,8 +8,6 @@ import java.util.List;
 
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 
-import static org.junit.Assert.*;
-
 /**
  * @author Francesco Vasco
  */
@@ -19,7 +17,7 @@ public class PlacemarkCollectionParserTest extends AndroidTestCase {
     public void testRead() throws Exception {
         final PlacemarkCollectionParser pct = new PlacemarkCollectionParser();
         pct.setLocale("ITA");
-        final List<PlacemarkCollection> list = pct.read(PlacemarkCollectionParserTest.class.getResource("placemarkCollection.xml"));
+        final List<PlacemarkCollection> list = pct.read(PlacemarkCollectionParserTest.class.getResource("placemarkCollection.zip"));
 
         assertEquals(2, list.size());
 
@@ -33,6 +31,7 @@ public class PlacemarkCollectionParserTest extends AndroidTestCase {
         pc = list.get(1);
         assertEquals("Test 2", pc.getName());
         assertEquals("Descrizione 2", pc.getDescription());
-
+        assertEquals("Category 2", pc.getCategory());
+        assertEquals("Source 2", pc.getSource());
     }
 }

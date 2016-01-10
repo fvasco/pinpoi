@@ -2,11 +2,12 @@ package io.github.fvasco.pinpoi.importer;
 
 import android.util.Log;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import io.github.fvasco.pinpoi.util.ZipGuardInputStream;
 
 /**
  * Import KMZ file (all KML in a ZIP)
@@ -27,21 +28,6 @@ public class KmzImporter extends KmlImporter {
                     super.importImpl(new ZipGuardInputStream(zipInputStream));
                 }
             }
-        }
-    }
-
-    /**
-     * Filter input stream to close all, this stream close only current entry;
-     */
-    private static final class ZipGuardInputStream extends FilterInputStream {
-
-        protected ZipGuardInputStream(ZipInputStream in) {
-            super(in);
-        }
-
-        @Override
-        public void close() throws IOException {
-            ((ZipInputStream) this.in).closeEntry();
         }
     }
 }

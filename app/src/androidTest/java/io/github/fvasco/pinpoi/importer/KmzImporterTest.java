@@ -6,8 +6,6 @@ import java.util.List;
 
 import io.github.fvasco.pinpoi.model.Placemark;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author Francesco Vasco
  */
