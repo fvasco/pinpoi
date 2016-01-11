@@ -20,11 +20,12 @@ class PlacemarkCollectionDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE PLACEMARK_COLLECTION (" +
-                "_ID integer primary key autoincrement," +
+                "_ID INTEGER primary key autoincrement," +
                 "name TEXT NOT NULL," +
                 "description TEXT," +
                 "source TEXT NOT NULL," +
-                "category TEXT" +
+                "category TEXT," +
+                "last_update INTEGER" +
                 ")");
     }
 

@@ -7,7 +7,10 @@ import android.location.Location;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -28,6 +31,21 @@ public class PlacemarkDao extends AbstractDao {
         setSqLiteOpenHelper(dbHelper);
     }
 
+    public List<Placemark> getAllPlacemarkByCollectionId(final long collectionId) {
+        final List<Placemark> res = new ArrayList<>();
+
+        final Cursor cursor = database.query("PLACEMARK", null,
+                "collecton_id=" + collectionId, null, null, null, null);
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            res.add(cursorToPlacemark(cursor));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return res;
+    }
+
     /**
      * Search {@linkplain Placemark} near location
      *
@@ -36,7 +54,13 @@ public class PlacemarkDao extends AbstractDao {
      * @param collectionIds collection id filter
      * @return
      */
-    public SortedSet<Placemark> getAllPlacemarkNear(final Location location, final int radius, final long... collectionIds) {
+    public SortedSet<Placemark> getAllPlacemarkNear(final Location location, final int radius, final Collection<Long> collectionIds) {
+        Objects.requireNonNull(location, "location not set");
+        Objects.requireNonNull(collectionIds, "collection not set");
+        if (collectionIds.isEmpty()) {
+            throw new IllegalArgumentException("collection empty");
+        }
+
         final SortedSet<Placemark> res = new TreeSet<>(new PlacemarkDistanceComparator(location));
 
         // calculate "square" of search
@@ -47,24 +71,26 @@ public class PlacemarkDao extends AbstractDao {
         location.setLatitude(location.getLatitude() + 1);
         final float scaleY = location.distanceTo(shiftY);
 
-        final StringBuilder query = new StringBuilder("WHERE longitude between ? and ? and latitude between ? and ?");
+        final StringBuilder where = new StringBuilder("longitude between ? and ? and latitude between ? and ?");
         final List<String> params = new ArrayList<>(
                 Arrays.asList(String.valueOf(location.getLongitude() - radius / scaleX),
                         String.valueOf(location.getLongitude() + radius / scaleX),
                         String.valueOf(location.getLatitude() - radius / scaleY),
                         String.valueOf(location.getLatitude() + radius / scaleY))
         );
-        if (collectionIds.length > 0) {
-            query.append(" AND collection_id in (");
-            query.append(collectionIds[0]);
-            for (int i = collectionIds.length - 1; i > 0; --i) {
-                query.append(',').append(collectionIds[i]);
-            }
-            query.append(')');
+
+        // collection ids
+        where.append(" AND collection_id in (");
+        final Iterator<Long> iterator = collectionIds.iterator();
+        where.append(iterator.next().toString());
+        while (iterator.hasNext()) {
+            where.append(',').append(iterator.next().toString());
         }
-        final Cursor cursor = database.query("PLACEMARK",
-                null, "WHERE longitude between ? and ? and latitude between ? and ? and collection_id=?",
-                params.toArray(new String[params.size()]), null, null, null);
+        where.append(')');
+
+        final Cursor cursor = database.query("PLACEMARK", null,
+                where.toString(), params.toArray(new String[params.size()]),
+                null, null, null);
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -76,7 +102,11 @@ public class PlacemarkDao extends AbstractDao {
     }
 
     public void insert(Placemark p) {
-        database.insert("PLACEMARK", null, placemarkToContentValues(p));
+        final long id = database.insert("PLACEMARK", null, placemarkToContentValues(p));
+        if (id == -1) {
+            throw new IllegalArgumentException("Data not valid");
+        }
+        p.setId(id);
     }
 
     public void deleteByCollectionId(final long collectionId) {

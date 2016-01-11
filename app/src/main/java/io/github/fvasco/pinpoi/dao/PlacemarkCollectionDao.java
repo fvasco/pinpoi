@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
@@ -25,8 +26,8 @@ public class PlacemarkCollectionDao extends AbstractDao {
 
     public List<String> getAllPlacemarkCollectionCategory() {
         final List<String> res = new ArrayList<>();
-        final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                new String[]{"CATEGORY"}, "CATEGORY", null, null, null, "CATEGORY");
+        final Cursor cursor = database.query(true, "PLACEMARK_COLLECTION",
+                new String[]{"CATEGORY"}, null, null, "CATEGORY", null, "CATEGORY", null);
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -40,7 +41,7 @@ public class PlacemarkCollectionDao extends AbstractDao {
     public List<PlacemarkCollection> getAllPlacemarkCollection() {
         final List<PlacemarkCollection> res = new ArrayList<>();
         final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                null, null, null, null, null, null);
+                null, null, null, null, null, "NAME");
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -52,7 +53,12 @@ public class PlacemarkCollectionDao extends AbstractDao {
     }
 
     public void insert(PlacemarkCollection pc) {
-        database.insert("PLACEMARK_COLLECTION", null, placemarkCollectionToContentValues(pc));
+        pc.setLastUpdate(new Date());
+        final long id = database.insert("PLACEMARK_COLLECTION", null, placemarkCollectionToContentValues(pc));
+        if (id == -1) {
+            throw new IllegalArgumentException("Data not valid");
+        }
+        pc.setId(id);
     }
 
     public void update(PlacemarkCollection pc) {
@@ -72,6 +78,7 @@ public class PlacemarkCollectionDao extends AbstractDao {
         cv.put("description", pc.getDescription());
         cv.put("source", pc.getSource());
         cv.put("category", pc.getCategory());
+        cv.put("last_update", pc.getLastUpdate().getTime());
         return cv;
     }
 
@@ -82,6 +89,7 @@ public class PlacemarkCollectionDao extends AbstractDao {
         pc.setDescription(cursor.getString(2));
         pc.setSource(cursor.getString(3));
         pc.setCategory(cursor.getString(4));
+        pc.setLastUpdate(new Date(cursor.getLong(5)));
         return pc;
     }
 }

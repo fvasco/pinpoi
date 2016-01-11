@@ -21,7 +21,7 @@ public abstract class AbstractDao implements AutoCloseable {
 
     protected void setSqLiteOpenHelper(SQLiteOpenHelper sqLiteOpenHelper) {
         if (this.sqLiteOpenHelper != null) {
-            throw new IllegalStateException("sqLiteOpenHelper defined");
+            throw new IllegalStateException("sqLiteOpenHelper already defined");
         }
         this.sqLiteOpenHelper = sqLiteOpenHelper;
     }

@@ -20,14 +20,14 @@ class PlacemarkDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE PLACEMARK (" +
-                "_ID integer primary key autoincrement," +
+                "_ID INTEGER primary key autoincrement," +
                 "longitude REAL NOT NULL," +
                 "latitude REAL NOT NULL" +
                 "name TEXT NOT NULL," +
                 "description TEXT," +
                 "collection_id INTEGER NOT NULL" +
                 ")");
-        db.execSQL("CREATE INDEX IDX_PLACEMARK_COLL ON PLACEMARK (collectionId)");
+        db.execSQL("CREATE INDEX IDX_PLACEMARK_COLL ON PLACEMARK (collection_id,longitude,latitude)");
     }
 
     @Override
