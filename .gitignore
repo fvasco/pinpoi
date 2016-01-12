@@ -3,6 +3,7 @@
 # Configuration files
 .*
 !/.git*
+!/.travis.yml
 
 # Android Studio
 /local.properties
