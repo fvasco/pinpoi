@@ -13,8 +13,14 @@ import static org.junit.Assert.assertEquals;
  */
 public class TextImporterTest extends AbstractImporterTestCase {
     @Test
-    public void testImportImpl() throws Exception {
-        final List<Placemark> list = importPlacemark(new TextImporter(), "ascii.txt");
+    public void testImportImplAsc() throws Exception {
+        final List<Placemark> list = importPlacemark(new TextImporter(), "asc.txt");
+        assertEquals(2, list.size());
+    }
+
+    @Test
+    public void testImportImplCsv() throws Exception {
+        final List<Placemark> list = importPlacemark(new TextImporter(), "csv.txt");
         assertEquals(2, list.size());
     }
 }
