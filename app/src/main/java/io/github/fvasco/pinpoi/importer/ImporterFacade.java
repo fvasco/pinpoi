@@ -3,6 +3,7 @@ package io.github.fvasco.pinpoi.importer;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +14,13 @@ import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.util.Consumer;
 
 /**
- * Importer facade
+ * Importer facade for:
+ * <ul>
+ *     <li>KML</li>
+ *     <li>KMZ</li>
+ *     <li>GPX</li>
+ *     <li>ASC, CSV files</li>
+ * </ul>
  *
  * @author Francesco Vasco
  */
@@ -26,7 +33,8 @@ public class ImporterFacade {
     }
 
     /**
-     * Import a generic resource into data base
+     * Import a generic resource into data base, this action refresh collection.
+     * If imported count is 0 no modification is done.
      *
      * @param resource resource as absolute file path or URL
      * @return imported {@linkplain io.github.fvasco.pinpoi.model.Placemark}
@@ -37,6 +45,8 @@ public class ImporterFacade {
             importer = new KmlImporter();
         } else if (resource.endsWith("kmz")) {
             importer = new KmzImporter();
+        } else if (resource.endsWith("gpx")) {
+            importer = new GpxImporter();
         } else {
             importer = new TextImporter();
         }
@@ -52,8 +62,9 @@ public class ImporterFacade {
         placemarkDao.open();
         SQLiteDatabase database = placemarkDao.getDatabase();
         database.beginTransaction();
-        try (final InputStream inputStream = resource.startsWith("/") ? new FileInputStream(resource) :
-                new URL(resource).openStream()) {
+        try (final InputStream inputStream = resource.startsWith("/")
+                ? new BufferedInputStream(new FileInputStream(resource))
+                : new URL(resource).openStream()) {
             // remove old placemark
             placemarkDao.deleteByCollectionId(collectionId);
             // insert new placemark

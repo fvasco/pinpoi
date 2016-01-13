@@ -24,11 +24,11 @@ import io.github.fvasco.pinpoi.model.Placemark;
 /*
  * Read KML data using SAX
  */
-public class KmlImporter extends AbstractImporter {
+public class GpxImporter extends AbstractImporter {
 
     private final SAXParser saxParser;
 
-    public KmlImporter() {
+    public GpxImporter() {
         try {
             SAXParserFactory spf = SAXParserFactory.newInstance();
             spf.setNamespaceAware(true);
@@ -42,14 +42,14 @@ public class KmlImporter extends AbstractImporter {
     protected void importImpl(InputStream is) throws IOException {
         try {
             XMLReader xmlReader = saxParser.getXMLReader();
-            xmlReader.setContentHandler(new KmlContentHandler());
+            xmlReader.setContentHandler(new GpxContentHandler());
             xmlReader.parse(new InputSource(is));
         } catch (SAXException ex) {
-            throw new IOException("Error reading KML file", ex);
+            throw new IOException("Error reading GPX file", ex);
         }
     }
 
-    private final class KmlContentHandler extends DefaultHandler implements ContentHandler {
+    private final class GpxContentHandler extends DefaultHandler implements ContentHandler {
 
         private final StringBuilder stringBuilder = new StringBuilder();
         private Placemark placemark;
@@ -61,8 +61,10 @@ public class KmlImporter extends AbstractImporter {
 
         @Override
         public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-            if ("Placemark".equals(localName)) {
+            if ("wpt".equals(localName)) {
                 placemark = new Placemark();
+                placemark.setLongitude(Float.parseFloat(attributes.getValue("lon")));
+                placemark.setLatitude(Float.parseFloat(attributes.getValue("lat")));
             }
             stringBuilder.setLength(0);
         }
@@ -72,21 +74,15 @@ public class KmlImporter extends AbstractImporter {
             if (placemark != null && stringBuilder.length() > 0) {
                 final String string = stringBuilder.toString().trim();
                 switch (localName) {
-                    case "Placemark":
+                    case "wpt":
                         importPlacemark(placemark);
                         placemark = null;
                         break;
                     case "name":
                         placemark.setName(string);
                         break;
-                    case "description":
+                    case "desc":
                         placemark.setDescription(string);
-                        break;
-                    case "coordinates":
-                        // format: longitude, latitute, altitude
-                        final String[] coordinates = string.split(",", 3);
-                        placemark.setLongitude(Float.parseFloat(coordinates[0]));
-                        placemark.setLatitude(Float.parseFloat(coordinates[1]));
                         break;
                 }
             }

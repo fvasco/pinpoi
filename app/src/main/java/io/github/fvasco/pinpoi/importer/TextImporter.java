@@ -16,6 +16,7 @@ import io.github.fvasco.pinpoi.model.Placemark;
  * <ul>
  * <li>ASC: <code>longitude latitude "POI name"</code></li>
  * <li>CSV: <code>longitude, latitude, "POI name"</code></li>
+ * <li>CSV: <code>longitude; latitude; "POI name"</code></li>
  * </ul>
  *
  * @author Francesco Vasco
