@@ -3,7 +3,7 @@
 <Document>
 <Placemark>
   <name>New York City</name>
-  <description>New York City</description>
+  <description>New York City description</description>
   <Point>
     <coordinates>-74.006393,40.714172,0</coordinates>
   </Point>

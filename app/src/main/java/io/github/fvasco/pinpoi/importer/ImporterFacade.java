@@ -16,10 +16,11 @@ import io.github.fvasco.pinpoi.util.Consumer;
 /**
  * Importer facade for:
  * <ul>
- *     <li>KML</li>
- *     <li>KMZ</li>
- *     <li>GPX</li>
- *     <li>ASC, CSV files</li>
+ * <li>KML</li>
+ * <li>KMZ</li>
+ * <li>GPX</li>
+ * <li>OV2 Tomtom</li>
+ * <li>ASC, CSV files</li>
  * </ul>
  *
  * @author Francesco Vasco
@@ -47,6 +48,8 @@ public class ImporterFacade {
             importer = new KmzImporter();
         } else if (resource.endsWith("gpx")) {
             importer = new GpxImporter();
+        } else if (resource.endsWith("ov2")) {
+            importer = new Ov2Importer();
         } else {
             importer = new TextImporter();
         }
