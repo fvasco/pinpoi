@@ -24,7 +24,7 @@ public class PlacemarkCollectionDao extends AbstractDao {
         setSqLiteOpenHelper(dbHelper);
     }
 
-    public List<String> getAllPlacemarkCollectionCategory() {
+    public List<String> findAllPlacemarkCollectionCategory() {
         final List<String> res = new ArrayList<>();
         final Cursor cursor = database.query(true, "PLACEMARK_COLLECTION",
                 new String[]{"CATEGORY"}, null, null, "CATEGORY", null, "CATEGORY", null);
@@ -38,7 +38,7 @@ public class PlacemarkCollectionDao extends AbstractDao {
         return res;
     }
 
-    public List<PlacemarkCollection> getAllPlacemarkCollection() {
+    public List<PlacemarkCollection> findAllPlacemarkCollection() {
         final List<PlacemarkCollection> res = new ArrayList<>();
         final Cursor cursor = database.query("PLACEMARK_COLLECTION",
                 null, null, null, null, null, "NAME");

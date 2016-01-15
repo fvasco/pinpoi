@@ -33,7 +33,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
     }
 
     @Test
-    public void testGetAllPlacemarkCollectionCategory() throws Exception {
+    public void testFindAllPlacemarkCollectionCategory() throws Exception {
         PlacemarkCollection pc = new PlacemarkCollection();
         pc.setName("test");
         pc.setDescription("description");
@@ -42,14 +42,14 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setLastUpdate(new Date());
         dao.insert(pc);
 
-        List<String> list = dao.getAllPlacemarkCollectionCategory();
+        List<String> list = dao.findAllPlacemarkCollectionCategory();
         assertEquals(1, list.size());
         String category = list.get(0);
         assertEquals("category", category);
     }
 
     @Test
-    public void testGetAllPlacemarkCollection() throws Exception {
+    public void testFindAllPlacemarkCollection() throws Exception {
         PlacemarkCollection pc = new PlacemarkCollection();
         pc.setName("test");
         pc.setDescription("description");
@@ -58,7 +58,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setLastUpdate(new Date());
         dao.insert(pc);
 
-        List<PlacemarkCollection> list = dao.getAllPlacemarkCollection();
+        List<PlacemarkCollection> list = dao.findAllPlacemarkCollection();
         assertEquals(1, list.size());
         pc = list.get(0);
         assertEquals(1, pc.getId());
@@ -74,7 +74,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setLastUpdate(new Date());
         dao.update(pc);
 
-        list = dao.getAllPlacemarkCollection();
+        list = dao.findAllPlacemarkCollection();
         assertEquals(1, list.size());
         pc = list.get(0);
         assertEquals(1, pc.getId());
@@ -84,7 +84,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         assertEquals("category2", pc.getCategory());
 
         dao.delete(pc);
-        list = dao.getAllPlacemarkCollection();
+        list = dao.findAllPlacemarkCollection();
         assertTrue(list.isEmpty());
     }
 }
