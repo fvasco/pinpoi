@@ -1,5 +1,7 @@
 package io.github.fvasco.pinpoi.importer;
 
+import android.util.Log;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,16 +30,25 @@ public class Ov2Importer extends AbstractImporter {
     protected void importImpl(final InputStream inputStream) throws IOException {
         final DataInputStream dataInputStream = new DataInputStream(inputStream);
         byte[] nameBuffer = new byte[64];
-        int b;
-        while ((b = dataInputStream.read()) >= 0) {
+        for (int rectype = dataInputStream.read(); rectype >= 0; rectype = dataInputStream.read()) {
+            // block header
+            if (rectype == 1) {
+                dataInputStream.skip(20);
+            }
             // if it is a simple POI record
-            if (b == 2) {
+            else if (rectype == 2 || rectype == 3) {
                 final int total = readIntLE(dataInputStream);
-                final int nameLength = total - 14;
+                int nameLength = total - 14;
 
                 // read lon, lat
-                final float longitude = (float) readIntLE(dataInputStream) / 100000.0F;
-                final float latitude = (float) readIntLE(dataInputStream) / 100000.0F;
+                // coordinate format: int*100000
+                final int longitudeInt = readIntLE(dataInputStream);
+                final int latitudeInt = readIntLE(dataInputStream);
+                if (longitudeInt < -18000000 || longitudeInt > 18000000
+                        || latitudeInt < -9000000 || latitudeInt > 9000000) {
+                    throw new IOException("Wrong coordinate " +
+                            longitudeInt + ',' + latitudeInt);
+                }
 
                 // read name
                 if (nameLength > nameBuffer.length) {
@@ -47,24 +58,31 @@ public class Ov2Importer extends AbstractImporter {
                 dataInputStream.readFully(nameBuffer, 0, nameLength);
                 // skip null byte
                 if (dataInputStream.read() != 0) {
-                    throw new IOException("wrong string termination " + b);
+                    throw new IOException("wrong string termination " + rectype);
+                }
+                // if rectype=3 description contains two-zero terminated string
+                // select first
+                if (rectype == 3) {
+                    int i = 0;
+                    while (i < nameLength) {
+                        if (nameBuffer[i] == 0) {
+                            // set name length
+                            // then exit
+                            nameLength = i;
+                        }
+                        ++i;
+                    }
                 }
 
                 final Placemark p = new Placemark();
-                p.setName(new String(nameBuffer, 0, nameLength, "ISO-8859-1"));
-                p.setLongitude(longitude);
-                p.setLatitude(latitude);
+                p.setName(new String(nameBuffer, 0, nameLength, "UTF-8"));
+                p.setLongitude(longitudeInt / 100000.0F);
+                p.setLatitude(latitudeInt / 100000.0F);
                 importPlacemark(p);
-            }
-            //if it is a deleted record
-            else if (b == 0) {
-                dataInputStream.skip(9);
-            }
-            //if it is a skipper record
-            else if (b == 1) {
-                dataInputStream.skip(20);
             } else {
-                throw new IOException("wrong record type " + b);
+                Log.i("importer", "Skip record type " + rectype);
+                final int total = readIntLE(dataInputStream);
+                inputStream.skip(total - 4);
             }
         }
     }

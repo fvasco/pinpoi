@@ -83,6 +83,9 @@ public abstract class AbstractImporter {
     }
 
     protected void importPlacemark(final Placemark placemark) {
+        assert placemark.getId() == 0;
+        assert !placemark.getName().isEmpty();
+        assert placemark.getCollectionId() == 0 || placemark.getCollectionId() == collectionId;
         try {
             if (placemark.getLongitude() != 0 && placemark.getLatitude() != 0) {
                 placemark.setCollectionId(collectionId);
