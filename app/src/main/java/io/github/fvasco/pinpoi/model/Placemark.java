@@ -12,7 +12,8 @@ public class Placemark implements Serializable {
     private long id;
     private String name;
     private String description;
-    private float longitude, latitude;
+    private float latitude;
+    private float longitude;
     private long collectionId;
 
     public long getCollectionId() {
@@ -65,6 +66,6 @@ public class Placemark implements Serializable {
 
     @Override
     public String toString() {
-        return name + '[' + id + "](" + longitude + ',' + latitude + ')';
+        return name + '[' + id + "](" + latitude + ',' + longitude + ')';
     }
 }

@@ -39,30 +39,30 @@ public class PlacemarkDaoTest extends AndroidTestCase {
     public void testGetAllPlacemarkNear() throws Exception {
         Placemark p = new Placemark();
         p.setName("Pompei");
-        p.setLongitude(14.5007385f);
-        p.setLatitude(40.7491819f);
+        p.setLatitude(40.7491819F);
+        p.setLongitude(14.5007385F);
         p.setCollectionId(1);
         dao.insert(p);
 
         p = new Placemark();
         p.setName("Ercolano");
-        p.setLongitude(14.3529209f);
         p.setLatitude(40.8060768f);
+        p.setLongitude(14.3529209f);
         p.setCollectionId(1);
         dao.insert(p);
 
         // Pompei
         Location lp = new Location(PlacemarkDaoTest.class.getSimpleName());
-        lp.setLongitude(14.5007385f);
-        lp.setLatitude(40.7491819f);
+        lp.setLatitude(40.7491819F);
+        lp.setLongitude(14.5007385F);
         // Ercolano
         Location le = new Location(PlacemarkDaoTest.class.getSimpleName());
-        le.setLongitude(14.3529209f);
-        le.setLatitude(40.8060768f);
+        le.setLatitude(40.8060768F);
+        le.setLongitude(14.3529209F);
         // Vesuvio
         Location lv = new Location(PlacemarkDaoTest.class.getSimpleName());
-        lv.setLongitude(14.433333f);
-        lv.setLatitude(40.816667f);
+        lv.setLatitude(40.816667F);
+        lv.setLongitude(14.433333F);
 
 
         SortedSet<Placemark> set = dao.getAllPlacemarkNear(lp, 1, Arrays.asList(1L));
@@ -74,16 +74,16 @@ public class PlacemarkDaoTest extends AndroidTestCase {
         assertTrue(set.isEmpty());
 
         // no poi near vesuvio
-        set = dao.getAllPlacemarkNear(lv, 10000, Arrays.asList(1L));
+        set = dao.getAllPlacemarkNear(lv, 1000, Arrays.asList(1L));
         assertTrue(set.isEmpty());
 
-        // only Pomey
-        set = dao.getAllPlacemarkNear(lp, 15000, Arrays.asList(1L));
+        // only Pompei
+        set = dao.getAllPlacemarkNear(lp, 12000, Arrays.asList(0L, 1L, 2L));
         assertEquals(1, set.size());
         assertEquals("Pompei", set.iterator().next().getName());
 
         // all data, Pompei first
-        set = dao.getAllPlacemarkNear(lp, 16000, Arrays.asList(1L));
+        set = dao.getAllPlacemarkNear(lp, 14000, Arrays.asList(1L));
         assertEquals(2, set.size());
         Iterator<Placemark> iterator = set.iterator();
         assertEquals("Pompei", iterator.next().getName());
@@ -93,20 +93,20 @@ public class PlacemarkDaoTest extends AndroidTestCase {
     @Test
     public void testInsert() throws Exception {
         Placemark p = new Placemark();
-        p.setName("test1");
-        p.setDescription("description1");
-        p.setLongitude(2);
-        p.setLatitude(3);
+        p.setName("Pompei");
+        p.setDescription("Pompei city");
+        p.setLatitude(40.7491819F);
+        p.setLongitude(14.5007385F);
         p.setCollectionId(1);
         dao.insert(p);
 
         final List<Placemark> list = dao.getAllPlacemarkByCollectionId(1);
         assertEquals(1, list.size());
         p = list.get(0);
-        assertEquals("test1", p.getName());
-        assertEquals("description1", p.getDescription());
-        assertEquals(2, p.getLongitude());
-        assertEquals(3, p.getLatitude());
+        assertEquals("Pompei", p.getName());
+        assertEquals("Pompei city", p.getDescription());
+        assertEquals(40.7491819F, p.getLatitude(), 0.00001);
+        assertEquals(14.5007385F, p.getLongitude(), 0.00001);
         assertEquals(1, p.getCollectionId());
     }
 
@@ -115,8 +115,8 @@ public class PlacemarkDaoTest extends AndroidTestCase {
         Placemark p = new Placemark();
         p.setName("test1");
         p.setDescription("description1");
-        p.setLongitude(2);
         p.setLatitude(3);
+        p.setLongitude(2);
         p.setCollectionId(1);
         dao.insert(p);
 

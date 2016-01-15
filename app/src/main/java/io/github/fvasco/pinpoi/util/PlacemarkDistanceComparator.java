@@ -31,9 +31,21 @@ public class PlacemarkDistanceComparator implements Comparator<Placemark> {
         return res;
     }
 
-    private float calculateDistance(final Placemark p) {
-        other.setLongitude(p.getLongitude());
-        other.setLatitude(p.getLatitude());
+    /**
+     * Calculate distance to placemark
+     * {@see Location@distanceTo}
+     */
+    public float calculateDistance(final Placemark p) {
+        return calculateDistance(p.getLatitude(), p.getLongitude());
+    }
+
+    /**
+     * Calculate distance to coordinate
+     * {@see Location@distanceTo}
+     */
+    public float calculateDistance(final float latitude, final float longitude) {
+        other.setLatitude(latitude);
+        other.setLongitude(longitude);
         return center.distanceTo(other);
     }
 }

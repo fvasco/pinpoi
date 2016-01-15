@@ -35,7 +35,7 @@ public class PlacemarkDao extends AbstractDao {
         final List<Placemark> res = new ArrayList<>();
 
         final Cursor cursor = database.query("PLACEMARK", null,
-                "collecton_id=" + collectionId, null, null, null, null);
+                "collection_id=" + collectionId, null, null, null, null);
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -64,29 +64,32 @@ public class PlacemarkDao extends AbstractDao {
         final SortedSet<Placemark> res = new TreeSet<>(new PlacemarkDistanceComparator(location));
 
         // calculate "square" of search
-        final Location shiftX = new Location(location);
-        location.setLongitude(location.getLongitude() + 1);
-        final float scaleX = location.distanceTo(shiftX);
         final Location shiftY = new Location(location);
-        location.setLatitude(location.getLatitude() + 1);
+        shiftY.setLatitude(location.getLatitude() + 1);
         final float scaleY = location.distanceTo(shiftY);
+        final Location shiftX = new Location(location);
+        // calculate scale on /smaller/ border
+        shiftX.setLatitude(Math.abs(location.getLatitude()) + radius / scaleY);
+        shiftX.setLongitude(location.getLongitude() + 1);
+        final float scaleX = location.distanceTo(shiftX);
 
-        final StringBuilder where = new StringBuilder("longitude between ? and ? and latitude between ? and ?");
-        final List<String> params = new ArrayList<>(
-                Arrays.asList(String.valueOf(location.getLongitude() - radius / scaleX),
-                        String.valueOf(location.getLongitude() + radius / scaleX),
-                        String.valueOf(location.getLatitude() - radius / scaleY),
-                        String.valueOf(location.getLatitude() + radius / scaleY))
-        );
-
+        // where clause
         // collection ids
-        where.append(" AND collection_id in (");
+        final StringBuilder where = new StringBuilder("collection_id in (");
         final Iterator<Long> iterator = collectionIds.iterator();
         where.append(iterator.next().toString());
         while (iterator.hasNext()) {
             where.append(',').append(iterator.next().toString());
         }
-        where.append(')');
+        // longitude, latitude
+        where.append(") AND latitude between ? and ? AND longitude between ? and ?");
+        final List<String> params =
+                Arrays.asList(
+                        String.valueOf(location.getLatitude() - radius / scaleY),
+                        String.valueOf(location.getLatitude() + radius / scaleY),
+                        String.valueOf(location.getLongitude() - radius / scaleX),
+                        String.valueOf(location.getLongitude() + radius / scaleX));
+
 
         final Cursor cursor = database.query("PLACEMARK", null,
                 where.toString(), params.toArray(new String[params.size()]),
@@ -118,8 +121,8 @@ public class PlacemarkDao extends AbstractDao {
         if (p.getId() > 0) {
             cv.put("_ID", p.getId());
         }
-        cv.put("longitude", p.getLongitude());
         cv.put("latitude", p.getLatitude());
+        cv.put("longitude", p.getLongitude());
         cv.put("name", p.getName());
         cv.put("description", p.getDescription());
         cv.put("collection_id", p.getCollectionId());
@@ -129,8 +132,8 @@ public class PlacemarkDao extends AbstractDao {
     Placemark cursorToPlacemark(Cursor cursor) {
         final Placemark p = new Placemark();
         p.setId(cursor.getLong(0));
-        p.setLongitude(cursor.getFloat(1));
-        p.setLatitude(cursor.getFloat(2));
+        p.setLatitude(cursor.getFloat(1));
+        p.setLongitude(cursor.getFloat(2));
         p.setName(cursor.getString(3));
         p.setDescription(cursor.getString(4));
         p.setCollectionId(cursor.getLong(5));
