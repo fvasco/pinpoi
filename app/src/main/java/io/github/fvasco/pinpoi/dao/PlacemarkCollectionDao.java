@@ -24,6 +24,18 @@ public class PlacemarkCollectionDao extends AbstractDao {
         setSqLiteOpenHelper(dbHelper);
     }
 
+    public PlacemarkCollection findPlacemarkCollectionById(final long id) {
+        final Cursor cursor = database.query("PLACEMARK_COLLECTION",
+                null, "_ID=" + id, null, null, null, null);
+
+        cursor.moveToFirst();
+        try {
+            return cursor.isAfterLast() ? null : cursorToPlacemarkCollection(cursor);
+        } finally {
+            cursor.close();
+        }
+    }
+
     public List<String> findAllPlacemarkCollectionCategory() {
         final List<String> res = new ArrayList<>();
         final Cursor cursor = database.query(true, "PLACEMARK_COLLECTION",
@@ -53,7 +65,6 @@ public class PlacemarkCollectionDao extends AbstractDao {
     }
 
     public void insert(PlacemarkCollection pc) {
-        pc.setLastUpdate(new Date());
         final long id = database.insert("PLACEMARK_COLLECTION", null, placemarkCollectionToContentValues(pc));
         if (id == -1) {
             throw new IllegalArgumentException("Data not valid");
@@ -71,14 +82,12 @@ public class PlacemarkCollectionDao extends AbstractDao {
 
     ContentValues placemarkCollectionToContentValues(final PlacemarkCollection pc) {
         final ContentValues cv = new ContentValues();
-        if (pc.getId() > 0) {
-            cv.put("_ID", pc.getId());
-        }
         cv.put("name", pc.getName());
         cv.put("description", pc.getDescription());
         cv.put("source", pc.getSource());
         cv.put("category", pc.getCategory());
-        cv.put("last_update", pc.getLastUpdate().getTime());
+        cv.put("last_update", pc.getLastUpdate() == null ? 0 : pc.getLastUpdate().getTime());
+        cv.put("poi_count", pc.getPoiCount());
         return cv;
     }
 
@@ -89,7 +98,9 @@ public class PlacemarkCollectionDao extends AbstractDao {
         pc.setDescription(cursor.getString(2));
         pc.setSource(cursor.getString(3));
         pc.setCategory(cursor.getString(4));
-        pc.setLastUpdate(new Date(cursor.getLong(5)));
+        final long lastUpdate = cursor.getLong(5);
+        pc.setLastUpdate(lastUpdate == 0 ? null : new Date(lastUpdate));
+        pc.setPoiCount(cursor.getInt(6));
         return pc;
     }
 }

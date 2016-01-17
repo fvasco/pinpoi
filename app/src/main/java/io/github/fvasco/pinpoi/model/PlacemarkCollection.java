@@ -15,6 +15,15 @@ public class PlacemarkCollection {
     private String category;
     private String source;
     private Date lastUpdate;
+    private int poiCount;
+
+    public int getPoiCount() {
+        return poiCount;
+    }
+
+    public void setPoiCount(int poiCount) {
+        this.poiCount = poiCount;
+    }
 
     public Date getLastUpdate() {
         return lastUpdate;

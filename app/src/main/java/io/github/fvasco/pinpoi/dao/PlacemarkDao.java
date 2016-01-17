@@ -199,9 +199,6 @@ public class PlacemarkDao extends AbstractDao {
 
     ContentValues placemarkToContentValues(final Placemark p) {
         final ContentValues cv = new ContentValues();
-        if (p.getId() > 0) {
-            cv.put("_ID", p.getId());
-        }
         cv.put("latitude", toInt(p.getLatitude()));
         cv.put("longitude", toInt(p.getLongitude()));
         cv.put("name", p.getName());
@@ -212,9 +209,6 @@ public class PlacemarkDao extends AbstractDao {
 
     ContentValues placemarkAnnotationToContentValues(final PlacemarkAnnotation pa) {
         final ContentValues cv = new ContentValues();
-        if (pa.getId() > 0) {
-            cv.put("_ID", pa.getId());
-        }
         cv.put("latitude", toInt(pa.getLatitude()));
         cv.put("longitude", toInt(pa.getLongitude()));
         cv.put("note", pa.getNote());

@@ -25,7 +25,8 @@ class PlacemarkCollectionDatabase extends SQLiteOpenHelper {
                 "description TEXT," +
                 "source TEXT NOT NULL," +
                 "category TEXT," +
-                "last_update INTEGER" +
+                "last_update INTEGER NOT NULL," +
+                "poi_count INTEGER NOT NULL" +
                 ")");
     }
 
