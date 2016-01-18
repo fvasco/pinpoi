@@ -6,8 +6,6 @@ import java.util.List;
 
 import io.github.fvasco.pinpoi.model.Placemark;
 
-import static org.junit.Assert.*;
-
 /**
  * @author Francesco Vasco
  */
@@ -22,7 +20,7 @@ public class GpxImporterTest extends AbstractImporterTestCase {
         final Placemark p = list.get(0);
         assertEquals("Test", p.getName());
         assertEquals("descTest", p.getDescription());
-        assertEquals(1, p.getLatitude(),0.1);
-        assertEquals(2, p.getLongitude(),0.1);
+        assertEquals(1, p.getLatitude(), 0.1);
+        assertEquals(2, p.getLongitude(), 0.1);
     }
 }

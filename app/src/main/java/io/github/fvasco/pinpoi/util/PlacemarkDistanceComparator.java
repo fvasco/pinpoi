@@ -15,17 +15,16 @@ import io.github.fvasco.pinpoi.model.Placemark;
 public class PlacemarkDistanceComparator implements Comparator<Placemark> {
 
     private final Location center;
-    private final Location other;
+    private final float[] distanceResult = new float[1];
 
     public PlacemarkDistanceComparator(final Location center) {
         Objects.requireNonNull(center);
         this.center = center;
-        this.other = new Location(PlacemarkDistanceComparator.class.getSimpleName());
     }
 
     @Override
     public int compare(Placemark lhs, Placemark rhs) {
-        int res = Float.compare(calculateDistance(lhs), calculateDistance(rhs));
+        int res = Double.compare(calculateDistance(lhs), calculateDistance(rhs));
         if (res == 0)
             res = Long.compare(lhs.getId(), rhs.getId());
         return res;
@@ -35,17 +34,9 @@ public class PlacemarkDistanceComparator implements Comparator<Placemark> {
      * Calculate distance to placemark
      * {@see Location@distanceTo}
      */
-    public float calculateDistance(final Placemark p) {
-        return calculateDistance(p.getLatitude(), p.getLongitude());
+    public double calculateDistance(final Placemark p) {
+        Location.distanceBetween(center.getLatitude(), center.getLongitude(), p.getLatitude(), p.getLongitude(), distanceResult);
+        return distanceResult[0];
     }
 
-    /**
-     * Calculate distance to coordinate
-     * {@see Location@distanceTo}
-     */
-    public float calculateDistance(final float latitude, final float longitude) {
-        other.setLatitude(latitude);
-        other.setLongitude(longitude);
-        return center.distanceTo(other);
-    }
 }

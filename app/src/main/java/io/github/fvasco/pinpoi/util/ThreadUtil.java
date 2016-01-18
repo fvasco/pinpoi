@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 public final class ThreadUtil {
 
     public static final ExecutorService EXECUTOR =
-            Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+            Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
 
     private ThreadUtil() {
     }

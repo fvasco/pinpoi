@@ -5,9 +5,11 @@ import android.test.RenamingDelegatingContext;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Date;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
+import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 
 /**
@@ -19,23 +21,45 @@ public class ImporterFacadeTest extends AbstractImporterTestCase {
     public void testImportPlacemarksKml() throws Exception {
         final Context context = new RenamingDelegatingContext(getContext(), "test_");
         final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(context);
+        final PlacemarkDao placemarkDao = new PlacemarkDao(context);
         placemarkCollectionDao.open();
+        placemarkDao.open();
+
         PlacemarkCollection pc = new PlacemarkCollection();
         pc.setName("test");
         pc.setDescription("description");
-        pc.setSource("source");
+        pc.setSource(getClass().getResource("test2.kml").toString());
         pc.setCategory("category");
         pc.setLastUpdate(new Date(5));
         pc.setPoiCount(5);
         placemarkCollectionDao.insert(pc);
 
         final ImporterFacade importerFacade = new ImporterFacade(context);
-        int count = importerFacade.importPlacemarks(getClass().getResource("test1.kml").toString(), 1);
-        assertEquals(1, count);
+        int count = importerFacade.importPlacemarks(1);
+        assertEquals(2, count);
 
 
         pc = placemarkCollectionDao.findPlacemarkCollectionById(1);
         assertEquals(count, pc.getPoiCount());
+        final Date lastUpdate = pc.getLastUpdate();
+        assertTrue(!new Date(5).equals(lastUpdate));
+
+        assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(1).size());
+
+        pc.setSource("wrong");
+        placemarkCollectionDao.update(pc);
+        try {
+            importerFacade.importPlacemarks(1);
+            fail();
+        } catch (final IOException e) {
+            // ok
+        }
+        pc = placemarkCollectionDao.findPlacemarkCollectionById(1);
+        assertEquals(count, pc.getPoiCount());
+        assertEquals(lastUpdate, pc.getLastUpdate());
+        assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(1).size());
+
+        placemarkDao.close();
         placemarkCollectionDao.close();
     }
 }

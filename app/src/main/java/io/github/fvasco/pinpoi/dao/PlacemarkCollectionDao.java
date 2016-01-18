@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.ApplicationContextHolder;
 
 /**
  * Dao for {@linkplain io.github.fvasco.pinpoi.model.PlacemarkCollection}
@@ -17,11 +18,23 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection;
  */
 public class PlacemarkCollectionDao extends AbstractDao {
 
+    private static PlacemarkCollectionDao INSTANCE;
     private PlacemarkCollectionDatabase dbHelper;
+
+    PlacemarkCollectionDao() {
+        this(ApplicationContextHolder.get());
+    }
 
     public PlacemarkCollectionDao(Context context) {
         dbHelper = new PlacemarkCollectionDatabase(context);
         setSqLiteOpenHelper(dbHelper);
+    }
+
+    public static PlacemarkCollectionDao getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new PlacemarkCollectionDao();
+        }
+        return INSTANCE;
     }
 
     public PlacemarkCollection findPlacemarkCollectionById(final long id) {

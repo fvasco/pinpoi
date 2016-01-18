@@ -14,6 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public abstract class AbstractDao implements AutoCloseable {
     protected SQLiteDatabase database;
     private SQLiteOpenHelper sqLiteOpenHelper;
+    private int openCount;
 
     public SQLiteOpenHelper getSqLiteOpenHelper() {
         return sqLiteOpenHelper;
@@ -26,18 +27,19 @@ public abstract class AbstractDao implements AutoCloseable {
         this.sqLiteOpenHelper = sqLiteOpenHelper;
     }
 
-    public void open() throws SQLException {
-        database = sqLiteOpenHelper.getWritableDatabase();
+    public synchronized void open() throws SQLException {
+        if (database == null) {
+            database = sqLiteOpenHelper.getWritableDatabase();
+            openCount = 0;
+        }
+        ++openCount;
     }
 
-    public void close() {
-        try {
-            if (database != null) {
-                database.close();
-                database = null;
-            }
-        } finally {
-            sqLiteOpenHelper.close();
+    public synchronized void close() {
+        --openCount;
+        if (openCount == 0) {
+            database.close();
+            database = null;
         }
     }
 

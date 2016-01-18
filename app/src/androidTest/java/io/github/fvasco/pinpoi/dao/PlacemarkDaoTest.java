@@ -3,7 +3,6 @@ package io.github.fvasco.pinpoi.dao;
 import android.location.Location;
 import android.test.AndroidTestCase;
 import android.test.RenamingDelegatingContext;
-import android.util.Log;
 
 import org.junit.Test;
 
@@ -19,10 +18,29 @@ import io.github.fvasco.pinpoi.model.PlacemarkAnnotation;
  * @author Francesco Vasco
  */
 public class PlacemarkDaoTest extends AndroidTestCase {
+    public static final Location POMPEI_LOCATION;
+    public static final Location ERCOLANO_LOCATION;
+    public static final Location VESUVIO_LOCATION;
+
+    static {
+        // Pompei
+        POMPEI_LOCATION = new Location(PlacemarkDaoTest.class.getSimpleName());
+        POMPEI_LOCATION.setLatitude(40.7491819);
+        POMPEI_LOCATION.setLongitude(14.5007385);
+        // Ercolano
+        ERCOLANO_LOCATION = new Location(PlacemarkDaoTest.class.getSimpleName());
+        ERCOLANO_LOCATION.setLatitude(40.8060768);
+        ERCOLANO_LOCATION.setLongitude(14.3529209);
+        // Vesuvio
+        VESUVIO_LOCATION = new Location(PlacemarkDaoTest.class.getSimpleName());
+        VESUVIO_LOCATION.setLatitude(40.816667F);
+        VESUVIO_LOCATION.setLongitude(14.433333F);
+    }
+
     private PlacemarkDao dao;
 
-    private static void assertEquals(float expected, float actual) {
-        assertEquals(expected, actual, 0.00001F);
+    private static void assertEquals(double expected, double actual) {
+        assertEquals(expected, actual, 0.00001);
     }
 
     @Override
@@ -40,111 +58,133 @@ public class PlacemarkDaoTest extends AndroidTestCase {
         super.tearDown();
     }
 
-    @Test
-    public void testFindAllPlacemarkNear() throws Exception {
+    private void insertPompeiErcolanoVesuvio() {
         Placemark p = new Placemark();
         p.setName("Pompei");
-        p.setLatitude(40.7491819F);
-        p.setLongitude(14.5007385F);
+        p.setDescription("Pompei city");
+        p.setLatitude((float) POMPEI_LOCATION.getLatitude());
+        p.setLongitude((float) POMPEI_LOCATION.getLongitude());
         p.setCollectionId(1);
         dao.insert(p);
 
         p = new Placemark();
         p.setName("Ercolano");
-        p.setLatitude(40.8060768f);
-        p.setLongitude(14.3529209f);
+        p.setLatitude((float) ERCOLANO_LOCATION.getLatitude());
+        p.setLongitude((float) ERCOLANO_LOCATION.getLongitude());
         p.setCollectionId(1);
         dao.insert(p);
 
-        // Pompei
-        Location lp = new Location(PlacemarkDaoTest.class.getSimpleName());
-        lp.setLatitude(40.7491819F);
-        lp.setLongitude(14.5007385F);
-        // Ercolano
-        Location le = new Location(PlacemarkDaoTest.class.getSimpleName());
-        le.setLatitude(40.8060768F);
-        le.setLongitude(14.3529209F);
-        // Vesuvio
-        Location lv = new Location(PlacemarkDaoTest.class.getSimpleName());
-        lv.setLatitude(40.816667F);
-        lv.setLongitude(14.433333F);
+        p = new Placemark();
+        p.setName("Vesuvio");
+        p.setLatitude((float) VESUVIO_LOCATION.getLatitude());
+        p.setLongitude((float) VESUVIO_LOCATION.getLongitude());
+        p.setCollectionId(2);
+        dao.insert(p);
+    }
 
+    @Test
+    public void testFindAllPlacemarkNear() throws Exception {
+        insertPompeiErcolanoVesuvio();
 
-        SortedSet<Placemark> set = dao.findAllPlacemarkNear(lp, 1, Arrays.asList(1L));
+        SortedSet<Placemark> set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 1, Arrays.asList(1L));
         assertEquals(1, set.size());
         assertEquals("Pompei", set.iterator().next().getName());
 
         // empty catalog
-        set = dao.findAllPlacemarkNear(lp, 1, Arrays.asList(2L));
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 1, Arrays.asList(2L));
         assertTrue(set.isEmpty());
 
         // no poi near vesuvio
-        set = dao.findAllPlacemarkNear(lv, 1000, Arrays.asList(1L));
+        set = dao.findAllPlacemarkNear(VESUVIO_LOCATION, 1000, Arrays.asList(1L));
         assertTrue(set.isEmpty());
 
         // only Pompei
-        set = dao.findAllPlacemarkNear(lp, 12000, Arrays.asList(0L, 1L, 2L));
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 12000, Arrays.asList(1L, 999L));
         assertEquals(1, set.size());
         assertEquals("Pompei", set.iterator().next().getName());
 
         // all data, Pompei first
-        set = dao.findAllPlacemarkNear(lp, 14000, Arrays.asList(1L));
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000, Arrays.asList(1L));
         assertEquals(2, set.size());
         Iterator<Placemark> iterator = set.iterator();
         assertEquals("Pompei", iterator.next().getName());
         assertEquals("Ercolano", iterator.next().getName());
     }
 
+    /**
+     * Test aroung longitude 180
+     */
     @Test
-    public void testInsert() throws Exception {
+    public void testFindAllPlacemarkNearLongitude180() throws Exception {
+        // insert some other point
+        insertPompeiErcolanoVesuvio();
+
         Placemark p = new Placemark();
-        p.setName("Pompei");
-        p.setDescription("Pompei city");
-        p.setLatitude(40.7491819F);
-        p.setLongitude(14.5007385F);
+        p.setName("p1");
+        p.setLongitude(179.9F);
         p.setCollectionId(1);
         dao.insert(p);
 
+        p = new Placemark();
+        p.setName("p2");
+        p.setLongitude(-179.9F);
+        p.setCollectionId(1);
+        dao.insert(p);
+
+        Location l = new Location(PlacemarkDaoTest.class.getSimpleName());
+        l.setLatitude(0);
+        l.setLongitude(179.9F);
+
+        SortedSet<Placemark> set = dao.findAllPlacemarkNear(l, 100000, Arrays.asList(1L));
+        assertEquals(2, set.size());
+
+        l.setLongitude(-179.9F);
+        set = dao.findAllPlacemarkNear(l, 100000, Arrays.asList(1L));
+        assertEquals(2, set.size());
+    }
+
+    @Test
+    public void testInsert() throws Exception {
+        insertPompeiErcolanoVesuvio();
+
         final List<Placemark> list = dao.findAllPlacemarkByCollectionId(1);
-        assertEquals(1, list.size());
-        p = list.get(0);
+        assertEquals(2, list.size());
+        Placemark p = list.get(0);
+        assertEquals(1, p.getId());
         assertEquals("Pompei", p.getName());
         assertEquals("Pompei city", p.getDescription());
-        assertEquals(40.7491819F, p.getLatitude());
-        assertEquals(14.5007385F, p.getLongitude());
+        assertEquals(POMPEI_LOCATION.getLatitude(), p.getLatitude());
+        assertEquals(POMPEI_LOCATION.getLongitude(), p.getLongitude());
+        assertEquals(1, p.getCollectionId());
+
+        p = dao.getPlacemark(2);
+        assertEquals(2, p.getId());
+        assertEquals("Ercolano", p.getName());
+        assertNull(p.getDescription());
+        assertEquals(ERCOLANO_LOCATION.getLatitude(), p.getLatitude());
+        assertEquals(ERCOLANO_LOCATION.getLongitude(), p.getLongitude());
         assertEquals(1, p.getCollectionId());
     }
 
     @Test
     public void testDeleteByCollectionId() throws Exception {
-        Placemark p = new Placemark();
-        p.setName("test1");
-        p.setDescription("description1");
-        p.setLatitude(2);
-        p.setLongitude(3);
-        p.setCollectionId(1);
-        dao.insert(p);
+        insertPompeiErcolanoVesuvio();
 
         dao.deleteByCollectionId(999);
-        List<Placemark> list = dao.findAllPlacemarkByCollectionId(1);
-        assertEquals(1, list.size());
+        assertNotNull(dao.getPlacemark(1));
+        assertNotNull(dao.getPlacemark(2));
+        assertNotNull(dao.getPlacemark(3));
 
         dao.deleteByCollectionId(1);
-        list = dao.findAllPlacemarkByCollectionId(1);
-        assertTrue(list.isEmpty());
-
+        assertNull(dao.getPlacemark(1));
+        assertNull(dao.getPlacemark(2));
+        assertNotNull(dao.getPlacemark(3));
     }
 
     @Test
     public void testPlacemarkAnnotation() throws Exception {
-        final Placemark p = new Placemark();
-        p.setName("test1");
-        p.setDescription("description1");
-        p.setLatitude((float) (Math.random() - 0.5) * 180);
-        p.setLongitude((float) (Math.random() - 0.5) * 360);
-        p.setCollectionId(1);
-        Log.i(PlacemarkDaoTest.class.getSimpleName(), "testPlacemarkAnnotation p=" + p);
-        dao.insert(p);
+        insertPompeiErcolanoVesuvio();
+        final Placemark p = dao.getPlacemark(1);
 
         // load empty annotation
         PlacemarkAnnotation pa = dao.loadPlacemarkAnnotation(p);
