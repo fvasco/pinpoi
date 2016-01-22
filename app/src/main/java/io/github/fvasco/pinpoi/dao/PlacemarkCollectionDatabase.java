@@ -28,6 +28,7 @@ class PlacemarkCollectionDatabase extends SQLiteOpenHelper {
                 "last_update INTEGER NOT NULL," +
                 "poi_count INTEGER NOT NULL" +
                 ")");
+        db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_NAME ON PLACEMARK_COLLECTION (name)");
     }
 
     @Override

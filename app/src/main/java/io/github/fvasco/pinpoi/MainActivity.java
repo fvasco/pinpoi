@@ -1,17 +1,62 @@
 package io.github.fvasco.pinpoi;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
+import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.ApplicationContextHolder;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
+
+    private Spinner collectionSpinner;
+    private SeekBar rangeSeek;
+    private TextView latitudeText;
+    private TextView longitudeText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ApplicationContextHolder.init(getApplicationContext());
+        collectionSpinner = (Spinner) findViewById(R.id.collectionSpinner);
+        rangeSeek = (SeekBar) findViewById(R.id.rangeSeek);
+
+        final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance();
+        collectionDao.open();
+        try {
+            ArrayAdapter<PlacemarkCollection> dataAdapter = new ArrayAdapter<PlacemarkCollection>
+                    (this, R.layout.collection_item, collectionDao.findAllPlacemarkCollection()) {
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    return getView(position, convertView, parent);
+                }
+
+                @Override
+                public View getView(int position, View view, ViewGroup parent) {
+                    PlacemarkCollection pc = getItem(position);
+                    if (view == null) {
+                        view = getLayoutInflater().inflate(R.layout.collection_item, parent, false);
+                    }
+                    final TextView nameText = (TextView) view.findViewById(R.id.collectionItemText);
+                    nameText.setText(pc.getName());
+                    return view;
+                }
+            };
+
+            collectionSpinner.setAdapter(dataAdapter);
+        } finally {
+            collectionDao.close();
+        }
     }
 
     @Override
@@ -19,6 +64,9 @@ public class MainActivity extends ActionBarActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    public void onSearch(View view) {
     }
 
     @Override
