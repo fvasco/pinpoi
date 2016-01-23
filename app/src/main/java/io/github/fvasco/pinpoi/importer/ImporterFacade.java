@@ -20,9 +20,8 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
-import io.github.fvasco.pinpoi.util.ApplicationContextHolder;
 import io.github.fvasco.pinpoi.util.Consumer;
-import io.github.fvasco.pinpoi.util.ThreadUtil;
+import io.github.fvasco.pinpoi.util.Util;
 
 /**
  * Importer facade for:
@@ -43,13 +42,13 @@ public class ImporterFacade implements Consumer<Placemark> {
     /**
      * Signpost for end of elaboration
      */
-    private final Placemark END_PLACEMARK = new Placemark();
+    private final Placemark STOP_PLACEMARK = new Placemark();
     private final PlacemarkDao placemarkDao;
     private final PlacemarkCollectionDao placemarkCollectionDao;
     private final BlockingQueue<Placemark> placemarkQueue = new ArrayBlockingQueue<Placemark>(64);
 
     public ImporterFacade() {
-        this(ApplicationContextHolder.get());
+        this(Util.getApplicationContext());
     }
 
     public ImporterFacade(Context context) {
@@ -88,7 +87,7 @@ public class ImporterFacade implements Consumer<Placemark> {
             importer.setConsumer(this);
 
             // insert new placemark
-            final Future<Integer> importFuture = ThreadUtil.EXECUTOR.submit(new Callable<Integer>() {
+            final Future<Integer> importFuture = Util.EXECUTOR.submit(new Callable<Integer>() {
                 @Override
                 public Integer call() throws Exception {
                     try (final InputStream inputStream = new BufferedInputStream(resource.startsWith("/")
@@ -96,7 +95,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                             : new URL(resource).openStream())) {
                         return importer.importPlacemarks(inputStream);
                     } finally {
-                        placemarkQueue.put(END_PLACEMARK);
+                        placemarkQueue.put(STOP_PLACEMARK);
                     }
                 }
             });
@@ -107,7 +106,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                 // remove old placemark
                 placemarkDao.deleteByCollectionId(collectionId);
                 Placemark placemark;
-                while ((placemark = placemarkQueue.take()) != END_PLACEMARK) {
+                while ((placemark = placemarkQueue.take()) != STOP_PLACEMARK) {
                     placemarkDao.insert(placemark);
                 }
                 final int count = importFuture.get();
@@ -115,7 +114,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                 if (count > 0) {
                     daoDatabase.setTransactionSuccessful();
                     // update placemark collection
-                    placemarkCollection.setLastUpdate(new Date());
+                    placemarkCollection.setLastUpdate(System.currentTimeMillis());
                     placemarkCollection.setPoiCount(count);
                     placemarkCollectionDao.update(placemarkCollection);
                 }
@@ -146,7 +145,7 @@ public class ImporterFacade implements Consumer<Placemark> {
         try {
             placemarkQueue.put(p);
         } catch (InterruptedException e) {
-            Log.w("importer", "Placemark discarded " + p, e);
+            Log.w(ImporterFacade.class.getSimpleName(), "Placemark discarded " + p, e);
             throw new RuntimeException(e);
         }
     }

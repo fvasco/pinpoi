@@ -40,10 +40,10 @@ public class TextImporter extends AbstractImporter {
                     placemark.setName(matcher.group(5).replace("\"\"", "\""));
                     importPlacemark(placemark);
                 } catch (final NumberFormatException nfe) {
-                    Log.d("importer", "Skip line: " + line, nfe);
+                    Log.d(TextImporter.class.getSimpleName(), "Skip line: " + line, nfe);
                 }
             } else {
-                Log.d("importer", "Skip line: " + line);
+                Log.d(TextImporter.class.getSimpleName(), "Skip line: " + line);
             }
         }
     }

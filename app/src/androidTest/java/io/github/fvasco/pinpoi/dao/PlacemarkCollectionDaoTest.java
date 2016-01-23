@@ -5,7 +5,6 @@ import android.test.RenamingDelegatingContext;
 
 import org.junit.Test;
 
-import java.util.Date;
 import java.util.List;
 
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
@@ -39,7 +38,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setDescription("description");
         pc.setSource("source");
         pc.setCategory("category");
-        pc.setLastUpdate(new Date());
+        pc.setLastUpdate(System.currentTimeMillis());
         dao.insert(pc);
 
         List<String> list = dao.findAllPlacemarkCollectionCategory();
@@ -55,7 +54,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setDescription("description");
         pc.setSource("source");
         pc.setCategory("category");
-        pc.setLastUpdate(new Date(5));
+        pc.setLastUpdate(5);
         pc.setPoiCount(5);
         dao.insert(pc);
 
@@ -66,14 +65,14 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         assertEquals("description", pc.getDescription());
         assertEquals("source", pc.getSource());
         assertEquals("category", pc.getCategory());
-        assertEquals(new Date(5), pc.getLastUpdate());
+        assertEquals(5, pc.getLastUpdate());
         assertEquals(5, pc.getPoiCount());
 
         pc.setName("test2");
         pc.setDescription("description2");
         pc.setSource("source2");
         pc.setCategory("category2");
-        pc.setLastUpdate(new Date(7));
+        pc.setLastUpdate(7);
         pc.setPoiCount(7);
         dao.update(pc);
 
@@ -86,7 +85,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         assertEquals("description2", pc.getDescription());
         assertEquals("source2", pc.getSource());
         assertEquals("category2", pc.getCategory());
-        assertEquals(new Date(7), pc.getLastUpdate());
+        assertEquals(7, pc.getLastUpdate());
         assertEquals(7, pc.getPoiCount());
 
         dao.delete(pc);

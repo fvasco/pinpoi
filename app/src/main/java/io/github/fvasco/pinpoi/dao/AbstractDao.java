@@ -11,10 +11,10 @@ import android.database.sqlite.SQLiteOpenHelper;
  *
  * @author Francesco Vasco
  */
-public abstract class AbstractDao implements AutoCloseable {
+public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseable {
     protected SQLiteDatabase database;
     private SQLiteOpenHelper sqLiteOpenHelper;
-    private int openCount;
+    private int openCount = 0;
 
     public SQLiteOpenHelper getSqLiteOpenHelper() {
         return sqLiteOpenHelper;
@@ -27,19 +27,25 @@ public abstract class AbstractDao implements AutoCloseable {
         this.sqLiteOpenHelper = sqLiteOpenHelper;
     }
 
-    public synchronized void open() throws SQLException {
-        if (database == null) {
+    public synchronized T open() throws SQLException {
+        assert openCount >= 0;
+        if (openCount == 0) {
+            assert database == null;
             database = sqLiteOpenHelper.getWritableDatabase();
-            openCount = 0;
         }
+        assert database != null;
         ++openCount;
+        return (T) this;
     }
 
     public synchronized void close() {
+        assert openCount > 0;
         --openCount;
         if (openCount == 0) {
             database.close();
             database = null;
+        } else {
+            assert database != null;
         }
     }
 

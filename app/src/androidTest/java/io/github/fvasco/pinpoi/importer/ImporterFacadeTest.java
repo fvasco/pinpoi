@@ -6,7 +6,6 @@ import android.test.RenamingDelegatingContext;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Date;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
@@ -30,7 +29,7 @@ public class ImporterFacadeTest extends AbstractImporterTestCase {
         pc.setDescription("description");
         pc.setSource(getClass().getResource("test2.kml").toString());
         pc.setCategory("category");
-        pc.setLastUpdate(new Date(5));
+        pc.setLastUpdate(5);
         pc.setPoiCount(5);
         placemarkCollectionDao.insert(pc);
 
@@ -41,8 +40,8 @@ public class ImporterFacadeTest extends AbstractImporterTestCase {
 
         pc = placemarkCollectionDao.findPlacemarkCollectionById(1);
         assertEquals(count, pc.getPoiCount());
-        final Date lastUpdate = pc.getLastUpdate();
-        assertTrue(!new Date(5).equals(lastUpdate));
+        final long lastUpdate = pc.getLastUpdate();
+        assertTrue(lastUpdate > 5);
 
         assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(1).size());
 

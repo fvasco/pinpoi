@@ -5,24 +5,23 @@ import android.content.Context;
 import android.database.Cursor;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
-import io.github.fvasco.pinpoi.util.ApplicationContextHolder;
+import io.github.fvasco.pinpoi.util.Util;
 
 /**
  * Dao for {@linkplain io.github.fvasco.pinpoi.model.PlacemarkCollection}
  *
  * @author Francesco Vasco
  */
-public class PlacemarkCollectionDao extends AbstractDao {
+public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> {
 
     private static PlacemarkCollectionDao INSTANCE;
     private PlacemarkCollectionDatabase dbHelper;
 
     PlacemarkCollectionDao() {
-        this(ApplicationContextHolder.get());
+        this(Util.getApplicationContext());
     }
 
     public PlacemarkCollectionDao(Context context) {
@@ -30,7 +29,7 @@ public class PlacemarkCollectionDao extends AbstractDao {
         setSqLiteOpenHelper(dbHelper);
     }
 
-    public static PlacemarkCollectionDao getInstance() {
+    public static synchronized PlacemarkCollectionDao getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new PlacemarkCollectionDao();
         }
@@ -41,8 +40,8 @@ public class PlacemarkCollectionDao extends AbstractDao {
         final Cursor cursor = database.query("PLACEMARK_COLLECTION",
                 null, "_ID=" + id, null, null, null, null);
 
-        cursor.moveToFirst();
         try {
+            cursor.moveToFirst();
             return cursor.isAfterLast() ? null : cursorToPlacemarkCollection(cursor);
         } finally {
             cursor.close();
@@ -54,26 +53,32 @@ public class PlacemarkCollectionDao extends AbstractDao {
         final Cursor cursor = database.query(true, "PLACEMARK_COLLECTION",
                 new String[]{"CATEGORY"}, null, null, "CATEGORY", null, "CATEGORY", null);
 
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            res.add(cursor.getString(0));
-            cursor.moveToNext();
+        try {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                res.add(cursor.getString(0));
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.close();
         }
-        cursor.close();
         return res;
     }
 
     public List<PlacemarkCollection> findAllPlacemarkCollection() {
         final List<PlacemarkCollection> res = new ArrayList<>();
         final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                null, null, null, null, null, "NAME");
+                null, null, null, null, null, "CATEGORY,NAME");
 
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            res.add(cursorToPlacemarkCollection(cursor));
-            cursor.moveToNext();
+        try {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                res.add(cursorToPlacemarkCollection(cursor));
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.close();
         }
-        cursor.close();
         return res;
     }
 
@@ -93,26 +98,25 @@ public class PlacemarkCollectionDao extends AbstractDao {
         database.delete("PLACEMARK_COLLECTION", "_ID=" + pc.getId(), null);
     }
 
-    ContentValues placemarkCollectionToContentValues(final PlacemarkCollection pc) {
+    private ContentValues placemarkCollectionToContentValues(final PlacemarkCollection pc) {
         final ContentValues cv = new ContentValues();
         cv.put("name", pc.getName());
         cv.put("description", pc.getDescription());
         cv.put("source", pc.getSource());
         cv.put("category", pc.getCategory());
-        cv.put("last_update", pc.getLastUpdate() == null ? 0 : pc.getLastUpdate().getTime());
+        cv.put("last_update", pc.getLastUpdate());
         cv.put("poi_count", pc.getPoiCount());
         return cv;
     }
 
-    PlacemarkCollection cursorToPlacemarkCollection(Cursor cursor) {
+    private PlacemarkCollection cursorToPlacemarkCollection(Cursor cursor) {
         final PlacemarkCollection pc = new PlacemarkCollection();
         pc.setId(cursor.getLong(0));
         pc.setName(cursor.getString(1));
         pc.setDescription(cursor.getString(2));
         pc.setSource(cursor.getString(3));
         pc.setCategory(cursor.getString(4));
-        final long lastUpdate = cursor.getLong(5);
-        pc.setLastUpdate(lastUpdate == 0 ? null : new Date(lastUpdate));
+        pc.setLastUpdate(cursor.getLong(5));
         pc.setPoiCount(cursor.getInt(6));
         return pc;
     }

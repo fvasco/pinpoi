@@ -1,7 +1,8 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -9,56 +10,142 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="io.github.fvasco.pinpoi.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/latitude" />
 
-    <EditText
-        android:id="@+id/latitudeText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="numberSigned|numberDecimal" />
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/longitude" />
+        <Switch
+            android:id="@+id/switchGps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/use_gps" />
 
-    <EditText
-        android:id="@+id/longitudeText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="numberSigned|numberDecimal" />
+        <Button
+            android:id="@+id/search_address_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onSearchAddress"
+            android:text="@string/search_address" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/search_range" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-    <SeekBar
-        android:id="@+id/rangeSeek"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:max="150" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".4"
+                android:labelFor="@+id/latitudeText"
+                android:text="@string/latitude" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/collection" />
+            <EditText
+                android:id="@+id/latitudeText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".6"
+                android:ems="10"
+                android:inputType="numberSigned|numberDecimal" />
+        </LinearLayout>
 
-    <Spinner
-        android:id="@+id/collectionSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onSearch"
-        android:text="@string/action_search" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".4"
+                android:labelFor="@+id/longitudeText"
+                android:text="@string/longitude" />
 
-</LinearLayout>
+            <EditText
+                android:id="@+id/longitudeText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".6"
+                android:ems="10"
+                android:inputType="numberSigned|numberDecimal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".4"
+                android:labelFor="@+id/name_filter_text"
+                android:text="@string/name_filter" />
+
+            <EditText
+                android:id="@+id/name_filter_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".6"
+                android:inputType="textFilter|textCapCharacters"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/favouriteSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:paddingBottom="16dp"
+            android:paddingTop="16dp"
+            android:text="@string/only_favourite" />
+
+        <TextView
+            android:id="@+id/rangeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:text="@string/search_range" />
+
+        <SeekBar
+            android:id="@+id/rangeSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="150" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:text="@string/collection" />
+
+        <Spinner
+            android:id="@+id/collectionSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+
+        <Button
+            android:id="@+id/manage_placemark_collections_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onManagePlacemarkCollections"
+            android:text="@string/action_placemark_collections" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
+
+        <Button
+            android:id="@+id/search_placemark_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onSearchPoi"
+            android:text="@string/action_search_placemark" />
+
+    </LinearLayout>
+</ScrollView>

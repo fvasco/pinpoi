@@ -80,7 +80,7 @@ public class Ov2Importer extends AbstractImporter {
                 p.setLatitude(latitudeInt / 100000.0F);
                 importPlacemark(p);
             } else {
-                Log.i("importer", "Skip record type " + rectype);
+                Log.i(Ov2Importer.class.getSimpleName(), "Skip record type " + rectype);
                 final int total = readIntLE(dataInputStream);
                 inputStream.skip(total - 4);
             }

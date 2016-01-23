@@ -88,7 +88,8 @@ public class PlacemarkDaoTest extends AndroidTestCase {
 
         SortedSet<Placemark> set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 1, Arrays.asList(1L));
         assertEquals(1, set.size());
-        assertEquals("Pompei", set.iterator().next().getName());
+        final Placemark pompei = set.iterator().next();
+        assertEquals("Pompei", pompei.getName());
 
         // empty catalog
         set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 1, Arrays.asList(2L));
@@ -109,6 +110,23 @@ public class PlacemarkDaoTest extends AndroidTestCase {
         Iterator<Placemark> iterator = set.iterator();
         assertEquals("Pompei", iterator.next().getName());
         assertEquals("Ercolano", iterator.next().getName());
+
+        // filter for Pompei
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000, "pom", false, Arrays.asList(1L, 999L));
+        assertEquals(1, set.size());
+        assertEquals("Pompei", set.iterator().next().getName());
+
+        // filter favourite
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000, "mpe", true, Arrays.asList(1L));
+        assertTrue(set.isEmpty());
+
+        PlacemarkAnnotation placemarkAnnotation = dao.loadPlacemarkAnnotation(pompei);
+        placemarkAnnotation.setFlagged(true);
+        dao.update(placemarkAnnotation);
+
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000, "mpe", true, Arrays.asList(1L));
+        assertEquals(1, set.size());
+        assertEquals("Pompei", set.iterator().next().getName());
     }
 
     /**

@@ -1,7 +1,5 @@
 package io.github.fvasco.pinpoi.model;
 
-import java.util.Date;
-
 /**
  * A collection, aggregator for {@linkplain Placemark}
  *
@@ -14,7 +12,7 @@ public class PlacemarkCollection {
     private String description;
     private String category;
     private String source;
-    private Date lastUpdate;
+    private long lastUpdate;
     private int poiCount;
 
     public int getPoiCount() {
@@ -25,11 +23,14 @@ public class PlacemarkCollection {
         this.poiCount = poiCount;
     }
 
-    public Date getLastUpdate() {
+    /**
+     * Last collection update, unix time
+     */
+    public long getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(Date lastUpdate) {
+    public void setLastUpdate(long lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 

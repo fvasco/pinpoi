@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.util.Objects;
 
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.util.Consumer;
+import io.github.fvasco.pinpoi.util.Util;
 
 /**
  * Abstract base importer.
@@ -16,10 +18,6 @@ import io.github.fvasco.pinpoi.util.Consumer;
  */
 public abstract class AbstractImporter {
 
-    /**
-     * Signal to stop future working
-     */
-    private static final Placemark STOP_PLACEMARK = new Placemark();
     protected Consumer<Placemark> consumer;
     protected long collectionId;
     private int importedPlacemarkCount = 0;
@@ -47,7 +45,7 @@ public abstract class AbstractImporter {
      * @return imported POI
      * @throws IOException error during reading
      */
-    public int importPlacemarks(InputStream inputStream) throws IOException {
+    public int importPlacemarks(@NonNull InputStream inputStream) throws IOException {
         Objects.requireNonNull(inputStream);
         if (consumer == null) {
             throw new IllegalStateException("Consumer not defined");
@@ -58,21 +56,24 @@ public abstract class AbstractImporter {
         importedPlacemarkCount = 0;
         // do import
         importImpl(inputStream);
-        // stop future signal
         return importedPlacemarkCount;
     }
 
-    protected void importPlacemark(final Placemark placemark) {
+    protected void importPlacemark(@NonNull final Placemark placemark) {
         assert placemark.getId() == 0;
-        assert !placemark.getName().isEmpty();
         assert placemark.getCollectionId() == 0 || placemark.getCollectionId() == collectionId;
-        if (placemark.getLongitude() != 0 && placemark.getLatitude() != 0) {
+        float latitude = placemark.getLatitude();
+        float longitude = placemark.getLongitude();
+        if (latitude != 0 && latitude >= -90F && longitude <= 90F
+                && longitude != 0 && longitude >= -180F && longitude <= 180F) {
+            placemark.setName(Util.trim(placemark.getName()));
+            placemark.setDescription(Util.trim(placemark.getDescription()));
             placemark.setCollectionId(collectionId);
-            Log.d("importer", "importPlacemark " + placemark);
+            Log.d(AbstractImporter.class.getSimpleName(), "importPlacemark " + placemark);
             consumer.accept(placemark);
             ++importedPlacemarkCount;
         } else {
-            Log.d("importer", "importPlacemark skip " + placemark);
+            Log.d(AbstractImporter.class.getSimpleName(), "importPlacemark skip " + placemark);
         }
     }
 
@@ -82,6 +83,6 @@ public abstract class AbstractImporter {
      * @param inputStream data source
      * @throws IOException error during reading
      */
-    protected abstract void importImpl(InputStream inputStream) throws IOException;
+    protected abstract void importImpl(@NonNull InputStream inputStream) throws IOException;
 
 }

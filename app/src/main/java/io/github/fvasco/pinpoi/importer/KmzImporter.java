@@ -24,7 +24,7 @@ public class KmzImporter extends KmlImporter {
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                 if (!zipEntry.isDirectory() && zipEntry.getName().endsWith(".kml")) {
-                    Log.d("importer", "Import entry " + zipEntry.getName());
+                    Log.d(KmzImporter.class.getSimpleName(), "Import entry " + zipEntry.getName());
                     super.importImpl(new ZipGuardInputStream(zipInputStream));
                 }
             }
