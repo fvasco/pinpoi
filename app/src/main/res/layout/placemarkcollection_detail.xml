@@ -34,7 +34,8 @@
         android:layout_height="wrap_content"
         android:inputType="text"
         android:padding="16dp"
-        android:singleLine="true" />
+        android:singleLine="true"
+        android:textIsSelectable="true" />
 
     <TextView
         android:layout_width="match_parent"
@@ -49,7 +50,8 @@
         android:layout_height="wrap_content"
         android:inputType="textUri"
         android:padding="16dp"
-        android:singleLine="true" />
+        android:singleLine="true"
+        android:textIsSelectable="true" />
 
     <TextView
         android:id="@+id/poi_count"

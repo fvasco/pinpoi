@@ -206,6 +206,7 @@ public class MainActivity extends AppCompatActivity
         final SharedPreferences preference = getPreferences(MODE_PRIVATE);
 
         final EditText editText = new EditText(context);
+        editText.setTextIsSelectable(true);
         editText.setMaxLines(6);
         editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""));
         editText.selectAll();

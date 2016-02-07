@@ -50,7 +50,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight=".6"
                 android:ems="10"
-                android:inputType="numberSigned|numberDecimal" />
+                android:inputType="numberSigned|numberDecimal"
+                android:textIsSelectable="true" />
         </LinearLayout>
 
         <LinearLayout
@@ -71,7 +72,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight=".6"
                 android:ems="10"
-                android:inputType="numberSigned|numberDecimal" />
+                android:inputType="numberSigned|numberDecimal"
+                android:textIsSelectable="true" />
         </LinearLayout>
 
         <LinearLayout
@@ -92,7 +94,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight=".6"
                 android:inputType="textFilter|textCapCharacters"
-                android:singleLine="true" />
+                android:singleLine="true"
+                android:textIsSelectable="true" />
         </LinearLayout>
 
         <Switch
