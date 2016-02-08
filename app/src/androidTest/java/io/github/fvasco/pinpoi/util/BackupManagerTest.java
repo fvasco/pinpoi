@@ -20,10 +20,18 @@ public class BackupManagerTest extends AndroidTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         testContext = new RenamingDelegatingContext(getContext(), "test_");
+        BackupManager.BACKUP_FILE.delete();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        BackupManager.BACKUP_FILE.delete();
     }
 
     @Test
     public void testCreate() throws Exception {
+        if (!BackupManager.isCreateBackupSupported()) return;
         try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open()) {
             final PlacemarkCollection placemarkCollection = new PlacemarkCollection();
             placemarkCollection.setName("name");
@@ -34,10 +42,14 @@ public class BackupManagerTest extends AndroidTestCase {
         }
         final BackupManager backupManager = new BackupManager(testContext);
         backupManager.create();
+        assertTrue(BackupManager.BACKUP_FILE.isFile());
     }
 
     @Test
     public void testRestore() throws Exception {
+        if (!BackupManager.isCreateBackupSupported()
+                || !BackupManager.isRestoreBackupSupported()) return;
+
         testCreate();
 
         final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext);
