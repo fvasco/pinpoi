@@ -1,9 +1,8 @@
 <resources>
     <string name="app_name">PinPoi</string>
-    <string name="title_activity_main">Poi filter</string>
+    <string name="title_activity_main">PinPoi</string>
 
     <string name="action_search_placemark">Search POI</string>
-    <string name="action_settings">Settings</string>
     <string name="collection">Collection</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
@@ -39,5 +38,8 @@
     <string name="last_update">Last update at %1$tc</string>
     <string name="name_filter">Name</string>
     <string name="only_favourite">Only favourite</string>
-    <string name="placemark_item_format">%1$.1f km %2$.0f°</string>
+    <string name="action_create_backup">Create backup on SD card</string>
+    <string name="action_restore_backup">Restore backup from SD card</string>
+    <string name="backup_file">Backup file is %s</string>
+    <string name="menu_backup">Backup</string>
 </resources>

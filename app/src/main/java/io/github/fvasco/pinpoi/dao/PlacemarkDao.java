@@ -269,7 +269,6 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
                 if (id == -1) {
                     throw new IllegalArgumentException("Data not valid");
                 }
-                assert id > 0;
                 placemarkAnnotation.setId(id);
             }
         }

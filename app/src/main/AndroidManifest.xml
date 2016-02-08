@@ -2,8 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.github.fvasco.pinpoi">
 
+    <!-- import placemark -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- use gps to find location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- backup and restore -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"

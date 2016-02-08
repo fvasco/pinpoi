@@ -79,7 +79,6 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         View recyclerView = findViewById(R.id.placemarkcollection_list);
-        assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
     }
 

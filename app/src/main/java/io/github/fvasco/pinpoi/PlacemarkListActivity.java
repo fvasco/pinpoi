@@ -72,7 +72,6 @@ public class PlacemarkListActivity extends AppCompatActivity {
         }
 
         View recyclerView = findViewById(R.id.placemark_list);
-        assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
 
         if (findViewById(R.id.placemark_detail_container) != null) {
@@ -165,11 +164,13 @@ public class PlacemarkListActivity extends AppCompatActivity {
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
         private final DecimalFormat decimalFormat = new DecimalFormat();
+        private final StringBuilder stringBuilder = new StringBuilder();
         private Placemark[] mValues;
         private float[] floatArray = new float[2];
 
         public SimpleItemRecyclerViewAdapter() {
-            decimalFormat.setMaximumFractionDigits(0);
+            decimalFormat.setMinimumFractionDigits(1);
+            decimalFormat.setMaximumFractionDigits(1);
         }
 
         public void setPlacemarks(final Collection<Placemark> placemarks) {
@@ -189,13 +190,23 @@ public class PlacemarkListActivity extends AppCompatActivity {
             final Placemark p = mValues[position];
             holder.mItem = p;
             Location.distanceBetween(latitude, longitude, p.getLatitude(), p.getLongitude(), floatArray);
-            holder.mInfoView.setText(getString(
-                    R.string.placemark_item_format,
-                    // distance in km
-                    floatArray[0] / 1000f,
-                    // bearing
-                    floatArray[1] >= 0 ? floatArray[1] : floatArray[1] + 360
-            ));
+            final float distance = floatArray[0];
+            final int bearing = (int) floatArray[1];
+
+
+            stringBuilder.setLength(0);
+            if (distance < 1000F) {
+                stringBuilder.append(Integer.toString((int) distance)).append(' ');
+            } else {
+                stringBuilder.append(distance < 10_000F
+                        ? decimalFormat.format(distance / 1000F)
+                        : Integer.toString((int) distance / 1000))
+                        .append(" k");
+            }
+            stringBuilder.append("m\n")
+                    .append(String.valueOf(bearing >= 0 ? bearing : bearing + 360))
+                    .append('°');
+            holder.mInfoView.setText(stringBuilder);
             holder.mContentView.setText(p.getName());
 
             holder.mView.setOnClickListener(new View.OnClickListener() {

@@ -22,10 +22,6 @@ public abstract class AbstractImporter {
     protected long collectionId;
     private int importedPlacemarkCount = 0;
 
-    public long getCollectionId() {
-        return collectionId;
-    }
-
     public void setCollectionId(long collectionId) {
         this.collectionId = collectionId;
     }
@@ -60,12 +56,10 @@ public abstract class AbstractImporter {
     }
 
     protected void importPlacemark(@NonNull final Placemark placemark) {
-        assert placemark.getId() == 0;
-        assert placemark.getCollectionId() == 0 || placemark.getCollectionId() == collectionId;
         float latitude = placemark.getLatitude();
         float longitude = placemark.getLongitude();
-        if (latitude != 0 && latitude >= -90F && longitude <= 90F
-                && longitude != 0 && longitude >= -180F && longitude <= 180F) {
+        if (latitude >= -90F && latitude <= 90F
+                && longitude >= -180F && longitude <= 180F) {
             placemark.setName(Util.trim(placemark.getName()));
             placemark.setDescription(Util.trim(placemark.getDescription()));
             placemark.setCollectionId(collectionId);

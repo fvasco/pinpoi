@@ -125,17 +125,19 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
     }
 
     public void updatePlacemarkCollection() {
-        final ProgressDialog progress = new ProgressDialog(getActivity());
-        progress.setMessage(getString(R.string.update, placemarkCollection.getName()));
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-        progress.show();
+        final ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.update, placemarkCollection.getName()));
+        progressDialog.setProgressStyle(placemarkCollection.getPoiCount() > 0
+                ? ProgressDialog.STYLE_HORIZONTAL
+                : ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();
         Util.EXECUTOR.submit(new Runnable() {
             @Override
             public void run() {
                 try {
                     savePlacemarkCollection();
                     final ImporterFacade importerFacade = new ImporterFacade();
+                    importerFacade.setProgressDialog(progressDialog);
                     final int count = importerFacade.importPlacemarks(placemarkCollection.getId());
                     if (count == 0) {
                         Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), getString(R.string.error_no_placemark)), Toast.LENGTH_LONG);
@@ -146,7 +148,6 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                     Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
                     Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), e.getLocalizedMessage()), Toast.LENGTH_LONG);
                 } finally {
-                    progress.dismiss();
                     showUpdatedCollectionInfo();
                 }
             }

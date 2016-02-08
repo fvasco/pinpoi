@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,7 +12,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.BackupManager;
 import io.github.fvasco.pinpoi.util.Util;
 
 
@@ -98,7 +99,39 @@ public class MainActivity extends AppCompatActivity
         rangeSeek.setOnSeekBarChangeListener(this);
         onProgressChanged(rangeSeek, rangeSeek.getProgress(), false);
 
-        // setup collection spinner
+        setupPlacemarkCollectionSpinner();
+
+        // restore preference
+        final SharedPreferences preference = getPreferences(MODE_PRIVATE);
+        final boolean useGpsPreference = preference.getBoolean(PREFEFERNCE_GPS, false);
+        switchGps.setChecked(useGpsPreference);
+        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, ""));
+        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, ""));
+        nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, ""));
+        favouriteSwitch.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
+        rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, rangeSeek.getMax() * 2 / 3), rangeSeek.getMax()));
+        if (collectionSpinner.getAdapter().getCount() > 1) {
+            collectionSpinner.setSelection(Math.min(preference.getInt(PREFEFERNCE_COLLECTION, 0), collectionSpinner.getAdapter().getCount() - 1));
+        }
+
+        // load intent parameters for geo scheme
+        final Uri intentUri = getIntent().getData();
+        if (intentUri != null) {
+            Pattern coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?");
+            Matcher matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"));
+            if (!matcher.matches()) {
+                matcher = coordinatePattern.matcher(intentUri.getAuthority());
+            }
+            if (matcher.matches()) {
+                switchGps.setChecked(false);
+                latitudeText.setText(matcher.group(1));
+                longitudeText.setText(matcher.group(2));
+            }
+        }
+        searchAddressButton.setEnabled(!switchGps.isChecked());
+    }
+
+    private void setupPlacemarkCollectionSpinner() {
         final List<PlacemarkCollection> placemarkCollections;
         ArrayAdapter<PlacemarkCollection> dataAdapter;
         try (final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open()) {
@@ -134,41 +167,10 @@ public class MainActivity extends AppCompatActivity
         }
 
         // no collection -> no search
-        if (placemarkCollections.isEmpty()) {
-            collectionSpinner.setVisibility(View.GONE);
-            searchPlacemarkButton.setEnabled(false);
-        } else {
-            manageCollectionButton.setVisibility(View.GONE);
-        }
-
-        // restore preference
-        final SharedPreferences preference = getPreferences(MODE_PRIVATE);
-        final boolean useGpsPreference = preference.getBoolean(PREFEFERNCE_GPS, false);
-        switchGps.setChecked(useGpsPreference);
-        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, ""));
-        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, ""));
-        nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, ""));
-        favouriteSwitch.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
-        rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, rangeSeek.getMax() * 2 / 3), rangeSeek.getMax()));
-        if (dataAdapter.getCount() > 1) {
-            collectionSpinner.setSelection(Math.min(preference.getInt(PREFEFERNCE_COLLECTION, 0), dataAdapter.getCount() - 1));
-        }
-
-        // load intent parameters for geo scheme
-        final Uri intentUri = getIntent().getData();
-        if (intentUri != null) {
-            Pattern coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?");
-            Matcher matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"));
-            if (!matcher.matches()) {
-                matcher = coordinatePattern.matcher(intentUri.getAuthority());
-            }
-            if (matcher.matches()) {
-                switchGps.setChecked(false);
-                latitudeText.setText(matcher.group(1));
-                longitudeText.setText(matcher.group(2));
-            }
-        }
-        searchAddressButton.setEnabled(!switchGps.isChecked());
+        final boolean poiPresent = collectionSpinner.getAdapter().getCount() > 0;
+        collectionSpinner.setVisibility(poiPresent ? View.VISIBLE : View.GONE);
+        manageCollectionButton.setVisibility(poiPresent ? View.GONE : View.VISIBLE);
+        searchPlacemarkButton.setEnabled(poiPresent);
     }
 
     @Override
@@ -198,6 +200,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        menu.findItem(R.id.create_backup).setEnabled(BackupManager.isCreateBackupSupported());
+        menu.findItem(R.id.restore_backup).setEnabled(BackupManager.isRestoreBackupSupported());
         return true;
     }
 
@@ -295,14 +299,43 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-            case R.id.action_settings:
-                return true;
             case R.id.action_placemark_collections:
                 onManagePlacemarkCollections(null);
+                return true;
+            case R.id.create_backup:
+                createBackup();
+                return true;
+            case R.id.restore_backup:
+                restoreBackup();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void createBackup() {
+        final BackupManager backupManager = new BackupManager(getApplicationContext());
+        try {
+            Util.showToast(getString(R.string.action_create_backup), Toast.LENGTH_SHORT);
+            backupManager.create();
+            Util.showToast(getString(R.string.backup_file, BackupManager.BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
+        } catch (Exception e) {
+            Log.w(MainActivity.class.getSimpleName(), "create backup failed", e);
+            Util.showToast(e);
+        }
+    }
+
+    private void restoreBackup() {
+        final BackupManager backupManager = new BackupManager(getApplicationContext());
+        try {
+            Util.showToast(getString(R.string.action_restore_backup), Toast.LENGTH_SHORT);
+            backupManager.restore();
+            Util.showToast(getString(R.string.backup_file, BackupManager.BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
+            setupPlacemarkCollectionSpinner();
+        } catch (Exception e) {
+            Log.w(MainActivity.class.getSimpleName(), "restore backup failed", e);
+            Util.showToast(e);
+        }
     }
 
     /**
@@ -323,9 +356,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        assert switchGps == buttonView;
-        setUseLocationManagerListener(isChecked);
-        searchAddressButton.setEnabled(!isChecked);
+        if (switchGps == buttonView) {
+            setUseLocationManagerListener(isChecked);
+            searchAddressButton.setEnabled(!isChecked);
+        }
     }
 
     private void setUseLocationManagerListener(final boolean on) {

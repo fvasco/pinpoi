@@ -6,8 +6,12 @@ import android.location.Location;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.design.BuildConfig;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -31,13 +35,16 @@ public final class Util {
 
     public static void initApplicationContext(@NonNull Context context) {
         Objects.requireNonNull(context);
-        if (APPLICATION_CONTEXT != context) {
-            APPLICATION_CONTEXT = context;
+        if (BuildConfig.DEBUG && APPLICATION_CONTEXT != null && APPLICATION_CONTEXT != context) {
+            throw new AssertionError();
         }
+        APPLICATION_CONTEXT = context;
     }
 
     public static Context getApplicationContext() {
-        assert APPLICATION_CONTEXT != null;
+        if (BuildConfig.DEBUG && APPLICATION_CONTEXT == null) {
+            throw new AssertionError();
+        }
         return APPLICATION_CONTEXT;
     }
 
@@ -53,6 +60,11 @@ public final class Util {
     public static String formatCoordinate(@NonNull final Placemark placemark) {
         return Float.toString(placemark.getLatitude())
                 + ',' + Float.toString(placemark.getLongitude());
+    }
+
+    public static void showToast(@NonNull final Throwable throwable) {
+        final String message = throwable.getLocalizedMessage();
+        showToast(isEmpty(message) ? "Error" : message, Toast.LENGTH_LONG);
     }
 
     public static void showToast(@NonNull final CharSequence message, final int duration) {
@@ -103,22 +115,33 @@ public final class Util {
         if (a == null) {
             return null;
         }
+        final String separator = ", ";
         if (a.getMaxAddressLineIndex() == 0) {
             return a.getAddressLine(0);
         } else if (a.getMaxAddressLineIndex() > 0) {
             final StringBuilder stringBuilder = new StringBuilder(a.getMaxAddressLineIndex());
             for (int i = 1; i <= a.getMaxAddressLineIndex(); ++i) {
-                stringBuilder.append(", ").append(a.getAddressLine(i));
+                stringBuilder.append(separator).append(a.getAddressLine(i));
             }
             return stringBuilder.toString();
         } else {
             final StringBuilder stringBuilder = new StringBuilder();
-            final String separator = ", ";
             append(a.getFeatureName(), separator, stringBuilder);
             append(a.getLocality(), separator, stringBuilder);
             append(a.getAdminArea(), separator, stringBuilder);
             append(a.getCountryCode(), separator, stringBuilder);
             return isEmpty(stringBuilder) ? a.toString() : stringBuilder.toString();
+        }
+    }
+
+    /**
+     * Copy stream
+     */
+    public static void copy(final InputStream is, final OutputStream os) throws IOException {
+        final byte[] buf = new byte[4 * 1024];
+        int c;
+        while ((c = is.read(buf)) >= 0) {
+            os.write(buf, 0, c);
         }
     }
 }

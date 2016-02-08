@@ -1,3 +1,3 @@
-0.0,0.0,"location to discard"
+200.0,0.0,"location to discard"
 1.0,2.5,"location1 to import"
 -1.2345;-6.7890;"location2 to import"

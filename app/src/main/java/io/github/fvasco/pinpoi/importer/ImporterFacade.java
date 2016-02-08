@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -9,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -45,7 +45,9 @@ public class ImporterFacade implements Consumer<Placemark> {
     private final Placemark STOP_PLACEMARK = new Placemark();
     private final PlacemarkDao placemarkDao;
     private final PlacemarkCollectionDao placemarkCollectionDao;
-    private final BlockingQueue<Placemark> placemarkQueue = new ArrayBlockingQueue<Placemark>(64);
+    private final BlockingQueue<Placemark> placemarkQueue = new ArrayBlockingQueue<>(64);
+    private ProgressDialog progressDialog;
+    private int placemarkCount;
 
     public ImporterFacade() {
         this(Util.getApplicationContext());
@@ -54,6 +56,13 @@ public class ImporterFacade implements Consumer<Placemark> {
     public ImporterFacade(Context context) {
         this.placemarkDao = new PlacemarkDao(context);
         this.placemarkCollectionDao = new PlacemarkCollectionDao(context);
+    }
+
+    /**
+     * Set progress dialog to show and update
+     */
+    public void setProgressDialog(ProgressDialog progressDialog) {
+        this.progressDialog = progressDialog;
     }
 
     /**
@@ -69,6 +78,12 @@ public class ImporterFacade implements Consumer<Placemark> {
             if (placemarkCollection == null) {
                 throw new IllegalArgumentException("Placemark collection " + collectionId + " not found");
             }
+
+            if (progressDialog != null) {
+                progressDialog.setMax(placemarkCollection.getPoiCount());
+                progressDialog.setIndeterminate(placemarkCollection.getPoiCount() <= 0);
+            }
+
             final String resource = placemarkCollection.getSource();
             final AbstractImporter importer;
             if (resource.endsWith("kml")) {
@@ -99,6 +114,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                     }
                 }
             });
+            placemarkCount = 0;
             placemarkDao.open();
             SQLiteDatabase daoDatabase = placemarkDao.getDatabase();
             daoDatabase.beginTransaction();
@@ -109,16 +125,16 @@ public class ImporterFacade implements Consumer<Placemark> {
                 while ((placemark = placemarkQueue.take()) != STOP_PLACEMARK) {
                     placemarkDao.insert(placemark);
                 }
-                final int count = importFuture.get();
+                placemarkCount = importFuture.get();
                 // confirm transaction
-                if (count > 0) {
+                if (placemarkCount > 0) {
                     daoDatabase.setTransactionSuccessful();
                     // update placemark collection
                     placemarkCollection.setLastUpdate(System.currentTimeMillis());
-                    placemarkCollection.setPoiCount(count);
+                    placemarkCollection.setPoiCount(placemarkCount);
                     placemarkCollectionDao.update(placemarkCollection);
                 }
-                return count;
+                return placemarkCount;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Error importing placemark", e);
             } catch (ExecutionException e) {
@@ -137,6 +153,9 @@ public class ImporterFacade implements Consumer<Placemark> {
             }
         } finally {
             placemarkCollectionDao.close();
+            if (progressDialog != null) {
+                progressDialog.dismiss();
+            }
         }
     }
 
@@ -144,6 +163,13 @@ public class ImporterFacade implements Consumer<Placemark> {
     public void accept(Placemark p) {
         try {
             placemarkQueue.put(p);
+            ++placemarkCount;
+            if (progressDialog != null) {
+                progressDialog.setProgress(placemarkCount);
+                if (placemarkCount == progressDialog.getMax()) {
+                    progressDialog.setIndeterminate(true);
+                }
+            }
         } catch (InterruptedException e) {
             Log.w(ImporterFacade.class.getSimpleName(), "Placemark discarded " + p, e);
             throw new RuntimeException(e);

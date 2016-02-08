@@ -35,8 +35,8 @@ public abstract class AbstractImporterTestCase extends AndroidTestCase {
             assertEquals(0, p.getId());
             assertNotNull(p.getName());
             assertTrue(!p.getName().isEmpty());
-            assertTrue(p.getLongitude() != 0);
-            assertTrue(p.getLatitude() != 0);
+            assertTrue(!Float.isNaN(p.getLatitude()));
+            assertTrue(!Float.isNaN(p.getLongitude()));
             assertEquals(1, p.getCollectionId());
         }
         return list;

@@ -58,7 +58,6 @@ public class PlacemarkDetailFragment extends Fragment {
         final long id = getArguments().getLong(ARG_ITEM_ID, preferences.getLong(ARG_ITEM_ID, 0));
         Log.i(PlacemarkDetailFragment.class.getSimpleName(), "open placemark " + id);
         placemark = placemarkDao.getPlacemark(id);
-        assert placemark != null;
         placemarkCollection = placemarkCollectionDao.findPlacemarkCollectionById(placemark.getCollectionId());
         placemarkAnnotation = placemarkDao.loadPlacemarkAnnotation(placemark);
         preferences.edit().putLong(ARG_ITEM_ID, placemark.getId()).apply();
