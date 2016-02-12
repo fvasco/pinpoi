@@ -13,7 +13,7 @@ public class TextImporterTest extends AbstractImporterTestCase {
     @Test
     public void testImportImplAsc() throws Exception {
         final List<Placemark> list = importPlacemark(new TextImporter(), "asc.txt");
-        assertEquals(2, list.size());
+        assertEquals(3, list.size());
     }
 
     @Test

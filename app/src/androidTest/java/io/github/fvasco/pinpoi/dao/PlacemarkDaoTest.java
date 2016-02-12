@@ -13,6 +13,7 @@ import java.util.SortedSet;
 
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation;
+import io.github.fvasco.pinpoi.util.Util;
 
 /**
  * @author Francesco Vasco
@@ -45,9 +46,7 @@ public class PlacemarkDaoTest extends AndroidTestCase {
 
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
-        RenamingDelegatingContext context = new RenamingDelegatingContext(getContext(), "test_");
-        dao = new PlacemarkDao(context);
+        dao = new PlacemarkDao(new RenamingDelegatingContext(getContext(), "test_"));
         dao.open();
     }
 
@@ -159,6 +158,29 @@ public class PlacemarkDaoTest extends AndroidTestCase {
         l.setLongitude(-179.9F);
         set = dao.findAllPlacemarkNear(l, 100000, Arrays.asList(1L));
         assertEquals(2, set.size());
+    }
+
+    @Test
+    public void testFindAllPlacemarkNearMatrix() {
+        Placemark p = new Placemark();
+        for (int lon = -171; lon <= 171; lon += 9) {
+            for (int lat = -84; lat <= 84; lat += 12) {
+                final String name = "Placemark " + lat + ',' + lon;
+                p.setId(0);
+                p.setName(name);
+                p.setLatitude(lat);
+                p.setLongitude(lon);
+                p.setCollectionId(1);
+                dao.insert(p);
+
+                final Location referenceLocation = Util.newLocation(lat + 4 * Math.cos(lon), lon + 3 * Math.cos(lat));
+                SortedSet<Placemark> placemarks = dao.findAllPlacemarkNear(referenceLocation,
+                        referenceLocation.distanceTo(Util.newLocation(p)), Arrays.asList(1L));
+                assertEquals("Error on " + name, 1, placemarks.size());
+                p = placemarks.first();
+                assertEquals(name, p.getName());
+            }
+        }
     }
 
     @Test

@@ -56,6 +56,41 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="io.github.fvasco.pinpoi.MainActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*" />
+                <data android:pathPattern="/.*\\.kml" />
+                <data android:pathPattern="/.*\\.zip" />
+                <data android:pathPattern="/.*\\.kmz" />
+                <data android:pathPattern="/.*\\.gpx" />
+                <data android:pathPattern="/.*\\.ov2" />
+                <data android:pathPattern="/.*\\.asc" />
+                <data android:pathPattern="/.*\\.csv" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*" />
+                <data android:mimeType="application/vnd.google-earth.kml+xml" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/vnd.google-earth.kmz" />
+                <data android:mimeType="application/gpx" />
+                <data android:mimeType="application/gpx+xml" />
+                <data android:mimeType="application/csv" />
+                <data android:mimeType="text/csv" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".PlacemarkCollectionDetailActivity"

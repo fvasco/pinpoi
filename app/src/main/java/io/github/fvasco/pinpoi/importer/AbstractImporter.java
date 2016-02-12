@@ -20,7 +20,6 @@ public abstract class AbstractImporter {
 
     protected Consumer<Placemark> consumer;
     protected long collectionId;
-    private int importedPlacemarkCount = 0;
 
     public void setCollectionId(long collectionId) {
         this.collectionId = collectionId;
@@ -41,7 +40,7 @@ public abstract class AbstractImporter {
      * @return imported POI
      * @throws IOException error during reading
      */
-    public int importPlacemarks(@NonNull InputStream inputStream) throws IOException {
+    public void importPlacemarks(@NonNull InputStream inputStream) throws IOException {
         Objects.requireNonNull(inputStream);
         if (consumer == null) {
             throw new IllegalStateException("Consumer not defined");
@@ -49,23 +48,20 @@ public abstract class AbstractImporter {
         if (collectionId <= 0) {
             throw new IllegalStateException("Collection id not defined");
         }
-        importedPlacemarkCount = 0;
         // do import
         importImpl(inputStream);
-        return importedPlacemarkCount;
     }
 
     protected void importPlacemark(@NonNull final Placemark placemark) {
         float latitude = placemark.getLatitude();
         float longitude = placemark.getLongitude();
-        if (latitude >= -90F && latitude <= 90F
-                && longitude >= -180F && longitude <= 180F) {
+        if (!Float.isNaN(latitude) && latitude >= -90F && latitude <= 90F
+                && !Float.isNaN(longitude) && longitude >= -180F && longitude <= 180F) {
             placemark.setName(Util.trim(placemark.getName()));
             placemark.setDescription(Util.trim(placemark.getDescription()));
             placemark.setCollectionId(collectionId);
             Log.d(AbstractImporter.class.getSimpleName(), "importPlacemark " + placemark);
             consumer.accept(placemark);
-            ++importedPlacemarkCount;
         } else {
             Log.d(AbstractImporter.class.getSimpleName(), "importPlacemark skip " + placemark);
         }

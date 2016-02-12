@@ -9,8 +9,8 @@ import java.io.Serializable;
  */
 public class PlacemarkAnnotation implements Serializable {
     private long id;
-    private float latitude;
-    private float longitude;
+    private float latitude = Float.NaN;
+    private float longitude = Float.NaN;
     private String note;
     private boolean flagged;
 
@@ -56,7 +56,7 @@ public class PlacemarkAnnotation implements Serializable {
 
     @Override
     public String toString() {
-        return note + '[' + id + "](" + latitude + ',' + longitude + ')';
+        return note + '(' + latitude + ',' + longitude + ')';
     }
 
 }

@@ -127,9 +127,13 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
             final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             view.getContext().startActivity(intent);
         } catch (Exception e) {
-            Log.e(PlacemarkDetailActivity.class.getSimpleName(), "Error on click", e);
+            Log.e(PlacemarkDetailActivity.class.getSimpleName(), "Error on map click", e);
             Util.showToast(e.getLocalizedMessage(), Toast.LENGTH_LONG);
         }
+    }
+
+    public void onCoordinateClick(final View view) {
+        fragment.onCoordinateClick(view);
     }
 
     @Override

@@ -2,11 +2,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="8dp">
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="24dp" />
+        android:layout_height="8dp" />
 
     <EditText
         android:id="@+id/note"
@@ -14,41 +15,35 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textMultiLine"
-        android:padding="16dp"
-        android:textIsSelectable="true" />
+        android:padding="@dimen/text_margin" />
 
     <TextView
         android:id="@+id/placemark_detail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"
         android:textIsSelectable="true"
         tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="@string/coordinate" />
 
     <TextView
         android:id="@+id/coordinate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp" />
+        android:onClick="onCoordinateClick"
+        android:paddingTop="2dp"
+        android:text="@string/location"
+        android:textIsSelectable="true" />
 
     <TextView
+        android:id="@+id/placemark_collection_description_title"
         style="?android:attr/textAppearanceLarge"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="@string/placemark_collection_description" />
+        android:padding="@dimen/text_margin" />
 
     <TextView
         android:id="@+id/placemark_collection_description"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp" />
+        android:layout_height="wrap_content" />
 
     <Space
         android:layout_width="match_parent"

@@ -1,17 +1,16 @@
 <resources>
     <string name="app_name">PinPoi</string>
     <string name="title_activity_main">PinPoi</string>
-
     <string name="action_search_placemark">Search POI</string>
     <string name="collection">Collection</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
-    <string name="search_range">Search range %1$d km</string>
-    <string name="title_placemark_list">Placemarks</string>
-    <string name="title_placemark_detail">Placemark detail</string>
+    <string name="search_range">Search range: %1$d km</string>
+    <string name="title_placemark_list">POIs</string>
+    <string name="title_placemark_detail">POI detail</string>
     <string name="validation_error">Validation error, please check values</string>
-    <string name="title_placemarkcollection_list">Placemark Collections</string>
-    <string name="title_placemarkcollection_detail">Placemark Collection Detail</string>
+    <string name="title_placemarkcollection_list">POI Collections</string>
+    <string name="title_placemarkcollection_detail">POI Collection Detail</string>
     <string name="category">Category</string>
     <string name="source">Source URL (or local file path)</string>
     <string name="description">Description</string>
@@ -20,11 +19,10 @@
     <string name="error_update">Update error %1$s: %2$s</string>
     <string name="error_search">Search error: %1$s</string>
     <string name="error_no_placemark">no placemark found</string>
-    <string name="action_placemark_collections">Manage placemarks collections</string>
-    <string name="coordinate">Coordinate</string>
-    <string name="placemark_collection_name">Placemark collection name</string>
-    <string name="placemark_collection_description">Collection description</string>
-    <string name="delete_placemark_collection_confirm">Delete placemark collection?</string>
+    <string name="action_placemark_collections">Manage POIs collections</string>
+    <string name="location">Location: %1$s %2$s</string>
+    <string name="placemark_collection_name">POI collection name</string>
+    <string name="delete_placemark_collection_confirm">Delete POI collection?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="use_gps">Use GPS</string>
@@ -36,7 +34,7 @@
     <string name="close">Close</string>
     <string name="poi_count">%1$d sites in this collection</string>
     <string name="last_update">Last update at %1$tc</string>
-    <string name="name_filter">Name</string>
+    <string name="name_filter">Name filter</string>
     <string name="only_favourite">Only favourite</string>
     <string name="action_create_backup">Create backup on SD card</string>
     <string name="action_restore_backup">Restore backup from SD card</string>

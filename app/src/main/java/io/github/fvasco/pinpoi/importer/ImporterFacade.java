@@ -3,6 +3,9 @@ package io.github.fvasco.pinpoi.importer;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -47,7 +50,6 @@ public class ImporterFacade implements Consumer<Placemark> {
     private final PlacemarkCollectionDao placemarkCollectionDao;
     private final BlockingQueue<Placemark> placemarkQueue = new ArrayBlockingQueue<>(64);
     private ProgressDialog progressDialog;
-    private int placemarkCount;
 
     public ImporterFacade() {
         this(Util.getApplicationContext());
@@ -56,6 +58,54 @@ public class ImporterFacade implements Consumer<Placemark> {
     public ImporterFacade(Context context) {
         this.placemarkDao = new PlacemarkDao(context);
         this.placemarkCollectionDao = new PlacemarkCollectionDao(context);
+    }
+
+    @Nullable
+    static AbstractImporter createImporter(@NonNull String resource) {
+        if (resource.startsWith("content://")) {
+            final Uri resourceUri = Uri.parse(resource);
+            final String[] mimeTypes = Util.getApplicationContext().getContentResolver().getStreamTypes(resourceUri, "*/*");
+            if (mimeTypes != null) {
+                for (final String mimeType : mimeTypes)
+                    switch (mimeType) {
+                        case "application/vnd.google-earth.kml+xml":
+                            return new KmlImporter();
+                        case "application/zip":
+                        case "application/vnd.google-earth.kmz":
+                            return new ZipImporter();
+                        case "application/gpx":
+                        case "application/gpx+xml":
+                            return new GpxImporter();
+                        case "application/csv":
+                        case "text/csv":
+                        case "text/plain":
+                            return new TextImporter();
+                    }
+            }
+            return createImporter(resourceUri.getLastPathSegment());
+        } else {
+            String path;
+            try {
+                path = Util.isUri(resource)
+                        ? Uri.parse(resource).getLastPathSegment()
+                        : resource;
+            } catch (Exception e) {
+                path = resource;
+            }
+            path = path.toLowerCase();
+            if (path.endsWith(".kml")) {
+                return new KmlImporter();
+            } else if (path.endsWith(".zip") || path.endsWith(".kmz")) {
+                return new ZipImporter();
+            } else if (path.endsWith(".gpx")) {
+                return new GpxImporter();
+            } else if (path.endsWith(".ov2")) {
+                return new Ov2Importer();
+            } else if (path.endsWith(".asc") || path.endsWith(".csv") || path.endsWith(".txt")) {
+                return new TextImporter();
+            }
+        }
+        return null;
     }
 
     /**
@@ -68,71 +118,74 @@ public class ImporterFacade implements Consumer<Placemark> {
     /**
      * Import a generic resource into data base, this action refresh collection.
      * If imported count is 0 no modification is done.
+     * <b>Side effect</b> update and save placermak collection
      *
      * @return imported {@linkplain io.github.fvasco.pinpoi.model.Placemark}
      */
-    public int importPlacemarks(final long collectionId) throws IOException {
+    public int importPlacemarks(@NonNull final PlacemarkCollection placemarkCollection) throws IOException {
         placemarkCollectionDao.open();
         try {
-            final PlacemarkCollection placemarkCollection = placemarkCollectionDao.findPlacemarkCollectionById(collectionId);
-            if (placemarkCollection == null) {
-                throw new IllegalArgumentException("Placemark collection " + collectionId + " not found");
-            }
-
             if (progressDialog != null) {
                 progressDialog.setMax(placemarkCollection.getPoiCount());
                 progressDialog.setIndeterminate(placemarkCollection.getPoiCount() <= 0);
             }
 
             final String resource = placemarkCollection.getSource();
-            final AbstractImporter importer;
-            if (resource.endsWith("kml")) {
-                importer = new KmlImporter();
-            } else if (resource.endsWith("kmz")) {
-                importer = new KmzImporter();
-            } else if (resource.endsWith("gpx")) {
-                importer = new GpxImporter();
-            } else if (resource.endsWith("ov2")) {
-                importer = new Ov2Importer();
-            } else {
-                importer = new TextImporter();
+            final AbstractImporter importer = createImporter(resource);
+            if (importer == null) {
+                throw new IOException("Cannot import " + resource);
             }
-
-            importer.setCollectionId(collectionId);
+            importer.setCollectionId(placemarkCollection.getId());
             importer.setConsumer(this);
 
             // insert new placemark
-            final Future<Integer> importFuture = Util.EXECUTOR.submit(new Callable<Integer>() {
+            final Future<Void> importFuture = Util.EXECUTOR.submit(new Callable<Void>() {
                 @Override
-                public Integer call() throws Exception {
-                    try (final InputStream inputStream = new BufferedInputStream(resource.startsWith("/")
-                            ? new FileInputStream(resource)
-                            : new URL(resource).openStream())) {
-                        return importer.importPlacemarks(inputStream);
+                public Void call() throws Exception {
+                    try (final InputStream inputStream = new BufferedInputStream(
+                            resource.startsWith("file:///") ? new FileInputStream(resource.substring(7))
+                                    : resource.startsWith("file:/") ? new FileInputStream(resource.substring(5))
+                                    : resource.startsWith("/") ? new FileInputStream(resource)
+                                    : new URL(resource).openStream())) {
+                        importer.importPlacemarks(inputStream);
                     } finally {
                         placemarkQueue.put(STOP_PLACEMARK);
                     }
+                    return null;
                 }
             });
-            placemarkCount = 0;
+            int placemarkCount = 0;
             placemarkDao.open();
-            SQLiteDatabase daoDatabase = placemarkDao.getDatabase();
-            daoDatabase.beginTransaction();
+            SQLiteDatabase placemarkDaoDatabase = placemarkDao.getDatabase();
+            placemarkDaoDatabase.beginTransaction();
             try {
                 // remove old placemark
-                placemarkDao.deleteByCollectionId(collectionId);
+                placemarkDao.deleteByCollectionId(placemarkCollection.getId());
                 Placemark placemark;
                 while ((placemark = placemarkQueue.take()) != STOP_PLACEMARK) {
-                    placemarkDao.insert(placemark);
+                    try {
+                        placemarkDao.insert(placemark);
+                        ++placemarkCount;
+                        if (progressDialog != null) {
+                            progressDialog.setProgress(placemarkCount);
+                            if (placemarkCount == progressDialog.getMax()) {
+                                progressDialog.setIndeterminate(true);
+                            }
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // discard (duplicate?) placemark
+                        Log.i(ImporterFacade.class.getSimpleName(), "Placemark discarded " + placemark, e);
+                    }
                 }
-                placemarkCount = importFuture.get();
-                // confirm transaction
+                // wait import and check exception
+                importFuture.get();
                 if (placemarkCount > 0) {
-                    daoDatabase.setTransactionSuccessful();
                     // update placemark collection
                     placemarkCollection.setLastUpdate(System.currentTimeMillis());
                     placemarkCollection.setPoiCount(placemarkCount);
                     placemarkCollectionDao.update(placemarkCollection);
+                    // confirm transaction
+                    placemarkDaoDatabase.setTransactionSuccessful();
                 }
                 return placemarkCount;
             } catch (InterruptedException e) {
@@ -148,7 +201,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                 }
             } finally {
                 importFuture.cancel(true);
-                daoDatabase.endTransaction();
+                placemarkDaoDatabase.endTransaction();
                 placemarkDao.close();
             }
         } finally {
@@ -163,13 +216,6 @@ public class ImporterFacade implements Consumer<Placemark> {
     public void accept(Placemark p) {
         try {
             placemarkQueue.put(p);
-            ++placemarkCount;
-            if (progressDialog != null) {
-                progressDialog.setProgress(placemarkCount);
-                if (placemarkCount == progressDialog.getMax()) {
-                    progressDialog.setIndeterminate(true);
-                }
-            }
         } catch (InterruptedException e) {
             Log.w(ImporterFacade.class.getSimpleName(), "Placemark discarded " + p, e);
             throw new RuntimeException(e);

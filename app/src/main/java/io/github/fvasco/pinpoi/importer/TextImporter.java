@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class TextImporter extends AbstractImporter {
     private static final Pattern LINE_PATTERN = Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\1[,;\\s]+(\"?)([+-]?\\d+\\.\\d+)\\3[,;\\s]+\"(.*)\"\\s*");
 
     @Override
-    protected void importImpl(InputStream inputStream) throws IOException {
+    protected void importImpl(@NonNull final InputStream inputStream) throws IOException {
         final LineNumberReader reader = new LineNumberReader(new InputStreamReader(inputStream, "UTF-8"));
         String line;
         while ((line = reader.readLine()) != null) {

@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +37,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
     private PlacemarkCollection placemarkCollection;
     private EditText descriptionText;
     private TextView sourceText;
-    private TextView cateogoryText;
+    private AutoCompleteTextView cateogoryText;
     private TextView lastUpdateText;
     private TextView poiCountText;
 
@@ -60,6 +62,30 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                 appBarLayout.setTitle(placemarkCollection.getName());
             }
         }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.placemarkcollection_detail, container, false);
+        descriptionText = ((EditText) rootView.findViewById(R.id.description));
+        sourceText = ((TextView) rootView.findViewById(R.id.source));
+        lastUpdateText = ((TextView) rootView.findViewById(R.id.last_update));
+        poiCountText = ((TextView) rootView.findViewById(R.id.poi_count));
+        cateogoryText = ((AutoCompleteTextView) rootView.findViewById(R.id.category));
+        cateogoryText.setAdapter(new ArrayAdapter<>(container.getContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                placemarkCollectionDao.findAllPlacemarkCollectionCategory()));
+
+
+        if (placemarkCollection != null) {
+            descriptionText.setText(placemarkCollection.getDescription());
+            sourceText.setText(placemarkCollection.getSource());
+            cateogoryText.setText(placemarkCollection.getCategory());
+            showUpdatedCollectionInfo();
+        }
+
+        return rootView;
     }
 
     @Override
@@ -94,26 +120,6 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.placemarkcollection_detail, container, false);
-        descriptionText = ((EditText) rootView.findViewById(R.id.description));
-        sourceText = ((TextView) rootView.findViewById(R.id.source));
-        cateogoryText = ((TextView) rootView.findViewById(R.id.category));
-        lastUpdateText = ((TextView) rootView.findViewById(R.id.last_update));
-        poiCountText = ((TextView) rootView.findViewById(R.id.poi_count));
-
-        if (placemarkCollection != null) {
-            descriptionText.setText(placemarkCollection.getDescription());
-            sourceText.setText(placemarkCollection.getSource());
-            cateogoryText.setText(placemarkCollection.getCategory());
-            showUpdatedCollectionInfo();
-        }
-
-        return rootView;
-    }
-
     /**
      * Update screen with poi count and last update
      */
@@ -138,7 +144,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                     savePlacemarkCollection();
                     final ImporterFacade importerFacade = new ImporterFacade();
                     importerFacade.setProgressDialog(progressDialog);
-                    final int count = importerFacade.importPlacemarks(placemarkCollection.getId());
+                    final int count = importerFacade.importPlacemarks(placemarkCollection);
                     if (count == 0) {
                         Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), getString(R.string.error_no_placemark)), Toast.LENGTH_LONG);
                     } else {
@@ -148,6 +154,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                     Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
                     Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), e.getLocalizedMessage()), Toast.LENGTH_LONG);
                 } finally {
+                    // update placemark collection info
                     showUpdatedCollectionInfo();
                 }
             }

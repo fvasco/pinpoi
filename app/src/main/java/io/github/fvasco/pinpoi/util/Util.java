@@ -12,6 +12,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -29,6 +30,10 @@ public final class Util {
     public static final ExecutorService EXECUTOR =
             Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
     private static Context APPLICATION_CONTEXT;
+
+    static {
+        HttpURLConnection.setFollowRedirects(true);
+    }
 
     private Util() {
     }
@@ -55,6 +60,10 @@ public final class Util {
         l.setAccuracy(0);
         l.setTime(System.currentTimeMillis());
         return l;
+    }
+
+    public static Location newLocation(@NonNull final Placemark placemark) {
+        return newLocation(placemark.getLatitude(), placemark.getLongitude());
     }
 
     public static String formatCoordinate(@NonNull final Placemark placemark) {
@@ -90,6 +99,13 @@ public final class Util {
     }
 
     /**
+     * Check if text is a uri
+     */
+    public static boolean isUri(String text) {
+        return text != null && text.matches("\\w+:/{1,3}\\w+.+");
+    }
+
+    /**
      * Safe trim for string, null check
      */
     public static String trim(String text) {
@@ -119,7 +135,7 @@ public final class Util {
         if (a.getMaxAddressLineIndex() == 0) {
             return a.getAddressLine(0);
         } else if (a.getMaxAddressLineIndex() > 0) {
-            final StringBuilder stringBuilder = new StringBuilder(a.getMaxAddressLineIndex());
+            final StringBuilder stringBuilder = new StringBuilder(a.getAddressLine(0));
             for (int i = 1; i <= a.getMaxAddressLineIndex(); ++i) {
                 stringBuilder.append(separator).append(a.getAddressLine(i));
             }
@@ -142,6 +158,15 @@ public final class Util {
         int c;
         while ((c = is.read(buf)) >= 0) {
             os.write(buf, 0, c);
+        }
+    }
+
+    /**
+     * Force skip bytes
+     */
+    public static void skip(final InputStream inputStream, int skip) throws IOException {
+        while (skip > 0) {
+            skip -= inputStream.skip(skip);
         }
     }
 }

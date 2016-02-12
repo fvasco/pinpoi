@@ -28,7 +28,7 @@ class PlacemarkDatabase extends SQLiteOpenHelper {
                 "description TEXT," +
                 "collection_id INTEGER NOT NULL" +
                 ")");
-        db.execSQL("CREATE INDEX IDX_PLACEMARK_COLL ON PLACEMARK (collection_id,latitude,longitude)");
+        db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL ON PLACEMARK (collection_id,latitude,longitude)");
 
         // PlacemarkAnnotation table
         db.execSQL("CREATE TABLE PLACEMARK_ANNOTATION (" +

@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -16,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -57,7 +60,7 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                createPlacemarkCollection(view);
+                createPlacemarkCollection(view.getContext(), null);
             }
         });
         // Show the Up button in the action bar.
@@ -72,6 +75,12 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
             // If this view is present, then the
             // activity should be in two-pane mode.
             mTwoPane = true;
+        }
+
+        // load intent parameters to create a new collection
+        final Uri intentUri = getIntent().getData();
+        if (intentUri != null) {
+            createPlacemarkCollection(getBaseContext(), intentUri);
         }
     }
 
@@ -109,45 +118,55 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(placemarkCollectionDao.findAllPlacemarkCollection()));
     }
 
-    private void createPlacemarkCollection(final View view) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-        alert.setTitle(getString(R.string.title_placemarkcollection_detail));
-        alert.setMessage(getString(R.string.placemark_collection_name));
-
-// Set an EditText view to get user input
+    private void createPlacemarkCollection(final Context context, final Uri sourceUri) {
+        // Set an EditText view to get user input
         final EditText input = new EditText(this);
-        alert.setView(input);
-
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String placemarkCollectionName = input.getText().toString();
-                final PlacemarkCollection placemarkCollection = new PlacemarkCollection();
-                placemarkCollection.setName(placemarkCollectionName);
-                placemarkCollection.setSource("");
-                placemarkCollectionDao.insert(placemarkCollection);
-
-                // edit placemark collection
-                Context context = view.getContext();
-                Intent intent = new Intent(context, PlacemarkCollectionDetailActivity.class);
-                intent.putExtra(PlacemarkCollectionDetailFragment.ARG_ITEM_ID, placemarkCollection.getId());
-                context.startActivity(intent);
+        if (sourceUri != null) {
+            String fileName = sourceUri.getLastPathSegment();
+            final String extension = MimeTypeMap.getFileExtensionFromUrl(sourceUri.toString());
+            if (!Util.isEmpty(extension)) {
+                fileName = fileName.substring(0, fileName.length() - extension.length() - 1);
             }
-        });
+            input.setText(fileName);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.title_placemarkcollection_detail))
+                .setMessage(getString(R.string.placemark_collection_name))
+                .setView(input)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        try {
+                            String placemarkCollectionName = input.getText().toString();
+                            final PlacemarkCollection placemarkCollection = new PlacemarkCollection();
+                            placemarkCollection.setName(placemarkCollectionName);
+                            placemarkCollection.setSource(sourceUri == null ? "" : sourceUri.toString());
+                            placemarkCollection.setCategory(sourceUri == null ? "" : sourceUri.getHost());
+                            placemarkCollectionDao.insert(placemarkCollection);
 
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // Canceled.
-            }
-        });
-
-        alert.show();
+                            // edit placemark collection
+                            dialog.dismiss();
+                            Intent intent = new Intent(context, PlacemarkCollectionDetailActivity.class);
+                            intent.putExtra(PlacemarkCollectionDetailFragment.ARG_ITEM_ID, placemarkCollection.getId());
+                            startActivity(intent);
+                        } catch (final IllegalArgumentException e) {
+                            // cannot insert collection
+                            Util.showToast(e);
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
     }
 
     public class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
         private final List<PlacemarkCollection> mValues;
+        private final StringBuilder stringBuilder = new StringBuilder();
 
         public SimpleItemRecyclerViewAdapter(List<PlacemarkCollection> items) {
             mValues = items;
@@ -164,10 +183,18 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             final PlacemarkCollection pc = mValues.get(position);
             holder.mItem = pc;
-            holder.mContentView.setText(
-                    (Util.isEmpty(pc.getCategory()) ? "" : pc.getCategory() + " / ")
-                            + pc.getName()
-                            + " (" + pc.getPoiCount() + ')');
+            if (Util.isEmpty(pc.getCategory())) {
+                holder.mContentView.setText(pc.getName());
+            } else {
+                stringBuilder.setLength(0);
+                stringBuilder.append(pc.getCategory()).append(" / ").append(pc.getName());
+                holder.mContentView.setText(stringBuilder);
+            }
+            if (pc.getPoiCount() == 0) {
+                holder.mContentView.setPaintFlags(holder.mContentView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            } else {
+                holder.mContentView.setPaintFlags(holder.mContentView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+            }
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override

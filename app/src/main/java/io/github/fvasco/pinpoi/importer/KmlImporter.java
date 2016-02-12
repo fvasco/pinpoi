@@ -1,5 +1,7 @@
 package io.github.fvasco.pinpoi.importer;
 
+import android.support.annotation.NonNull;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -39,7 +41,7 @@ public class KmlImporter extends AbstractImporter {
     }
 
     @Override
-    protected void importImpl(InputStream is) throws IOException {
+    protected void importImpl(@NonNull final InputStream is) throws IOException {
         try {
             XMLReader xmlReader = saxParser.getXMLReader();
             xmlReader.setContentHandler(new KmlContentHandler());

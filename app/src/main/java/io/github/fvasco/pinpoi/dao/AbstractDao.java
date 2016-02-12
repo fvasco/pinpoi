@@ -60,6 +60,10 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
 
     @Override
     protected void finalize() throws Throwable {
-        close();
+        try {
+            close();
+        } finally {
+            super.finalize();
+        }
     }
 }

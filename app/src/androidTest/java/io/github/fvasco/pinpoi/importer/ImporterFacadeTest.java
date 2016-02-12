@@ -6,6 +6,7 @@ import android.test.RenamingDelegatingContext;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URL;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
@@ -16,49 +17,73 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection;
  */
 public class ImporterFacadeTest extends AbstractImporterTestCase {
 
-    @Test
-    public void testImportPlacemarksKml() throws Exception {
-        final Context context = new RenamingDelegatingContext(getContext(), "test_");
-        final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(context);
-        final PlacemarkDao placemarkDao = new PlacemarkDao(context);
+    private PlacemarkCollectionDao placemarkCollectionDao;
+    private PlacemarkDao placemarkDao;
+    private Context context;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        context = new RenamingDelegatingContext(getContext(), "test_");
+        placemarkCollectionDao = new PlacemarkCollectionDao(context);
+        placemarkDao = new PlacemarkDao(context);
         placemarkCollectionDao.open();
         placemarkDao.open();
+    }
 
-        PlacemarkCollection pc = new PlacemarkCollection();
-        pc.setName("test");
-        pc.setDescription("description");
-        pc.setSource(getClass().getResource("test2.kml").toString());
-        pc.setCategory("category");
-        pc.setLastUpdate(5);
-        pc.setPoiCount(5);
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        placemarkDao.close();
+        placemarkCollectionDao.close();
+    }
+
+    private PlacemarkCollection insertPlacemarkCollection(String resource) {
+        final PlacemarkCollection pc = new PlacemarkCollection();
+        pc.setName(resource);
+        final URL resourceUrl = getClass().getResource(resource);
+        pc.setSource(resourceUrl == null ? resource : resourceUrl.toString());
         placemarkCollectionDao.insert(pc);
+        return pc;
+    }
 
+    @Test
+    public void testImportPlacemarksKml() throws Exception {
+        final PlacemarkCollection pc = insertPlacemarkCollection("test2.kml");
         final ImporterFacade importerFacade = new ImporterFacade(context);
-        int count = importerFacade.importPlacemarks(1);
+        int count = importerFacade.importPlacemarks(pc);
         assertEquals(2, count);
 
-
-        pc = placemarkCollectionDao.findPlacemarkCollectionById(1);
         assertEquals(count, pc.getPoiCount());
         final long lastUpdate = pc.getLastUpdate();
-        assertTrue(lastUpdate > 5);
+        assertTrue(lastUpdate > 0);
 
-        assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(1).size());
+        assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(pc.getId()).size());
+    }
 
-        pc.setSource("wrong");
-        placemarkCollectionDao.update(pc);
+    @Test
+    public void testImportPlacemarksWrong() throws Exception {
+        final PlacemarkCollection pc = insertPlacemarkCollection("wrong");
+        pc.setLastUpdate(1);
+        pc.setPoiCount(10);
+        final ImporterFacade importerFacade = new ImporterFacade(context);
         try {
-            importerFacade.importPlacemarks(1);
+            importerFacade.importPlacemarks(pc);
             fail();
         } catch (final IOException e) {
             // ok
         }
-        pc = placemarkCollectionDao.findPlacemarkCollectionById(1);
-        assertEquals(count, pc.getPoiCount());
-        assertEquals(lastUpdate, pc.getLastUpdate());
-        assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(1).size());
+        assertEquals(1, pc.getLastUpdate());
+        assertEquals(10, pc.getPoiCount());
+    }
 
-        placemarkDao.close();
-        placemarkCollectionDao.close();
+    @Test
+    public void testImportPlacemarksArc() throws Exception {
+        final PlacemarkCollection pc = insertPlacemarkCollection("asc.txt");
+        final ImporterFacade importerFacade = new ImporterFacade(context);
+        int count = importerFacade.importPlacemarks(pc);
+        assertEquals(2, count);
+        assertEquals(count, pc.getPoiCount());
+        assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(pc.getId()).size());
     }
 }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -17,24 +18,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
+import io.github.fvasco.pinpoi.dao.PlacemarkDao;
+import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 import io.github.fvasco.pinpoi.util.BackupManager;
 import io.github.fvasco.pinpoi.util.Util;
@@ -50,22 +52,24 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFEFERNCE_NAME_FILTER = "nameFilter";
     private static final String PREFEFERNCE_RANGE = "range";
     private static final String PREFEFERNCE_FAVOURITE = "favourite";
+    private static final String PREFEFERNCE_CATEGORY = "category";
     private static final String PREFEFERNCE_COLLECTION = "collection";
     private static final String PREFEFERNCE_GPS = "gps";
     private static final String PREFEFERNCE_ADDRESS = "address";
+    private String selectedPlacemarkCategory;
+    private PlacemarkCollection selectedPlacemarkCollection;
     private LocationManager locationManager;
-    private Spinner collectionSpinner;
+    private Button categoryButton;
+    private Button collectionButton;
     private SeekBar rangeSeek;
     private TextView latitudeText;
     private TextView longitudeText;
     private TextView nameFilterText;
-    private Switch favouriteSwitch;
+    private CheckBox favouriteCheck;
     private TextView rangeLabel;
     private Switch switchGps;
     private Geocoder geocoder;
     private Button searchAddressButton;
-    private Button manageCollectionButton;
-    private Button searchPlacemarkButton;
     private Location lastLocation;
 
     @Override
@@ -79,18 +83,17 @@ public class MainActivity extends AppCompatActivity
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         // widget
-        collectionSpinner = (Spinner) findViewById(R.id.collectionSpinner);
+        categoryButton = (Button) findViewById(R.id.categoryButton);
+        collectionButton = (Button) findViewById(R.id.collectionButton);
         rangeLabel = (TextView) findViewById(R.id.rangeLabel);
         rangeSeek = (SeekBar) findViewById(R.id.rangeSeek);
         latitudeText = (TextView) findViewById(R.id.latitudeText);
         longitudeText = (TextView) findViewById(R.id.longitudeText);
         nameFilterText = (TextView) findViewById(R.id.name_filter_text);
-        favouriteSwitch = (Switch) findViewById(R.id.favouriteSwitch);
+        favouriteCheck = (CheckBox) findViewById(R.id.favouriteCheck);
         switchGps = (Switch) findViewById(R.id.switchGps);
         switchGps.setOnCheckedChangeListener(this);
         searchAddressButton = (Button) findViewById(R.id.search_address_button);
-        manageCollectionButton = (Button) findViewById(R.id.manage_placemark_collections_button);
-        searchPlacemarkButton = (Button) findViewById(R.id.search_placemark_button);
         if (geocoder == null) {
             searchAddressButton.setVisibility(View.GONE);
         }
@@ -99,20 +102,17 @@ public class MainActivity extends AppCompatActivity
         rangeSeek.setOnSeekBarChangeListener(this);
         onProgressChanged(rangeSeek, rangeSeek.getProgress(), false);
 
-        setupPlacemarkCollectionSpinner();
-
         // restore preference
         final SharedPreferences preference = getPreferences(MODE_PRIVATE);
         final boolean useGpsPreference = preference.getBoolean(PREFEFERNCE_GPS, false);
         switchGps.setChecked(useGpsPreference);
-        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, ""));
-        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, ""));
-        nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, ""));
-        favouriteSwitch.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
+        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, "0"));
+        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, "0"));
+        nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null));
+        favouriteCheck.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
         rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, rangeSeek.getMax() * 2 / 3), rangeSeek.getMax()));
-        if (collectionSpinner.getAdapter().getCount() > 1) {
-            collectionSpinner.setSelection(Math.min(preference.getInt(PREFEFERNCE_COLLECTION, 0), collectionSpinner.getAdapter().getCount() - 1));
-        }
+        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null));
+        setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0));
 
         // load intent parameters for geo scheme
         final Uri intentUri = getIntent().getData();
@@ -131,46 +131,80 @@ public class MainActivity extends AppCompatActivity
         searchAddressButton.setEnabled(!switchGps.isChecked());
     }
 
-    private void setupPlacemarkCollectionSpinner() {
-        final List<PlacemarkCollection> placemarkCollections;
-        ArrayAdapter<PlacemarkCollection> dataAdapter;
+    private void setPlacemarkCategory(String placemarkCategory) {
+        if (Util.isEmpty(placemarkCategory)) {
+            placemarkCategory = null;
+        }
+        selectedPlacemarkCategory = placemarkCategory;
+        categoryButton.setText(placemarkCategory);
+        if (placemarkCategory != null
+                && selectedPlacemarkCollection != null && !placemarkCategory.equals(selectedPlacemarkCollection.getCategory())) {
+            setPlacemarkCollection(null);
+        }
+    }
+
+    private void setPlacemarkCollection(final long placemarkCollectionId) {
+        try (final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open()) {
+            setPlacemarkCollection(placemarkCollectionDao.findPlacemarkCollectionById(placemarkCollectionId));
+        }
+    }
+
+    private void setPlacemarkCollection(PlacemarkCollection placemarkCollection) {
+        selectedPlacemarkCollection = placemarkCollection;
+        collectionButton.setText(placemarkCollection == null ? null : placemarkCollection.getName());
+    }
+
+    public void openPlacemarkCategoryChooser(View view) {
         try (final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open()) {
-            placemarkCollections = collectionDao.findAllPlacemarkCollection();
+            final List<String> categories = collectionDao.findAllPlacemarkCollectionCategory();
+            categories.add(0, "");
+            new AlertDialog.Builder(view.getContext())
+                    .setTitle(getString(R.string.collection))
+                    .setItems(categories.toArray(new String[categories.size()]),
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    setPlacemarkCategory(categories.get(which));
+                                }
+                            }).show();
+        }
+    }
+
+    public void openPlacemarkCollectionChooser(View view) {
+        try (final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open()) {
+            final List<PlacemarkCollection> placemarkCollections = selectedPlacemarkCategory == null
+                    ? collectionDao.findAllPlacemarkCollection()
+                    : collectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory);
+            final List<String> placemarkCollectionNames = new ArrayList<>(placemarkCollections.size());
             // skip empty collections
             for (final Iterator<PlacemarkCollection> iterator = placemarkCollections.iterator(); iterator.hasNext(); ) {
-                if (iterator.next().getPoiCount() == 0) {
+                final PlacemarkCollection placemarkCollection = iterator.next();
+                if (placemarkCollection.getPoiCount() == 0) {
                     iterator.remove();
+                } else {
+                    placemarkCollectionNames.add(placemarkCollection.getCategory() + " / " + placemarkCollection.getName());
                 }
             }
-            dataAdapter = new ArrayAdapter<PlacemarkCollection>
-                    (this, R.layout.placemarkcollection_list_content, placemarkCollections) {
-                @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                    return getView(position, convertView, parent);
-                }
-
-                @Override
-                public View getView(int position, View view, ViewGroup parent) {
-                    PlacemarkCollection pc = getItem(position);
-                    if (view == null) {
-                        view = getLayoutInflater().inflate(R.layout.placemarkcollection_list_content, parent, false);
-                    }
-                    final TextView contentText = (TextView) view.findViewById(R.id.content);
-                    contentText.setText((Util.isEmpty(pc.getCategory()) ? "" : pc.getCategory())
-                            + "/\n   " + pc.getName());
-
-                    return view;
-                }
-            };
-
-            collectionSpinner.setAdapter(dataAdapter);
+            if (selectedPlacemarkCategory == null && placemarkCollections.isEmpty()) {
+                onManagePlacemarkCollections(view);
+            } else if (placemarkCollections.size() == 1) {
+                setPlacemarkCollection(placemarkCollections.get(0));
+            } else {
+                placemarkCollections.add(0, null);
+                placemarkCollectionNames.add(0, "");
+                new AlertDialog.Builder(view.getContext())
+                        .setTitle(getString(R.string.collection))
+                        .setItems(placemarkCollectionNames.toArray(new String[placemarkCollectionNames.size()]),
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        setPlacemarkCollection(placemarkCollections.get(which));
+                                    }
+                                }).show();
+            }
         }
-
-        // no collection -> no search
-        final boolean poiPresent = collectionSpinner.getAdapter().getCount() > 0;
-        collectionSpinner.setVisibility(poiPresent ? View.VISIBLE : View.GONE);
-        manageCollectionButton.setVisibility(poiPresent ? View.GONE : View.VISIBLE);
-        searchPlacemarkButton.setEnabled(poiPresent);
     }
 
     @Override
@@ -188,9 +222,10 @@ public class MainActivity extends AppCompatActivity
                 .putString(PREFEFERNCE_LATITUDE, latitudeText.getText().toString())
                 .putString(PREFEFERNCE_LONGITUDE, longitudeText.getText().toString())
                 .putString(PREFEFERNCE_NAME_FILTER, nameFilterText.getText().toString())
-                .putBoolean(PREFEFERNCE_FAVOURITE, favouriteSwitch.isChecked())
+                .putBoolean(PREFEFERNCE_FAVOURITE, favouriteCheck.isChecked())
                 .putInt(PREFEFERNCE_RANGE, rangeSeek.getProgress())
-                .putInt(PREFEFERNCE_COLLECTION, collectionSpinner.getSelectedItemPosition())
+                .putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory)
+                .putLong(PREFEFERNCE_COLLECTION, selectedPlacemarkCollection == null ? 0 : selectedPlacemarkCollection.getId())
                 .commit();
 
         super.onStop();
@@ -202,7 +237,34 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.findItem(R.id.create_backup).setEnabled(BackupManager.isCreateBackupSupported());
         menu.findItem(R.id.restore_backup).setEnabled(BackupManager.isRestoreBackupSupported());
+        // on debug show debug menu
+        menu.findItem(R.id.menu_debug).setVisible(BuildConfig.DEBUG);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case R.id.action_placemark_collections:
+                onManagePlacemarkCollections(null);
+                return true;
+            case R.id.create_backup:
+                createBackup();
+                return true;
+            case R.id.restore_backup:
+                restoreBackup();
+                return true;
+            case R.id.debug_create_db:
+                setUpDebugDatabase();
+                return true;
+            case R.id.debug_import_collection:
+                debugImportCollection();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void onSearchAddress(final View view) {
@@ -210,7 +272,6 @@ public class MainActivity extends AppCompatActivity
         final SharedPreferences preference = getPreferences(MODE_PRIVATE);
 
         final EditText editText = new EditText(context);
-        editText.setTextIsSelectable(true);
         editText.setMaxLines(6);
         editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""));
         editText.selectAll();
@@ -274,15 +335,35 @@ public class MainActivity extends AppCompatActivity
 
     public void onSearchPoi(View view) {
         try {
-            Context context = view.getContext();
-            final Intent intent = new Intent(context, PlacemarkListActivity.class);
-            intent.putExtra(PlacemarkListActivity.ARG_LATITUDE, Float.parseFloat(latitudeText.getText().toString()));
-            intent.putExtra(PlacemarkListActivity.ARG_LONGITUDE, Float.parseFloat(longitudeText.getText().toString()));
-            intent.putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.getText().toString());
-            intent.putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteSwitch.isChecked());
-            intent.putExtra(PlacemarkListActivity.ARG_RANGE, rangeSeek.getProgress() * 1000);
-            intent.putExtra(PlacemarkListActivity.ARG_COLLECTION_ID, ((PlacemarkCollection) collectionSpinner.getSelectedItem()).getId());
-            context.startActivity(intent);
+            long[] collectionsIds;
+            if (selectedPlacemarkCollection == null) {
+                try (final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open()) {
+                    final List<PlacemarkCollection> collections = selectedPlacemarkCategory == null
+                            ? placemarkCollectionDao.findAllPlacemarkCollection()
+                            : placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory);
+                    collectionsIds = new long[collections.size()];
+                    int i = 0;
+                    for (final PlacemarkCollection placemarkCollection : collections) {
+                        collectionsIds[i] = placemarkCollection.getId();
+                        ++i;
+                    }
+                }
+            } else {
+                collectionsIds = new long[]{selectedPlacemarkCollection.getId()};
+            }
+            if (collectionsIds.length == 0) {
+                Toast.makeText(MainActivity.this, R.string.error_no_placemark, Toast.LENGTH_LONG).show();
+            } else {
+                Context context = view.getContext();
+                final Intent intent = new Intent(context, PlacemarkListActivity.class);
+                intent.putExtra(PlacemarkListActivity.ARG_LATITUDE, Float.parseFloat(latitudeText.getText().toString()));
+                intent.putExtra(PlacemarkListActivity.ARG_LONGITUDE, Float.parseFloat(longitudeText.getText().toString()));
+                intent.putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.getText().toString());
+                intent.putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked());
+                intent.putExtra(PlacemarkListActivity.ARG_RANGE, rangeSeek.getProgress() * 1000);
+                intent.putExtra(PlacemarkListActivity.ARG_COLLECTION_IDS, collectionsIds);
+                context.startActivity(intent);
+            }
         } catch (Exception e) {
             Log.e(MainActivity.class.getSimpleName(), "onSearchPoi", e);
             Toast.makeText(MainActivity.this, R.string.validation_error, Toast.LENGTH_SHORT).show();
@@ -291,26 +372,6 @@ public class MainActivity extends AppCompatActivity
 
     public void onManagePlacemarkCollections(View view) {
         startActivity(new Intent(this, PlacemarkCollectionListActivity.class));
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        switch (item.getItemId()) {
-            case R.id.action_placemark_collections:
-                onManagePlacemarkCollections(null);
-                return true;
-            case R.id.create_backup:
-                createBackup();
-                return true;
-            case R.id.restore_backup:
-                restoreBackup();
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     private void createBackup() {
@@ -331,11 +392,75 @@ public class MainActivity extends AppCompatActivity
             Util.showToast(getString(R.string.action_restore_backup), Toast.LENGTH_SHORT);
             backupManager.restore();
             Util.showToast(getString(R.string.backup_file, BackupManager.BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
-            setupPlacemarkCollectionSpinner();
+            setPlacemarkCollection(null);
         } catch (Exception e) {
             Log.w(MainActivity.class.getSimpleName(), "restore backup failed", e);
             Util.showToast(e);
         }
+    }
+
+    private void setUpDebugDatabase() {
+        if (!BuildConfig.DEBUG) throw new Error();
+
+        try (final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open();
+             final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open()) {
+            final SQLiteDatabase placemarkCollectionDatabase = placemarkCollectionDao.getDatabase();
+            final SQLiteDatabase placemarkDatabase = placemarkDao.getDatabase();
+            placemarkCollectionDatabase.beginTransaction();
+            placemarkDatabase.beginTransaction();
+            try {
+                // clear all database
+                for (final PlacemarkCollection placemarkCollection : placemarkCollectionDao.findAllPlacemarkCollection()) {
+                    placemarkDao.deleteByCollectionId(placemarkCollection.getId());
+                    placemarkCollectionDao.delete(placemarkCollection);
+                }
+
+                // recreate test database
+                final PlacemarkCollection placemarkCollection = new PlacemarkCollection();
+                for (int pci = 15; pci >= 0; --pci) {
+                    placemarkCollection.setId(0);
+                    placemarkCollection.setName("Placemark Collection " + pci);
+                    placemarkCollection.setCategory(pci == 0 ? null : "Category " + (pci % 7));
+                    placemarkCollection.setDescription("Placemark Collection long long long description");
+                    placemarkCollection.setSource("source " + pci);
+                    placemarkCollection.setPoiCount(pci);
+                    placemarkCollection.setLastUpdate(pci * 10_000_000);
+                    placemarkCollectionDao.insert(placemarkCollection);
+                    Log.i(MainActivity.class.getSimpleName(), "inserted " + placemarkCollection);
+
+                    final Placemark placemark = new Placemark();
+                    for (int lat = -60; lat < 60; ++lat) {
+                        for (int lon = -90; lon < 90; lon += 2) {
+                            placemark.setId(0);
+                            placemark.setName("Placemark " + lat + "," + lon + "/" + pci);
+                            placemark.setDescription((lat + lon) % 10 == 0 ? null : "Placemark description");
+                            placemark.setLatitude((float) (lat + Math.sin(lat + pci)));
+                            placemark.setLongitude((float) (lon + Math.sin(lon - pci)));
+                            placemark.setCollectionId(placemarkCollection.getId());
+                            placemarkDao.insert(placemark);
+                        }
+                    }
+                }
+
+                placemarkDatabase.setTransactionSuccessful();
+                placemarkCollectionDatabase.setTransactionSuccessful();
+            } finally {
+                placemarkDatabase.endTransaction();
+                placemarkCollectionDatabase.endTransaction();
+            }
+        }
+    }
+
+    private void debugImportCollection() {
+        if (!BuildConfig.DEBUG) throw new Error();
+
+         Uri uri = new Uri.Builder().scheme("http").authority("my.poi.server")
+                .appendEncodedPath("/dir/subdir/poisource.ov2")
+                .appendQueryParameter("q", "customValue")
+                .build();
+    uri=    Uri.parse("http://womo-sp.lima-city.de/womo_SP_A.asc");
+        final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
     }
 
     /**

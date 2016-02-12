@@ -19,8 +19,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        RenamingDelegatingContext context = new RenamingDelegatingContext(getContext(), "test_");
-        dao = new PlacemarkCollectionDao(context);
+        dao = new PlacemarkCollectionDao(new RenamingDelegatingContext(getContext(), "test_"));
         dao.open();
     }
 
