@@ -2,7 +2,7 @@
 
 PinPoi can import and search in a thousand point of interests of your preferred gps navigator.
 
-Import KML, KMZ, KML zipped collection, OV2, GPX directly into your phone and organize it in collections.
+Import KML, KMZ, OV2, GPX, ASC, CSV and zipped collections directly into your phone and organize it in collections.
 
 PinPoi can search using your gps position or a custom location, you can choose your destination and open it with preferred app.
 

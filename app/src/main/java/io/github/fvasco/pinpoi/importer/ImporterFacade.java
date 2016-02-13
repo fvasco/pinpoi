@@ -146,6 +146,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                             resource.startsWith("file:///") ? new FileInputStream(resource.substring(7))
                                     : resource.startsWith("file:/") ? new FileInputStream(resource.substring(5))
                                     : resource.startsWith("/") ? new FileInputStream(resource)
+                                    : resource.startsWith("content:/") ? Util.getApplicationContext().getContentResolver().openInputStream(Uri.parse(resource))
                                     : new URL(resource).openStream())) {
                         importer.importPlacemarks(inputStream);
                     } finally {

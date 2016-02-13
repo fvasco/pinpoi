@@ -2,6 +2,8 @@ package io.github.fvasco.pinpoi;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
@@ -12,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +36,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
      * represents.
      */
     public static final String ARG_ITEM_ID = "item_id";
+    private static final int FILE_SELECT_CODE = 1;
     private final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance();
     private PlacemarkCollection placemarkCollection;
     private EditText descriptionText;
@@ -58,7 +62,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
+            if (appBarLayout != null && placemarkCollection != null) {
                 appBarLayout.setTitle(placemarkCollection.getName());
             }
         }
@@ -76,6 +80,12 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         cateogoryText.setAdapter(new ArrayAdapter<>(container.getContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()));
+        ((ImageButton) rootView.findViewById(R.id.browseBtn)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFileChooser(v);
+            }
+        });
 
 
         if (placemarkCollection != null) {
@@ -166,5 +176,29 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
             placemarkDao.deleteByCollectionId(placemarkCollection.getId());
         }
         placemarkCollectionDao.delete(placemarkCollection);
+    }
+
+    public void showFileChooser(View view) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");      //all files
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        try {
+            startActivityForResult(Intent.createChooser(intent,
+                    placemarkCollection == null ? getString(R.string.collection) : placemarkCollection.getName()),
+                    FILE_SELECT_CODE);
+        } catch (android.content.ActivityNotFoundException ex) {
+            Util.showToast("Please install a File Manager.", Toast.LENGTH_LONG);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_SELECT_CODE && resultCode == Activity.RESULT_OK) {
+            final Uri result = data.getData();
+            if (result != null) {
+                sourceText.setText(result.toString());
+            }
+        }
     }
 }

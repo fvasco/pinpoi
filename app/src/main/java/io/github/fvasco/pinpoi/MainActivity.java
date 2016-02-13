@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity
     private Geocoder geocoder;
     private Button searchAddressButton;
     private Location lastLocation;
+    private Future<?> futureSearchAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +130,6 @@ public class MainActivity extends AppCompatActivity
                 longitudeText.setText(matcher.group(2));
             }
         }
-        searchAddressButton.setEnabled(!switchGps.isChecked());
     }
 
     private void setPlacemarkCategory(String placemarkCategory) {
@@ -268,36 +269,60 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void onSearchAddress(final View view) {
-        final Context context = view.getContext();
-        final SharedPreferences preference = getPreferences(MODE_PRIVATE);
+        if (switchGps.isChecked()) {
+            // if gps toast address
+            if (futureSearchAddress != null) {
+                futureSearchAddress.cancel(true);
+            }
+            futureSearchAddress = Util.EXECUTOR.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final List<Address> addresses = geocoder.getFromLocation(
+                                Double.parseDouble(latitudeText.getText().toString()),
+                                Double.parseDouble(longitudeText.getText().toString()),
+                                1);
+                        if (!addresses.isEmpty()) {
+                            Util.showToast(Util.toString(addresses.get(0)), Toast.LENGTH_LONG);
+                        }
+                    } catch (IOException e) {
+                        Log.w(MainActivity.class.getSimpleName(), "Error search address", e);
+                    }
+                }
+            });
+        } else {
+            // no gps open search dialog
+            final Context context = view.getContext();
+            final SharedPreferences preference = getPreferences(MODE_PRIVATE);
 
-        final EditText editText = new EditText(context);
-        editText.setMaxLines(6);
-        editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""));
-        editText.selectAll();
+            final EditText editText = new EditText(context);
+            editText.setMaxLines(6);
+            editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""));
+            editText.selectAll();
 
-        new AlertDialog.Builder(context)
-                .setMessage(R.string.insert_address)
-                .setView(editText)
-                .setPositiveButton(R.string.search, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            final String address = editText.getText().toString();
-                            preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply();
-                            searchAddress(address, view.getContext());
-                        } finally {
+            new AlertDialog.Builder(context)
+                    .setMessage(R.string.insert_address)
+                    .setView(editText)
+                    .setPositiveButton(R.string.search, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            try {
+                                final String address = editText.getText().toString();
+                                preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply();
+                                searchAddress(address, view.getContext());
+                            } finally {
+                                dialog.dismiss();
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                         }
-                    }
-                })
-                .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
-                .show();
+                    })
+                    .show();
+        }
     }
 
     private void searchAddress(final String searchAddress, Context context) {
@@ -454,11 +479,11 @@ public class MainActivity extends AppCompatActivity
     private void debugImportCollection() {
         if (!BuildConfig.DEBUG) throw new Error();
 
-         Uri uri = new Uri.Builder().scheme("http").authority("my.poi.server")
+        Uri uri = new Uri.Builder().scheme("http").authority("my.poi.server")
                 .appendEncodedPath("/dir/subdir/poisource.ov2")
                 .appendQueryParameter("q", "customValue")
                 .build();
-    uri=    Uri.parse("http://womo-sp.lima-city.de/womo_SP_A.asc");
+        uri = Uri.parse("http://womo-sp.lima-city.de/womo_SP_A.asc");
         final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
@@ -483,7 +508,6 @@ public class MainActivity extends AppCompatActivity
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (switchGps == buttonView) {
             setUseLocationManagerListener(isChecked);
-            searchAddressButton.setEnabled(!isChecked);
         }
     }
 
@@ -491,7 +515,7 @@ public class MainActivity extends AppCompatActivity
         boolean locationManagerListenerEnabled = false;
         if (on) {
             setUseLocationManagerListener(false);
-            onLocationChanged(lastLocation);
+            onLocationChanged(null);
             for (final String provider : locationManager.getAllProviders()) {
                 Log.i(MainActivity.class.getSimpleName(), "provider " + provider);
                 // search updated location
@@ -515,6 +539,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onLocationChanged(Location location) {
         if (location == null) {
+            lastLocation = null;
             latitudeText.setText(null);
             longitudeText.setText(null);
         } else {
