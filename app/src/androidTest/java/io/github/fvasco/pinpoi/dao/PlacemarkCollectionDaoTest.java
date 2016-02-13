@@ -36,14 +36,14 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setName("test");
         pc.setDescription("description");
         pc.setSource("source");
-        pc.setCategory("category");
+        pc.setCategory("CATEGORY");
         pc.setLastUpdate(System.currentTimeMillis());
         dao.insert(pc);
 
         List<String> list = dao.findAllPlacemarkCollectionCategory();
         assertEquals(1, list.size());
         String category = list.get(0);
-        assertEquals("category", category);
+        assertEquals("CATEGORY", category);
     }
 
     @Test
@@ -52,7 +52,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         pc.setName("test");
         pc.setDescription("description");
         pc.setSource("source");
-        pc.setCategory("category");
+        pc.setCategory("CATEGORY");
         pc.setLastUpdate(5);
         pc.setPoiCount(5);
         dao.insert(pc);
@@ -63,14 +63,14 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         assertEquals("test", pc.getName());
         assertEquals("description", pc.getDescription());
         assertEquals("source", pc.getSource());
-        assertEquals("category", pc.getCategory());
+        assertEquals("CATEGORY", pc.getCategory());
         assertEquals(5, pc.getLastUpdate());
         assertEquals(5, pc.getPoiCount());
 
         pc.setName("test2");
         pc.setDescription("description2");
         pc.setSource("source2");
-        pc.setCategory("category2");
+        pc.setCategory("CATEGORY2");
         pc.setLastUpdate(7);
         pc.setPoiCount(7);
         dao.update(pc);
@@ -83,7 +83,7 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         assertEquals("test2", pc.getName());
         assertEquals("description2", pc.getDescription());
         assertEquals("source2", pc.getSource());
-        assertEquals("category2", pc.getCategory());
+        assertEquals("CATEGORY2", pc.getCategory());
         assertEquals(7, pc.getLastUpdate());
         assertEquals(7, pc.getPoiCount());
 
