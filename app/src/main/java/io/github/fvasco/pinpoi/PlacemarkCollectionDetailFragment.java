@@ -80,7 +80,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         cateogoryText.setAdapter(new ArrayAdapter<>(container.getContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()));
-        ((ImageButton) rootView.findViewById(R.id.browseBtn)).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.browseBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showFileChooser(v);

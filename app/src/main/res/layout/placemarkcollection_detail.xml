@@ -54,6 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="false"
             android:layout_alignParentRight="true"
+            android:contentDescription="Browse file"
             android:src="@drawable/abc_ic_search_api_mtrl_alpha" />
     </RelativeLayout>
 

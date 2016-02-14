@@ -36,17 +36,15 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
     private static final boolean SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
 
     // 2^20
-    private static float COORDINATE_MULTIPLIER = 1048576F;
+    private static final float COORDINATE_MULTIPLIER = 1048576F;
     private static PlacemarkDao INSTANCE;
-    private PlacemarkDatabase dbHelper;
 
     PlacemarkDao() {
         this(Util.getApplicationContext());
     }
 
     public PlacemarkDao(Context context) {
-        dbHelper = new PlacemarkDatabase(context);
-        setSqLiteOpenHelper(dbHelper);
+        setSqLiteOpenHelper(new PlacemarkDatabase(context));
     }
 
     public static synchronized PlacemarkDao getInstance() {
@@ -191,11 +189,10 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
         final SortedSet<Placemark> res = new TreeSet<>(locationComparator);
         try (final Cursor cursor = database.rawQuery(sql.toString(), whereArgs.toArray(new String[whereArgs.size()]))) {
             cursor.moveToFirst();
-            double maxRange = range;
+            double maxDistance = range;
             while (!cursor.isAfterLast()) {
                 final Placemark p = cursorToPlacemark(cursor);
-                final double distance = locationComparator.calculateDistance(p);
-                if (distance <= maxRange
+                if (locationComparator.calculateDistance(p) <= maxDistance
                         && (SQL_INSTR_PRESENT || nameFilter == null || p.getName().toUpperCase().contains(nameFilter))) {
                     res.add(p);
                     // ensure size limit, discard farest
@@ -203,7 +200,7 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
                         Placemark placemarkToDiscard = res.last();
                         res.remove(placemarkToDiscard);
                         // update search range to search closer
-                        maxRange = distance;
+                        maxDistance = locationComparator.calculateDistance(res.last());
                     }
                 }
                 cursor.moveToNext();

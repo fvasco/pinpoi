@@ -18,15 +18,13 @@ import io.github.fvasco.pinpoi.util.Util;
 public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> {
 
     private static PlacemarkCollectionDao INSTANCE;
-    private PlacemarkCollectionDatabase dbHelper;
 
     PlacemarkCollectionDao() {
         this(Util.getApplicationContext());
     }
 
     public PlacemarkCollectionDao(Context context) {
-        dbHelper = new PlacemarkCollectionDatabase(context);
-        setSqLiteOpenHelper(dbHelper);
+        setSqLiteOpenHelper(new PlacemarkCollectionDatabase(context));
     }
 
     public static synchronized PlacemarkCollectionDao getInstance() {

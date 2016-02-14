@@ -13,7 +13,7 @@ import android.support.design.BuildConfig;
  * @author Francesco Vasco
  */
 public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseable {
-    protected SQLiteDatabase database;
+    SQLiteDatabase database;
     private SQLiteOpenHelper sqLiteOpenHelper;
     private int openCount = 0;
 
@@ -25,15 +25,18 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     }
 
     public synchronized T open() throws SQLException {
+        //noinspection PointlessBooleanExpression
         if (BuildConfig.DEBUG && openCount < 0) {
             throw new AssertionError(openCount);
         }
         if (openCount == 0) {
+            //noinspection PointlessBooleanExpression
             if (BuildConfig.DEBUG && database != null) {
                 throw new AssertionError();
             }
             database = sqLiteOpenHelper.getWritableDatabase();
         }
+        //noinspection PointlessBooleanExpression
         if (BuildConfig.DEBUG && database == null) {
             throw new AssertionError(openCount);
         }
@@ -42,6 +45,7 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     }
 
     public synchronized void close() {
+        //noinspection PointlessBooleanExpression
         if (BuildConfig.DEBUG && openCount <= 0) {
             throw new AssertionError(openCount);
         }
@@ -49,9 +53,10 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
         if (openCount == 0) {
             database.close();
             database = null;
-        } else if (BuildConfig.DEBUG && database == null) {
-            throw new AssertionError(openCount);
-        }
+        } else //noinspection PointlessBooleanExpression
+            if (BuildConfig.DEBUG && database == null) {
+                throw new AssertionError(openCount);
+            }
     }
 
     public SQLiteDatabase getDatabase() {

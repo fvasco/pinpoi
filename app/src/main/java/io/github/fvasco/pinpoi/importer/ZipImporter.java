@@ -10,12 +10,11 @@ import java.util.zip.ZipInputStream;
 import io.github.fvasco.pinpoi.util.ZipGuardInputStream;
 
 /**
- * Import ZIP and KMZ file
+ * Import ZIP collection and KMZ file
  *
  * @author Francesco Vasco
  */
 public class ZipImporter extends AbstractImporter {
-
 
     @Override
     protected void importImpl(InputStream inputStream) throws IOException {
@@ -27,8 +26,8 @@ public class ZipImporter extends AbstractImporter {
                     final AbstractImporter importer = ImporterFacade.createImporter(entryName);
                     if (importer != null) {
                         Log.d(ZipImporter.class.getSimpleName(), "Import entry " + entryName);
-                        importer.setCollectionId(collectionId);
-                        importer.setConsumer(consumer);
+                        importer.setCollectionId(getCollectionId());
+                        importer.setConsumer(getConsumer());
                         importer.importImpl(new ZipGuardInputStream(zipInputStream));
                     }
                 }

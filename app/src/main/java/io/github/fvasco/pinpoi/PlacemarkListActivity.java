@@ -200,8 +200,8 @@ public class PlacemarkListActivity extends AppCompatActivity {
 
         private final DecimalFormat decimalFormat = new DecimalFormat();
         private final StringBuilder stringBuilder = new StringBuilder();
+        private final float[] floatArray = new float[2];
         private Placemark[] mValues;
-        private float[] floatArray = new float[2];
 
         public SimpleItemRecyclerViewAdapter() {
             decimalFormat.setMinimumFractionDigits(1);

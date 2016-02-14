@@ -40,6 +40,7 @@ public final class Util {
 
     public static void initApplicationContext(@NonNull Context context) {
         Objects.requireNonNull(context);
+        //noinspection PointlessBooleanExpression
         if (BuildConfig.DEBUG && APPLICATION_CONTEXT != null && APPLICATION_CONTEXT != context) {
             throw new AssertionError();
         }
@@ -47,6 +48,7 @@ public final class Util {
     }
 
     public static Context getApplicationContext() {
+        //noinspection PointlessBooleanExpression
         if (BuildConfig.DEBUG && APPLICATION_CONTEXT == null) {
             throw new AssertionError();
         }

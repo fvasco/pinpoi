@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -70,7 +71,6 @@ public class MainActivity extends AppCompatActivity
     private TextView rangeLabel;
     private Switch switchGps;
     private Geocoder geocoder;
-    private Button searchAddressButton;
     private Location lastLocation;
     private Future<?> futureSearchAddress;
 
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity
         favouriteCheck = (CheckBox) findViewById(R.id.favouriteCheck);
         switchGps = (Switch) findViewById(R.id.switchGps);
         switchGps.setOnCheckedChangeListener(this);
-        searchAddressButton = (Button) findViewById(R.id.search_address_button);
+        final Button searchAddressButton = (Button) findViewById(R.id.search_address_button);
         if (geocoder == null) {
             searchAddressButton.setVisibility(View.GONE);
         }
@@ -536,6 +536,7 @@ public class MainActivity extends AppCompatActivity
      *
      * @param location new location
      */
+    @SuppressLint("SetTextI18n")
     @Override
     public void onLocationChanged(Location location) {
         if (location == null) {

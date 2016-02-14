@@ -25,8 +25,9 @@ public class PlacemarkDistanceComparator implements Comparator<Placemark> {
     @Override
     public int compare(Placemark lhs, Placemark rhs) {
         int res = Double.compare(calculateDistance(lhs), calculateDistance(rhs));
-        if (res == 0)
+        if (res == 0) {
             res = Long.compare(lhs.getId(), rhs.getId());
+        }
         return res;
     }
 

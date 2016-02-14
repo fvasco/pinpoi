@@ -18,8 +18,12 @@ import io.github.fvasco.pinpoi.util.Util;
  */
 public abstract class AbstractImporter {
 
-    protected Consumer<Placemark> consumer;
-    protected long collectionId;
+    private Consumer<Placemark> consumer;
+    private long collectionId;
+
+    public long getCollectionId() {
+        return collectionId;
+    }
 
     public void setCollectionId(long collectionId) {
         this.collectionId = collectionId;

@@ -88,11 +88,6 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
         resetStarFabIcon();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
     private void resetStarFabIcon() {
         final boolean flagged;
         if (fragment != null) {
@@ -107,6 +102,7 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             starFab.setImageDrawable(getResources().getDrawable(drawable, getBaseContext().getTheme()));
         } else {
+            //noinspection deprecation
             starFab.setImageDrawable(getResources().getDrawable(drawable));
         }
     }

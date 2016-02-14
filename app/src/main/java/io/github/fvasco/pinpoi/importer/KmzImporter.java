@@ -16,8 +16,6 @@ import io.github.fvasco.pinpoi.util.ZipGuardInputStream;
  */
 public class KmzImporter extends KmlImporter {
 
-    private final KmlImporter kmlImporter = new KmlImporter();
-
     @Override
     protected void importImpl(InputStream inputStream) throws IOException {
         try (final ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
