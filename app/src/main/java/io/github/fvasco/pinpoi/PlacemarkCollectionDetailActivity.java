@@ -11,7 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
+import io.github.fvasco.pinpoi.util.DismissOnClickListener;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -23,15 +23,12 @@ import io.github.fvasco.pinpoi.util.Util;
 public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
 
     private PlacemarkCollectionDetailFragment fragment;
-    private PlacemarkCollectionDao placemarkCollectionDao;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_placemarkcollection_detail);
         Util.initApplicationContext(getApplicationContext());
-        placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
@@ -57,12 +54,7 @@ public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
                                 onBackPressed();
                             }
                         })
-                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
+                        .setNegativeButton(R.string.no, new DismissOnClickListener())
                         .show();
             }
         });
@@ -86,20 +78,14 @@ public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putLong(PlacemarkCollectionDetailFragment.ARG_ITEM_ID,
-                    getIntent().getLongExtra(PlacemarkCollectionDetailFragment.ARG_ITEM_ID, 0));
+            arguments.putLong(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
+                    getIntent().getLongExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, 0));
             fragment = new PlacemarkCollectionDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.placemarkcollection_detail_container, fragment)
                     .commit();
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        placemarkCollectionDao.close();
-        super.onDestroy();
     }
 
     @Override

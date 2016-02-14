@@ -26,6 +26,7 @@ import java.util.List;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.DismissOnClickListener;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -146,7 +147,7 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
                             // edit placemark collection
                             dialog.dismiss();
                             Intent intent = new Intent(context, PlacemarkCollectionDetailActivity.class);
-                            intent.putExtra(PlacemarkCollectionDetailFragment.ARG_ITEM_ID, placemarkCollection.getId());
+                            intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.getId());
                             startActivity(intent);
                         } catch (final IllegalArgumentException e) {
                             // cannot insert collection
@@ -154,11 +155,7 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
                         }
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dialog.dismiss();
-                    }
-                })
+                .setNegativeButton("Cancel", new DismissOnClickListener())
                 .show();
     }
 
@@ -201,7 +198,7 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putLong(PlacemarkCollectionDetailFragment.ARG_ITEM_ID, pc.getId());
+                        arguments.putLong(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, pc.getId());
                         PlacemarkCollectionDetailFragment fragment = new PlacemarkCollectionDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -210,7 +207,7 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
                     } else {
                         Context context = view.getContext();
                         Intent intent = new Intent(context, PlacemarkCollectionDetailActivity.class);
-                        intent.putExtra(PlacemarkCollectionDetailFragment.ARG_ITEM_ID, holder.mItem.getId());
+                        intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, holder.mItem.getId());
                         context.startActivity(intent);
                     }
                 }

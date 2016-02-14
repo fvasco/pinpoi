@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,13 +34,13 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
-    public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_PLACEMARK_COLLECTION_ID = "placemarkCollectionId";
     private static final int FILE_SELECT_CODE = 1;
     private final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance();
     private PlacemarkCollection placemarkCollection;
     private EditText descriptionText;
     private TextView sourceText;
-    private AutoCompleteTextView cateogoryText;
+    private AutoCompleteTextView categoryText;
     private TextView lastUpdateText;
     private TextView poiCountText;
 
@@ -57,8 +56,11 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
         placemarkCollectionDao.open();
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
-            placemarkCollection = placemarkCollectionDao.findPlacemarkCollectionById(getArguments().getLong(ARG_ITEM_ID));
+        if (getArguments().containsKey(ARG_PLACEMARK_COLLECTION_ID)) {
+            placemarkCollection = placemarkCollectionDao.findPlacemarkCollectionById(
+                    savedInstanceState == null
+                            ? getArguments().getLong(ARG_PLACEMARK_COLLECTION_ID)
+                            : savedInstanceState.getLong(ARG_PLACEMARK_COLLECTION_ID));
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
@@ -76,8 +78,8 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         sourceText = ((TextView) rootView.findViewById(R.id.source));
         lastUpdateText = ((TextView) rootView.findViewById(R.id.last_update));
         poiCountText = ((TextView) rootView.findViewById(R.id.poi_count));
-        cateogoryText = ((AutoCompleteTextView) rootView.findViewById(R.id.category));
-        cateogoryText.setAdapter(new ArrayAdapter<>(container.getContext(),
+        categoryText = ((AutoCompleteTextView) rootView.findViewById(R.id.category));
+        categoryText.setAdapter(new ArrayAdapter<>(container.getContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()));
         rootView.findViewById(R.id.browseBtn).setOnClickListener(new View.OnClickListener() {
@@ -91,7 +93,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         if (placemarkCollection != null) {
             descriptionText.setText(placemarkCollection.getDescription());
             sourceText.setText(placemarkCollection.getSource());
-            cateogoryText.setText(placemarkCollection.getCategory());
+            categoryText.setText(placemarkCollection.getCategory());
             showUpdatedCollectionInfo();
         }
 
@@ -102,6 +104,14 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
     public void onPause() {
         savePlacemarkCollection();
         super.onPause();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (placemarkCollection != null) {
+            outState.putLong(ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.getId());
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -116,7 +126,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         }
         placemarkCollection.setDescription(descriptionText.getText().toString());
         placemarkCollection.setSource(sourceText.getText().toString());
-        placemarkCollection.setCategory(cateogoryText.getText().toString());
+        placemarkCollection.setCategory(categoryText.getText().toString());
 
         try {
             if (placemarkCollection.getId() == 0) {

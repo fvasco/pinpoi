@@ -18,6 +18,7 @@ import android.widget.Toast;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation;
+import io.github.fvasco.pinpoi.util.OnSwipeTouchListener;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -26,23 +27,34 @@ import io.github.fvasco.pinpoi.util.Util;
  * item details are presented side-by-side with a list of items
  * in a {@link PlacemarkListActivity}.
  */
-public class PlacemarkDetailActivity extends AppCompatActivity {
+public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwipeTouchListener.SwipeTouchListener {
 
+    public static final String ARG_PLACEMARK_LIST_ID = "placemarkListId";
     private long placemarkId;
     private FloatingActionButton starFab;
     private PlacemarkDetailFragment fragment;
+    private PlacemarkDao placemarkDao;
+    private SharedPreferences preferences;
+    /**
+     * Placemark id for swipe
+     */
+    private long[] placemarkIdArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_placemark_detail);
         Util.initApplicationContext(getApplicationContext());
+        placemarkDao = PlacemarkDao.getInstance().open();
         starFab = (FloatingActionButton) findViewById(R.id.fabStar);
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
 
-        final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        placemarkId = getIntent().getLongExtra(PlacemarkDetailFragment.ARG_ITEM_ID, preferences.getLong(PlacemarkDetailFragment.ARG_ITEM_ID, 0));
+        preferences = getPreferences(MODE_PRIVATE);
+        placemarkId = getIntent().getLongExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID,
+                preferences.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, 0));
+        preferences.edit().putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId).apply();
+        placemarkIdArray = getIntent().getLongArrayExtra(ARG_PLACEMARK_LIST_ID);
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -63,15 +75,14 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putLong(PlacemarkDetailFragment.ARG_ITEM_ID, placemarkId);
+            arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId);
             fragment = new PlacemarkDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.placemark_detail_container, fragment)
                     .commit();
-            preferences.edit()
-                    .putLong(PlacemarkDetailFragment.ARG_ITEM_ID, placemarkId)
-                    .apply();
+        } else {
+            fragment = (PlacemarkDetailFragment) getSupportFragmentManager().getFragments().get(0);
         }
     }
 
@@ -79,8 +90,28 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         resetStarFabIcon();
+        fragment.getView().setOnTouchListener(new OnSwipeTouchListener(this, getBaseContext()));
     }
 
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        placemarkId = savedInstanceState.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID,
+                preferences.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, 0));
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        placemarkDao.close();
+        super.onDestroy();
+    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -92,7 +123,7 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
         final boolean flagged;
         if (fragment != null) {
             flagged = fragment.getPlacemarkAnnotation().isFlagged();
-        } else try (final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open()) {
+        } else {
             final PlacemarkAnnotation placemarkAnnotation = placemarkDao.loadPlacemarkAnnotation(placemarkDao.getPlacemark(placemarkId));
             flagged = placemarkAnnotation.isFlagged();
         }
@@ -146,5 +177,26 @@ public class PlacemarkDetailActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSwipe(boolean direction) {
+        if (placemarkIdArray != null) {
+            int i = 0;
+            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.length) {
+                ++i;
+            }
+            if (direction == OnSwipeTouchListener.SWIPE_LEFT) {
+                ++i;
+            } else {
+                --i;
+            }
+            if (i >= 0 && i < placemarkIdArray.length) {
+                placemarkId = placemarkIdArray[i];
+                fragment.setPlacemark(placemarkDao.getPlacemark(placemarkId));
+                preferences.edit().putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId).apply();
+                resetStarFabIcon();
+            }
+        }
     }
 }

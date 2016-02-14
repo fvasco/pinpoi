@@ -41,6 +41,7 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 import io.github.fvasco.pinpoi.util.BackupManager;
+import io.github.fvasco.pinpoi.util.DismissOnClickListener;
 import io.github.fvasco.pinpoi.util.Util;
 
 
@@ -209,8 +210,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
         setUseLocationManagerListener(switchGps.isChecked());
     }
 
@@ -315,12 +316,7 @@ public class MainActivity extends AppCompatActivity
                             }
                         }
                     })
-                    .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    })
+                    .setNegativeButton(R.string.close, new DismissOnClickListener())
                     .show();
         }
     }
@@ -483,7 +479,6 @@ public class MainActivity extends AppCompatActivity
                 .appendEncodedPath("/dir/subdir/poisource.ov2")
                 .appendQueryParameter("q", "customValue")
                 .build();
-        uri = Uri.parse("http://womo-sp.lima-city.de/womo_SP_A.asc");
         final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }

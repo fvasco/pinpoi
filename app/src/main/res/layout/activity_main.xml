@@ -142,17 +142,17 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:labelFor="@+id/favouriteCheck"
-                android:text="@string/only_favourite"
+                android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:layout_alignParentStart="true" />
+                android:labelFor="@+id/favouriteCheck"
+                android:text="@string/only_favourite" />
 
             <CheckBox
                 android:id="@+id/favouriteCheck"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="false" />
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentRight="true" />
         </RelativeLayout>
 
         <TextView

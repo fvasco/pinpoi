@@ -19,7 +19,7 @@
     <string name="error_update">Update error %1$s: %2$s</string>
     <string name="error_search">Search error: %1$s</string>
     <string name="error_no_placemark">no placemark found</string>
-    <string name="action_placemark_collections">Manage POIs collections</string>
+    <string name="action_placemark_collections">Manage collections</string>
     <string name="location">Location: %1$s %2$s</string>
     <string name="placemark_collection_name">POI collection name</string>
     <string name="delete_placemark_collection_confirm">Delete POI collection?</string>

@@ -67,14 +67,19 @@
         android:singleLine="true" />
 
     <TextView
-        android:id="@+id/poi_count"
+        android:id="@+id/last_update"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp" />
 
     <TextView
-        android:id="@+id/last_update"
+        android:id="@+id/poi_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal" />
 </LinearLayout>

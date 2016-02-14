@@ -53,7 +53,6 @@ public class PlacemarkListActivity extends AppCompatActivity {
            /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196'
     };
 
-
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -62,6 +61,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     private float latitude;
     private float longitude;
     private PlacemarkDao placemarkDao;
+    private long[] placemarkIdArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,6 +185,14 @@ public class PlacemarkListActivity extends AppCompatActivity {
                             }
                         });
                     }
+
+                    // create placemark id list for swipe
+                    placemarkIdArray = new long[placemarks.size()];
+                    int i = 0;
+                    for (final Placemark p : placemarks) {
+                        placemarkIdArray[i] = p.getId();
+                        ++i;
+                    }
                 } catch (Exception e) {
                     Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
                     Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
@@ -254,7 +262,8 @@ public class PlacemarkListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putLong(PlacemarkDetailFragment.ARG_ITEM_ID, holder.mItem.getId());
+                        arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.mItem.getId());
+                        arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
                         PlacemarkDetailFragment fragment = new PlacemarkDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -263,7 +272,8 @@ public class PlacemarkListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, PlacemarkDetailActivity.class);
-                        intent.putExtra(PlacemarkDetailFragment.ARG_ITEM_ID, holder.mItem.getId());
+                        intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.mItem.getId());
+                        intent.putExtra(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
                         context.startActivity(intent);
                     }
                 }
