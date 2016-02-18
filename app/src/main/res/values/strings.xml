@@ -5,7 +5,7 @@
     <string name="collection">Collection</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
-    <string name="search_range">Search range: %1$d km</string>
+    <string name="search_range">Search range: %1$d ㎞</string>
     <string name="title_placemark_list">POIs</string>
     <string name="title_placemark_detail">POI detail</string>
     <string name="validation_error">Validation error, please check values</string>
@@ -35,9 +35,11 @@
     <string name="poi_count">%1$d sites in this collection</string>
     <string name="last_update">Last update at %1$tc</string>
     <string name="name_filter">Name filter</string>
-    <string name="only_favourite">Only favourite</string>
+    <string name="only_favourite">Only favourites</string>
     <string name="action_create_backup">Create backup on SD card</string>
     <string name="action_restore_backup">Restore backup from SD card</string>
     <string name="backup_file">Backup file is %s</string>
     <string name="menu_backup">Backup</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_rename">Rename</string>
 </resources>

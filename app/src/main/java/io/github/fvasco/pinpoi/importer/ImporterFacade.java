@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -62,48 +63,28 @@ public class ImporterFacade implements Consumer<Placemark> {
 
     @Nullable
     static AbstractImporter createImporter(@NonNull String resource) {
-        if (resource.startsWith("content://")) {
-            final Uri resourceUri = Uri.parse(resource);
-            final String[] mimeTypes = Util.getApplicationContext().getContentResolver().getStreamTypes(resourceUri, "*/*");
-            if (mimeTypes != null) {
-                for (final String mimeType : mimeTypes)
-                    switch (mimeType) {
-                        case "application/vnd.google-earth.kml+xml":
-                            return new KmlImporter();
-                        case "application/zip":
-                        case "application/vnd.google-earth.kmz":
-                            return new ZipImporter();
-                        case "application/gpx":
-                        case "application/gpx+xml":
-                            return new GpxImporter();
-                        case "application/csv":
-                        case "text/csv":
-                        case "text/plain":
-                            return new TextImporter();
-                    }
-            }
-            return createImporter(resourceUri.getLastPathSegment());
-        } else {
-            String path;
-            try {
-                path = Util.isUri(resource)
-                        ? Uri.parse(resource).getLastPathSegment()
-                        : resource;
-            } catch (Exception e) {
+        String path;
+        try {
+            path = Util.isUri(resource)
+                    ? Uri.parse(resource).getLastPathSegment()
+                    : resource;
+            if (Util.isEmpty(path)) {
                 path = resource;
             }
-            path = path.toLowerCase();
-            if (path.endsWith(".kml")) {
-                return new KmlImporter();
-            } else if (path.endsWith(".zip") || path.endsWith(".kmz")) {
-                return new ZipImporter();
-            } else if (path.endsWith(".gpx")) {
-                return new GpxImporter();
-            } else if (path.endsWith(".ov2")) {
-                return new Ov2Importer();
-            } else if (path.endsWith(".asc") || path.endsWith(".csv") || path.endsWith(".txt")) {
-                return new TextImporter();
-            }
+        } catch (Exception e) {
+            path = resource;
+        }
+        path = path.toLowerCase();
+        if (path.endsWith(".kml")) {
+            return new KmlImporter();
+        } else if (path.endsWith(".zip") || path.endsWith(".kmz")) {
+            return new ZipImporter();
+        } else if (path.endsWith(".gpx")) {
+            return new GpxImporter();
+        } else if (path.endsWith(".ov2")) {
+            return new Ov2Importer();
+        } else if (path.endsWith(".asc") || path.endsWith(".csv") || path.endsWith(".txt")) {
+            return new TextImporter();
         }
         return null;
     }
@@ -123,14 +104,17 @@ public class ImporterFacade implements Consumer<Placemark> {
      * @return imported {@linkplain io.github.fvasco.pinpoi.model.Placemark}
      */
     public int importPlacemarks(@NonNull final PlacemarkCollection placemarkCollection) throws IOException {
+        final String resource = placemarkCollection.getSource();
+        Objects.requireNonNull(resource, "Null source");
         placemarkCollectionDao.open();
         try {
             if (progressDialog != null) {
-                progressDialog.setMax(placemarkCollection.getPoiCount());
                 progressDialog.setIndeterminate(placemarkCollection.getPoiCount() <= 0);
+                if (placemarkCollection.getPoiCount() > 0) {
+                    progressDialog.setMax(placemarkCollection.getPoiCount());
+                }
             }
 
-            final String resource = placemarkCollection.getSource();
             final AbstractImporter importer = createImporter(resource);
             if (importer == null) {
                 throw new IOException("Cannot import " + resource);
@@ -143,10 +127,8 @@ public class ImporterFacade implements Consumer<Placemark> {
                 @Override
                 public Void call() throws Exception {
                     try (final InputStream inputStream = new BufferedInputStream(
-                            resource.startsWith("file:///") ? new FileInputStream(resource.substring(7))
-                                    : resource.startsWith("file:/") ? new FileInputStream(resource.substring(5))
-                                    : resource.startsWith("/") ? new FileInputStream(resource)
-                                    : resource.startsWith("content:/") ? Util.getApplicationContext().getContentResolver().openInputStream(Uri.parse(resource))
+                            resource.startsWith("/")
+                                    ? new FileInputStream(resource)
                                     : new URL(resource).openStream())) {
                         importer.importPlacemarks(inputStream);
                     } finally {

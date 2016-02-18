@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.fvasco.pinpoi">
+    package="io.github.fvasco.pinpoi"
+    android:installLocation="auto">
 
     <!-- import placemark -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- use gps to find location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- backup and restore -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
@@ -56,6 +58,7 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="io.github.fvasco.pinpoi.MainActivity" />
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

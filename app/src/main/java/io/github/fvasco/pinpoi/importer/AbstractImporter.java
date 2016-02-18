@@ -41,7 +41,6 @@ public abstract class AbstractImporter {
      * Import data
      *
      * @param inputStream data source
-     * @return imported POI
      * @throws IOException error during reading
      */
     public void importPlacemarks(@NonNull InputStream inputStream) throws IOException {

@@ -30,4 +30,24 @@
         <include layout="@layout/placemark_list" />
     </FrameLayout>
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabStar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:onClick="onStarClick"
+        android:src="@android:drawable/star_off"
+        android:visibility="gone" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabMap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:onClick="onMapClick"
+        android:src="@android:drawable/ic_dialog_map"
+        android:visibility="gone" />
+
 </android.support.design.widget.CoordinatorLayout>

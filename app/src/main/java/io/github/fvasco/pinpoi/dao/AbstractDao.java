@@ -1,28 +1,32 @@
 package io.github.fvasco.pinpoi.dao;
 
+import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 import android.support.design.BuildConfig;
+
+import java.util.Objects;
 
 /**
  * Generic Dao.
- * Init with {@linkplain #setSqLiteOpenHelper(SQLiteOpenHelper)}.
- * {@linkplain #close()} to free resources
  *
  * @author Francesco Vasco
  */
 public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseable {
-    SQLiteDatabase database;
+    private final Context context;
+    protected SQLiteDatabase database;
     private SQLiteOpenHelper sqLiteOpenHelper;
-    private int openCount = 0;
+    private volatile int openCount = 0;
 
-    protected void setSqLiteOpenHelper(SQLiteOpenHelper sqLiteOpenHelper) {
-        if (this.sqLiteOpenHelper != null) {
-            throw new IllegalStateException("sqLiteOpenHelper already defined");
-        }
-        this.sqLiteOpenHelper = sqLiteOpenHelper;
+    public AbstractDao(@NonNull final Context context) {
+        Objects.requireNonNull(context);
+        this.context = context;
+        reset();
     }
+
+    protected abstract SQLiteOpenHelper createSqLiteOpenHelper(@NonNull Context context);
 
     public synchronized T open() throws SQLException {
         //noinspection PointlessBooleanExpression
@@ -57,6 +61,18 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
             if (BuildConfig.DEBUG && database == null) {
                 throw new AssertionError(openCount);
             }
+    }
+
+    /**
+     * Reinitialize dao state
+     *
+     * @throws IllegalStateException Error if dao instance is open
+     */
+    public synchronized void reset() throws IllegalStateException {
+        if (openCount != 0) {
+            throw new IllegalStateException("Dao in use");
+        }
+        sqLiteOpenHelper = createSqLiteOpenHelper(context);
     }
 
     public SQLiteDatabase getDatabase() {

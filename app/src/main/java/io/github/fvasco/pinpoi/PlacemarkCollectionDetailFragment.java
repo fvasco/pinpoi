@@ -1,10 +1,10 @@
 package io.github.fvasco.pinpoi;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -17,10 +17,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.importer.ImporterFacade;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.Consumer;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -144,10 +147,21 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
      * Update screen with poi count and last update
      */
     private void showUpdatedCollectionInfo() {
-        int poiCount = placemarkCollection.getPoiCount();
+        Activity activity = this.getActivity();
+        CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
+        if (appBarLayout != null) {
+            appBarLayout.setTitle(placemarkCollection.getName());
+        }
+        final int poiCount = placemarkCollection.getPoiCount();
         poiCountText.setText(getString(R.string.poi_count, poiCount));
         lastUpdateText.setText(getString(R.string.last_update, placemarkCollection.getLastUpdate()));
         lastUpdateText.setVisibility(poiCount == 0 ? View.INVISIBLE : View.VISIBLE);
+    }
+
+    public String getRequiredPermissionToUpdatePlacemarkCollection() {
+        final String url = sourceText.getText().toString();
+        return url.startsWith("/") || url.startsWith("file:/") ? Manifest.permission.READ_EXTERNAL_STORAGE
+                : Manifest.permission.INTERNET;
     }
 
     public void updatePlacemarkCollection() {
@@ -181,6 +195,21 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         });
     }
 
+
+    public void renamePlacemarkCollection(String newPlacemarkCollectionName) {
+        if (!Util.isEmpty(newPlacemarkCollectionName)
+                && placemarkCollectionDao.findPlacemarkCollectionByName(newPlacemarkCollectionName) == null) {
+            placemarkCollection.setName(newPlacemarkCollectionName);
+            try {
+                savePlacemarkCollection();
+            } catch (Exception e) {
+                Util.showToast(e);
+            } finally {
+                showUpdatedCollectionInfo();
+            }
+        }
+    }
+
     public void deletePlacemarkCollection() {
         try (final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open()) {
             placemarkDao.deleteByCollectionId(placemarkCollection.getId());
@@ -189,26 +218,16 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
     }
 
     public void showFileChooser(View view) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");      //all files
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        try {
-            startActivityForResult(Intent.createChooser(intent,
-                    placemarkCollection == null ? getString(R.string.collection) : placemarkCollection.getName()),
-                    FILE_SELECT_CODE);
-        } catch (android.content.ActivityNotFoundException ex) {
-            Util.showToast("Please install a File Manager.", Toast.LENGTH_LONG);
-        }
+        Util.openFileChooser(Environment.getExternalStorageDirectory(),
+                new Consumer<File>() {
+                    @Override
+                    public void accept(File file) {
+                        sourceText.setText(file.getAbsolutePath());
+                    }
+                }, view.getContext());
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILE_SELECT_CODE && resultCode == Activity.RESULT_OK) {
-            final Uri result = data.getData();
-            if (result != null) {
-                sourceText.setText(result.toString());
-            }
-        }
+    public PlacemarkCollection getPlacemarkCollection() {
+        return placemarkCollection;
     }
 }

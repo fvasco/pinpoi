@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,11 +16,16 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.concurrent.Future;
+
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
+import io.github.fvasco.pinpoi.util.Consumer;
+import io.github.fvasco.pinpoi.util.Coordinates;
+import io.github.fvasco.pinpoi.util.LocationUtil;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -33,20 +40,25 @@ public class PlacemarkDetailFragment extends Fragment {
      * represents.
      */
     public static final String ARG_PLACEMARK_ID = "placemarkId";
-    private static final String PREFERENCE_COORDINATE_FORMAT = "coordinateFormat";
-
     private EditText noteText;
     private Placemark placemark;
-    private PlacemarkCollection placemarkCollection;
+    public final View.OnLongClickListener longClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View view) {
+            LocationUtil.openExternalMap(placemark, true, view.getContext());
+            return true;
+        }
+    };
     private PlacemarkDao placemarkDao;
     private PlacemarkCollectionDao placemarkCollectionDao;
     private PlacemarkAnnotation placemarkAnnotation;
     private SharedPreferences preferences;
-    private int coordinateFormat;
     private TextView placemarkDetail;
     private TextView coordinateText;
     private TextView collectionDescriptionTitle;
     private TextView collectionDescriptionText;
+    private TextView addressText;
+    private Future<String> searchAddressFuture;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -65,7 +77,6 @@ public class PlacemarkDetailFragment extends Fragment {
         final long id = savedInstanceState == null
                 ? getArguments().getLong(ARG_PLACEMARK_ID, preferences.getLong(ARG_PLACEMARK_ID, 0))
                 : savedInstanceState.getLong(ARG_PLACEMARK_ID);
-        coordinateFormat = preferences.getInt(PREFERENCE_COORDINATE_FORMAT, 0);
         Log.i(PlacemarkDetailFragment.class.getSimpleName(), "open placemark " + id);
         placemark = placemarkDao.getPlacemark(id);
     }
@@ -86,9 +97,16 @@ public class PlacemarkDetailFragment extends Fragment {
         collectionDescriptionText = (TextView) rootView.findViewById(R.id.placemark_collection_description);
         noteText = ((EditText) rootView.findViewById(R.id.note));
         placemarkDetail = ((TextView) rootView.findViewById(R.id.placemark_detail));
-        coordinateText = ((TextView) rootView.findViewById(R.id.coordinate));
+        coordinateText = ((TextView) rootView.findViewById(R.id.coordinates));
+        addressText = ((TextView) rootView.findViewById(R.id.address));
         setPlacemark(placemark);
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        resetStarFabIcon((FloatingActionButton) getActivity().findViewById(R.id.fabStar));
     }
 
     @Override
@@ -99,6 +117,14 @@ public class PlacemarkDetailFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
+    public PlacemarkAnnotation getPlacemarkAnnotation() {
+        return placemarkAnnotation;
+    }
+
+    public Placemark getPlacemark() {
+        return placemark;
+    }
+
     public void setPlacemark(final Placemark placemark) {
         if (placemarkAnnotation != null) {
             placemarkAnnotation.setNote(noteText.getText().toString());
@@ -106,7 +132,7 @@ public class PlacemarkDetailFragment extends Fragment {
         }
         this.placemark = placemark;
         placemarkAnnotation = placemark == null ? null : placemarkDao.loadPlacemarkAnnotation(placemark);
-        placemarkCollection = placemark == null ? null : placemarkCollectionDao.findPlacemarkCollectionById(placemark.getCollectionId());
+        final PlacemarkCollection placemarkCollection = placemark == null ? null : placemarkCollectionDao.findPlacemarkCollectionById(placemark.getCollectionId());
         if (placemark != null) {
             preferences.edit().putLong(ARG_PLACEMARK_ID, placemark.getId()).apply();
         }
@@ -122,7 +148,30 @@ public class PlacemarkDetailFragment extends Fragment {
                         ? placemark.getName()
                         : placemark.getName() + "\n\n" + placemark.getDescription());
         noteText.setText(placemarkAnnotation == null ? null : placemarkAnnotation.getNote());
-        showCoordinate(coordinateText);
+        // show coordinates
+        coordinateText.setText(placemark == null ? null :
+                getString(R.string.location,
+                        Location.convert(placemark.getLatitude(), Location.FORMAT_DEGREES),
+                        Location.convert(placemark.getLongitude(), Location.FORMAT_DEGREES)));
+        // show address
+        if (searchAddressFuture != null) {
+            searchAddressFuture.cancel(true);
+        }
+        addressText.setText(null);
+        addressText.setVisibility(View.GONE);
+        if (placemark != null) {
+            searchAddressFuture = LocationUtil.getAddressStringAsync(Coordinates.fromPlacemark(placemark), new Consumer<String>() {
+                @Override
+                public void accept(String address) {
+                    if (!Util.isEmpty(address)) {
+                        addressText.setVisibility(View.VISIBLE);
+                        addressText.setText(address);
+                    }
+                }
+            });
+        }
+
+        // show placemark collection details
         if (placemarkCollection != null) {
             collectionDescriptionTitle.setVisibility(View.VISIBLE);
             collectionDescriptionText.setVisibility(View.VISIBLE);
@@ -132,24 +181,28 @@ public class PlacemarkDetailFragment extends Fragment {
             collectionDescriptionTitle.setVisibility(View.GONE);
             collectionDescriptionText.setVisibility(View.GONE);
         }
-
     }
 
-    private void showCoordinate(TextView textView) {
-        textView.setText(placemark == null ? null :
-                getString(R.string.location,
-                        Location.convert(placemark.getLatitude(), coordinateFormat),
-                        Location.convert(placemark.getLongitude(), coordinateFormat)));
-
+    public void onMapClick(final View view) {
+        LocationUtil.openExternalMap(placemark, false, view.getContext());
     }
 
-    public void onCoordinateClick(final View view) {
-        coordinateFormat = (coordinateFormat + 1) % 3;
-        preferences.edit().putInt(PREFERENCE_COORDINATE_FORMAT, coordinateFormat).apply();
-        showCoordinate((TextView) view);
+
+    public void resetStarFabIcon(FloatingActionButton starFab) {
+        final int drawable = getPlacemarkAnnotation().isFlagged()
+                ? R.drawable.abc_btn_rating_star_on_mtrl_alpha
+                : R.drawable.abc_btn_rating_star_off_mtrl_alpha;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            starFab.setImageDrawable(getResources().getDrawable(drawable, getActivity().getBaseContext().getTheme()));
+        } else {
+            //noinspection deprecation
+            starFab.setImageDrawable(getResources().getDrawable(drawable));
+        }
     }
 
-    public PlacemarkAnnotation getPlacemarkAnnotation() {
-        return placemarkAnnotation;
+    public void onStarClick(FloatingActionButton starFab) {
+        placemarkAnnotation.setFlagged(!placemarkAnnotation.isFlagged());
+        resetStarFabIcon(starFab);
     }
+
 }

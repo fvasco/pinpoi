@@ -3,13 +3,18 @@ package io.github.fvasco.pinpoi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 
 import io.github.fvasco.pinpoi.util.DismissOnClickListener;
 import io.github.fvasco.pinpoi.util.Util;
@@ -22,6 +27,7 @@ import io.github.fvasco.pinpoi.util.Util;
  */
 public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
 
+    private static final int PERMISSION_UPDATE = 1;
     private PlacemarkCollectionDetailFragment fragment;
 
     @Override
@@ -32,32 +38,6 @@ public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
-
-        final FloatingActionButton fabUpdate = (FloatingActionButton) findViewById(R.id.fabUpdate);
-        fabUpdate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                fragment.updatePlacemarkCollection();
-            }
-        });
-        final FloatingActionButton fabDelete = (FloatingActionButton) findViewById(R.id.fabDelete);
-        fabDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                new AlertDialog.Builder(view.getContext())
-                        .setMessage(R.string.delete_placemark_collection_confirm)
-                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                fragment.deletePlacemarkCollection();
-                                dialog.dismiss();
-                                onBackPressed();
-                            }
-                        })
-                        .setNegativeButton(R.string.no, new DismissOnClickListener())
-                        .show();
-            }
-        });
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -89,18 +69,90 @@ public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_collection, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            navigateUpTo(new Intent(this, PlacemarkCollectionListActivity.class));
-            return true;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // This ID represents the Home or Up button. In the case of this
+                // activity, the Up button is shown. For
+                // more details, see the Navigation pattern on Android Design:
+                //
+                // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+                //
+                navigateUpTo(new Intent(this, PlacemarkCollectionListActivity.class));
+                return true;
+            case R.id.action_rename:
+                renameCollection();
+                return true;
+            case R.id.action_delete:
+                deleteCollection();
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void updatePlacemarkCollection(final View view) {
+        if (fragment != null) {
+            final String permission = fragment.getRequiredPermissionToUpdatePlacemarkCollection();
+            if (ContextCompat.checkSelfPermission(this, permission)
+                    == PackageManager.PERMISSION_GRANTED) {
+                fragment.updatePlacemarkCollection();
+            } else {
+                // request permission
+                ActivityCompat.requestPermissions(this, new String[]{permission}, PERMISSION_UPDATE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_UPDATE && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            updatePlacemarkCollection(null);
+        }
+    }
+
+    private void renameCollection() {
+        if (fragment != null) {
+            final EditText editText = new EditText(getBaseContext());
+            editText.setText(fragment.getPlacemarkCollection().getName());
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_rename)
+                    .setView(editText)
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            fragment.renamePlacemarkCollection(editText.getText().toString());
+                        }
+                    })
+                    .setNegativeButton(R.string.no, DismissOnClickListener.INSTANCE)
+                    .show();
+        }
+    }
+
+    private void deleteCollection() {
+        if (fragment != null) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_delete)
+                    .setMessage(R.string.delete_placemark_collection_confirm)
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            fragment.deletePlacemarkCollection();
+                            onBackPressed();
+                        }
+                    })
+                    .setNegativeButton(R.string.no, DismissOnClickListener.INSTANCE)
+                    .show();
+        }
     }
 }

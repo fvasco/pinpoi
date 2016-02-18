@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ import io.github.fvasco.pinpoi.util.ZipGuardInputStream;
 public class ZipImporter extends AbstractImporter {
 
     @Override
-    protected void importImpl(InputStream inputStream) throws IOException {
+    protected void importImpl(@NonNull InputStream inputStream) throws IOException {
         try (final ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {

@@ -3,21 +3,15 @@ package io.github.fvasco.pinpoi;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
-import io.github.fvasco.pinpoi.model.Placemark;
-import io.github.fvasco.pinpoi.model.PlacemarkAnnotation;
 import io.github.fvasco.pinpoi.util.OnSwipeTouchListener;
 import io.github.fvasco.pinpoi.util.Util;
 
@@ -32,6 +26,7 @@ public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwip
     public static final String ARG_PLACEMARK_LIST_ID = "placemarkListId";
     private long placemarkId;
     private FloatingActionButton starFab;
+    private FloatingActionButton mapFab;
     private PlacemarkDetailFragment fragment;
     private PlacemarkDao placemarkDao;
     private SharedPreferences preferences;
@@ -47,8 +42,11 @@ public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwip
         Util.initApplicationContext(getApplicationContext());
         placemarkDao = PlacemarkDao.getInstance().open();
         starFab = (FloatingActionButton) findViewById(R.id.fabStar);
+        mapFab = (FloatingActionButton) findViewById(R.id.fabMap);
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
+        final View detailContainer = findViewById(R.id.placemark_detail_container);
+        detailContainer.setOnTouchListener(new OnSwipeTouchListener(this, detailContainer.getContext()));
 
         preferences = getPreferences(MODE_PRIVATE);
         placemarkId = getIntent().getLongExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID,
@@ -84,13 +82,13 @@ public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwip
         } else {
             fragment = (PlacemarkDetailFragment) getSupportFragmentManager().getFragments().get(0);
         }
+        mapFab.setOnLongClickListener(fragment.longClickListener);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         resetStarFabIcon();
-        fragment.getView().setOnTouchListener(new OnSwipeTouchListener(this, getBaseContext()));
     }
 
 
@@ -120,47 +118,15 @@ public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwip
     }
 
     private void resetStarFabIcon() {
-        final boolean flagged;
-        if (fragment != null) {
-            flagged = fragment.getPlacemarkAnnotation().isFlagged();
-        } else {
-            final PlacemarkAnnotation placemarkAnnotation = placemarkDao.loadPlacemarkAnnotation(placemarkDao.getPlacemark(placemarkId));
-            flagged = placemarkAnnotation.isFlagged();
-        }
-        final int drawable = flagged
-                ? R.drawable.abc_btn_rating_star_on_mtrl_alpha
-                : R.drawable.abc_btn_rating_star_off_mtrl_alpha;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            starFab.setImageDrawable(getResources().getDrawable(drawable, getBaseContext().getTheme()));
-        } else {
-            //noinspection deprecation
-            starFab.setImageDrawable(getResources().getDrawable(drawable));
-        }
+        fragment.resetStarFabIcon(starFab);
     }
 
     public void onStarClick(final View view) {
-        PlacemarkAnnotation placemarkAnnotation = fragment.getPlacemarkAnnotation();
-        placemarkAnnotation.setFlagged(!placemarkAnnotation.isFlagged());
-        resetStarFabIcon();
+        fragment.onStarClick(starFab);
     }
 
     public void onMapClick(final View view) {
-        try (final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open()) {
-            final Placemark placemark = placemarkDao.getPlacemark(placemarkId);
-            String coordinateFormatted = Util.formatCoordinate(placemark);
-            final Uri uri = new Uri.Builder().scheme("geo").authority(coordinateFormatted)
-                    .appendQueryParameter("q", coordinateFormatted + '(' + placemark.getName() + ')')
-                    .build();
-            final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            view.getContext().startActivity(intent);
-        } catch (Exception e) {
-            Log.e(PlacemarkDetailActivity.class.getSimpleName(), "Error on map click", e);
-            Util.showToast(e.getLocalizedMessage(), Toast.LENGTH_LONG);
-        }
-    }
-
-    public void onCoordinateClick(final View view) {
-        fragment.onCoordinateClick(view);
+        fragment.onMapClick(view);
     }
 
     @Override
@@ -186,6 +152,7 @@ public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwip
             while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.length) {
                 ++i;
             }
+            //noinspection PointlessBooleanExpression
             if (direction == OnSwipeTouchListener.SWIPE_LEFT) {
                 ++i;
             } else {

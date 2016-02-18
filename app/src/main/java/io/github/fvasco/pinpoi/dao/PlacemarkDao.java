@@ -3,8 +3,9 @@ package io.github.fvasco.pinpoi.dao;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.location.Location;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
+import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +17,10 @@ import java.util.TreeSet;
 
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation;
-import io.github.fvasco.pinpoi.util.PlacemarkDistanceComparator;
+import io.github.fvasco.pinpoi.model.PlacemarkBase;
+import io.github.fvasco.pinpoi.model.PlacemarkSearchResult;
+import io.github.fvasco.pinpoi.util.Coordinates;
+import io.github.fvasco.pinpoi.util.DistanceComparator;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -30,7 +34,7 @@ import io.github.fvasco.pinpoi.util.Util;
 public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
 
     /**
-     * Max result for {@linkplain #findAllPlacemarkNear(Location, double, String, boolean, Collection)}
+     * Max result for {@linkplain #findAllPlacemarkNear(Coordinates, double, String, boolean, Collection)}
      */
     private static final int MAX_NEAR_RESULT = 100;
     private static final boolean SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
@@ -43,8 +47,8 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
         this(Util.getApplicationContext());
     }
 
-    public PlacemarkDao(Context context) {
-        setSqLiteOpenHelper(new PlacemarkDatabase(context));
+    public PlacemarkDao(@NonNull Context context) {
+        super(context);
     }
 
     public static synchronized PlacemarkDao getInstance() {
@@ -55,20 +59,20 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
     }
 
     /**
-     * Convert DB coordinate to double
+     * Convert DB coordinates to double
      *
      * @param i db coordinate
-     * @return float coordinate
+     * @return float coordinates
      */
     private static float coordinateToFloat(int i) {
         return i / COORDINATE_MULTIPLIER;
     }
 
     /**
-     * Convert double to db coordinate
+     * Convert double to db coordinates
      *
      * @param f float coordinate
-     * @return db coordinate
+     * @return db coordinates
      */
     private static int coordinateToInt(float f) {
         return Math.round(f * COORDINATE_MULTIPLIER);
@@ -79,25 +83,23 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
     }
 
     /**
-     * Append location filter in stringBuilder sql clause
+     * Append coordinates filter in stringBuilder sql clause
      */
-    private static void createWhereFilter(Location location, double range, final String table, StringBuilder stringBuilder) {
+    private static void createWhereFilter(Coordinates coordinates, double range, final String table, StringBuilder stringBuilder) {
         // calculate "square" of search
-        final Location shiftY = new Location(location);
-        shiftY.setLatitude(location.getLatitude() + (location.getLatitude() > 0 ? -1 : 1));
-        final double scaleY = location.distanceTo(shiftY);
-        final Location shiftX = new Location(location);
-        shiftX.setLongitude(location.getLongitude() + (location.getLongitude() > 0 ? -1 : 1));
-        final double scaleX = location.distanceTo(shiftX);
+        final Coordinates shiftY = coordinates.withLatitude(coordinates.getLatitude() + (coordinates.getLatitude() > 0 ? -1 : 1));
+        final float scaleY = coordinates.distanceTo(shiftY);
+        final Coordinates shiftX = coordinates.withLongitude(coordinates.getLongitude() + (coordinates.getLongitude() > 0 ? -1 : 1));
+        final float scaleX = coordinates.distanceTo(shiftX);
 
         // latitude
         stringBuilder.append(table).append(".latitude between ")
-                .append(String.valueOf(coordinateToInt(location.getLatitude() - range / scaleY))).append(" AND ")
-                .append(String.valueOf(coordinateToInt(location.getLatitude() + range / scaleY)));
+                .append(String.valueOf(coordinateToInt(coordinates.getLatitude() - range / scaleY))).append(" AND ")
+                .append(String.valueOf(coordinateToInt(coordinates.getLatitude() + range / scaleY)));
 
         // longitude
-        final double longitudeMin = location.getLongitude() - range / scaleX;
-        final double longitudeMax = location.getLongitude() + range / scaleX;
+        final double longitudeMin = coordinates.getLongitude() - range / scaleX;
+        final double longitudeMax = coordinates.getLongitude() + range / scaleX;
         stringBuilder.append(" AND (").append(table).append(".longitude between ")
                 .append(String.valueOf(coordinateToInt(longitudeMin))).append(" AND ")
                 .append(String.valueOf(coordinateToInt(longitudeMax)));
@@ -108,6 +110,11 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
             stringBuilder.append(" OR ").append(table).append(".longitude <=").append(String.valueOf(coordinateToInt(longitudeMax - 360.0)));
         }
         stringBuilder.append(')');
+    }
+
+    @Override
+    protected SQLiteOpenHelper createSqLiteOpenHelper(@NonNull Context context) {
+        return new PlacemarkDatabase(context);
     }
 
     public List<Placemark> findAllPlacemarkByCollectionId(final long collectionId) {
@@ -123,27 +130,27 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
         }
     }
 
-    public SortedSet<Placemark> findAllPlacemarkNear
-            (final Location location,
+    public SortedSet<PlacemarkSearchResult> findAllPlacemarkNear
+            (final Coordinates coordinates,
              final double range,
              final Collection<Long> collectionIds) {
-        return findAllPlacemarkNear(location, range, null, false, collectionIds);
+        return findAllPlacemarkNear(coordinates, range, null, false, collectionIds);
     }
 
     /**
      * Search {@linkplain Placemark} near location
      *
-     * @param location      the center of search
+     * @param coordinates   the center of search
      * @param range         radius of search, in meters
      * @param collectionIds collection id filter
      */
-    public SortedSet<Placemark> findAllPlacemarkNear
-    (final Location location,
-     final double range,
-     String nameFilter,
-     final boolean onlyFavourite,
-     final Collection<Long> collectionIds) {
-        Objects.requireNonNull(location, "location not set");
+    public SortedSet<PlacemarkSearchResult> findAllPlacemarkNear(
+            final Coordinates coordinates,
+            final double range,
+            String nameFilter,
+            final boolean onlyFavourite,
+            final Collection<Long> collectionIds) {
+        Objects.requireNonNull(coordinates, "coordinates not set");
         Objects.requireNonNull(collectionIds, "collection not set");
         if (collectionIds.isEmpty()) {
             throw new IllegalArgumentException("collection empty");
@@ -161,10 +168,8 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
         // sql clause
         // collection ids
         final StringBuilder sql = new StringBuilder(
-                "SELECT p._ID,p.latitude,p.longitude,p.name,NULL,p.collection_id FROM PLACEMARK p");
-        if (onlyFavourite) {
-            sql.append(",PLACEMARK_ANNOTATION pa");
-        }
+                "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag FROM PLACEMARK p")
+                .append(" LEFT OUTER JOIN PLACEMARK_ANNOTATION pa USING(latitude,longitude)");
         sql.append(" WHERE p.collection_id in (");
         final List<String> whereArgs = new ArrayList<>();
         final Iterator<Long> iterator = collectionIds.iterator();
@@ -173,11 +178,10 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
             sql.append(',').append(iterator.next().toString());
         }
         sql.append(") AND ");
-        createWhereFilter(location, range, "p", sql);
+        createWhereFilter(coordinates, range, "p", sql);
 
         if (onlyFavourite) {
-            sql.append(" AND p.latitude=pa.latitude AND p.longitude=pa.longitude" +
-                    " AND pa.flag=1");
+            sql.append(" AND pa.flag=1");
         }
 
         if (SQL_INSTR_PRESENT && nameFilter != null) {
@@ -185,19 +189,19 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
             whereArgs.add(nameFilter);
         }
 
-        final PlacemarkDistanceComparator locationComparator = new PlacemarkDistanceComparator(location);
-        final SortedSet<Placemark> res = new TreeSet<>(locationComparator);
+        final DistanceComparator locationComparator = new DistanceComparator(coordinates);
+        final SortedSet<PlacemarkSearchResult> res = new TreeSet<>(locationComparator);
         try (final Cursor cursor = database.rawQuery(sql.toString(), whereArgs.toArray(new String[whereArgs.size()]))) {
             cursor.moveToFirst();
             double maxDistance = range;
             while (!cursor.isAfterLast()) {
-                final Placemark p = cursorToPlacemark(cursor);
+                final PlacemarkSearchResult p = cursorToPlacemarkSearchResult(cursor);
                 if (locationComparator.calculateDistance(p) <= maxDistance
                         && (SQL_INSTR_PRESENT || nameFilter == null || p.getName().toUpperCase().contains(nameFilter))) {
                     res.add(p);
                     // ensure size limit, discard farest
                     if (res.size() > MAX_NEAR_RESULT) {
-                        Placemark placemarkToDiscard = res.last();
+                        final PlacemarkSearchResult placemarkToDiscard = res.last();
                         res.remove(placemarkToDiscard);
                         // update search range to search closer
                         maxDistance = locationComparator.calculateDistance(res.last());
@@ -222,7 +226,7 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
      *
      * @return annotaion for a placemark
      */
-    public PlacemarkAnnotation loadPlacemarkAnnotation(Placemark placemark) {
+    public PlacemarkAnnotation loadPlacemarkAnnotation(PlacemarkBase placemark) {
         try (final Cursor cursor = database.query("PLACEMARK_ANNOTATION", null,
                 "latitude=" + coordinateToInt(placemark.getLatitude()) + " AND longitude=" + coordinateToInt(placemark.getLongitude()), null,
                 null, null, null)) {
@@ -304,6 +308,14 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
         p.setDescription(cursor.getString(4));
         p.setCollectionId(cursor.getLong(5));
         return p;
+    }
+
+    private PlacemarkSearchResult cursorToPlacemarkSearchResult(Cursor cursor) {
+        return new PlacemarkSearchResult(cursor.getLong(0),
+                coordinateToFloat(cursor.getInt(1)),
+                coordinateToFloat(cursor.getInt(2)),
+                cursor.getString(3),
+                cursor.getInt(4) != 0);
     }
 
     private PlacemarkAnnotation cursorToPlacemarkAnnotation(Cursor cursor) {

@@ -1,13 +1,11 @@
 package io.github.fvasco.pinpoi.model;
 
-import java.io.Serializable;
-
 /**
  * Container for placemark
  *
  * @author Francesco Vasco
  */
-public class Placemark implements Serializable {
+public class Placemark implements PlacemarkBase {
 
     private long id;
     private String name;

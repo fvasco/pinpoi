@@ -5,7 +5,7 @@
     <string name="collection">Collezione</string>
     <string name="latitude">Latitudine</string>
     <string name="longitude">Longitudine</string>
-    <string name="search_range">Raggio di ricerca: %1$d km</string>
+    <string name="search_range">Raggio di ricerca: %1$d ㎞</string>
     <string name="title_placemark_list">Punti di interesse</string>
     <string name="title_placemark_detail">Punto di interesse</string>
     <string name="validation_error">Errore di validazione, verificare i valori</string>
@@ -40,4 +40,6 @@
     <string name="action_restore_backup">Ripristina la copia di riserva dalla SD</string>
     <string name="backup_file">Il file utilizzato è %s</string>
     <string name="menu_backup">Backup</string>
+    <string name="action_delete">Elimina</string>
+    <string name="action_rename">Rinomina</string>
 </resources>

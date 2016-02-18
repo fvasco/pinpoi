@@ -45,7 +45,7 @@ public class Ov2Importer extends AbstractImporter {
                 final int latitudeInt = readIntLE(dataInputStream);
                 if (longitudeInt < -18000000 || longitudeInt > 18000000
                         || latitudeInt < -9000000 || latitudeInt > 9000000) {
-                    throw new IOException("Wrong coordinate " +
+                    throw new IOException("Wrong coordinates " +
                             longitudeInt + ',' + latitudeInt);
                 }
 
@@ -72,11 +72,11 @@ public class Ov2Importer extends AbstractImporter {
                         ++i;
                     }
                 }
-                final Placemark p = new Placemark();
-                p.setName(TextImporter.toString(nameBuffer, 0, nameLength));
-                p.setLongitude(longitudeInt / 100000F);
-                p.setLatitude(latitudeInt / 100000F);
-                importPlacemark(p);
+                final Placemark placemark = new Placemark();
+                placemark.setName(TextImporter.toString(nameBuffer, 0, nameLength));
+                placemark.setLongitude(longitudeInt / 100000F);
+                placemark.setLatitude(latitudeInt / 100000F);
+                importPlacemark(placemark);
             } else if (rectype == 1) {
                 // block header
                 Log.i(Ov2Importer.class.getSimpleName(), "Skip record type " + rectype);

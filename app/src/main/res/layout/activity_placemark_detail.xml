@@ -52,7 +52,7 @@
         app:layout_anchorGravity="top|end" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fabGps"
+        android:id="@+id/fabMap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|start"

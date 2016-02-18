@@ -8,22 +8,14 @@
         app:showAsAction="ifRoom" />
     <item android:title="@string/menu_backup">
         <menu>
-            <item android:title="@string/action_create_backup">
-                <menu>
-                    <item
-                        android:id="@+id/create_backup"
-                        android:title="@string/action_create_backup"
-                        app:showAsAction="never" />
-                </menu>
-            </item>
-            <item android:title="@string/action_restore_backup">
-                <menu>
-                    <item
-                        android:id="@+id/restore_backup"
-                        android:title="@string/action_restore_backup"
-                        app:showAsAction="never" />
-                </menu>
-            </item>
+            <item
+                android:id="@+id/restore_backup"
+                android:title="@string/action_restore_backup"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/create_backup"
+                android:title="@string/action_create_backup"
+                app:showAsAction="never" />
         </menu>
     </item>
     <item

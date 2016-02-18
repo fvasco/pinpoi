@@ -92,4 +92,25 @@ public class PlacemarkCollectionDaoTest extends AndroidTestCase {
         assertTrue(list.isEmpty());
         assertNull(dao.findPlacemarkCollectionById(1));
     }
+
+    public void testFindPlacemarkCollectionByName() throws Exception {
+        PlacemarkCollection pc = new PlacemarkCollection();
+        pc.setName("test");
+        pc.setDescription("description");
+        pc.setSource("source");
+        pc.setCategory("CATEGORY");
+        pc.setLastUpdate(5);
+        pc.setPoiCount(5);
+        dao.insert(pc);
+
+        // check findPlacemarkCollectionByName
+        pc = dao.findPlacemarkCollectionByName("test");
+        assertEquals(1, pc.getId());
+        assertEquals("test", pc.getName());
+        assertEquals("description", pc.getDescription());
+        assertEquals("source", pc.getSource());
+        assertEquals("CATEGORY", pc.getCategory());
+        assertEquals(5, pc.getLastUpdate());
+        assertEquals(5, pc.getPoiCount());
+    }
 }

@@ -2,6 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical"
     android:padding="8dp">
 
@@ -19,19 +21,24 @@
 
     <TextView
         android:id="@+id/placemark_detail"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:textIsSelectable="true"
         tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment" />
 
     <TextView
-        android:id="@+id/coordinate"
+        android:id="@+id/coordinates"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="onCoordinateClick"
-        android:paddingTop="2dp"
-        android:text="@string/location"
-        android:textIsSelectable="true" />
+        android:paddingTop="3dp"
+        android:text="@string/location" />
+
+    <TextView
+        android:id="@+id/address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="true"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/placemark_collection_description_title"
@@ -47,6 +54,5 @@
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_gravity="center_horizontal" />
+        android:layout_height="64dp" />
 </LinearLayout>

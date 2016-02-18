@@ -3,6 +3,8 @@ package io.github.fvasco.pinpoi.dao;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +25,8 @@ public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> 
         this(Util.getApplicationContext());
     }
 
-    public PlacemarkCollectionDao(Context context) {
-        setSqLiteOpenHelper(new PlacemarkCollectionDatabase(context));
+    public PlacemarkCollectionDao(@NonNull Context context) {
+        super(context);
     }
 
     public static synchronized PlacemarkCollectionDao getInstance() {
@@ -34,9 +36,22 @@ public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> 
         return INSTANCE;
     }
 
+    @Override
+    protected SQLiteOpenHelper createSqLiteOpenHelper(@NonNull Context context) {
+        return new PlacemarkCollectionDatabase(context);
+    }
+
     public PlacemarkCollection findPlacemarkCollectionById(final long id) {
         try (final Cursor cursor = database.query("PLACEMARK_COLLECTION",
                 null, "_ID=" + id, null, null, null, null)) {
+            cursor.moveToFirst();
+            return cursor.isAfterLast() ? null : cursorToPlacemarkCollection(cursor);
+        }
+    }
+
+    public PlacemarkCollection findPlacemarkCollectionByName(String name) {
+        try (final Cursor cursor = database.query("PLACEMARK_COLLECTION",
+                null, "NAME=?", new String[]{name}, null, null, null)) {
             cursor.moveToFirst();
             return cursor.isAfterLast() ? null : cursorToPlacemarkCollection(cursor);
         }

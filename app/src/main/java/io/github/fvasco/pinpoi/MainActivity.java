@@ -1,12 +1,13 @@
 package io.github.fvasco.pinpoi;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -14,6 +15,9 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -28,6 +32,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,10 +43,13 @@ import java.util.regex.Pattern;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
-import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 import io.github.fvasco.pinpoi.util.BackupManager;
+import io.github.fvasco.pinpoi.util.Consumer;
+import io.github.fvasco.pinpoi.util.Coordinates;
+import io.github.fvasco.pinpoi.util.DebugUtil;
 import io.github.fvasco.pinpoi.util.DismissOnClickListener;
+import io.github.fvasco.pinpoi.util.LocationUtil;
 import io.github.fvasco.pinpoi.util.Util;
 
 
@@ -59,6 +67,18 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFEFERNCE_COLLECTION = "collection";
     private static final String PREFEFERNCE_GPS = "gps";
     private static final String PREFEFERNCE_ADDRESS = "address";
+    private static final int PERMISSION_GPS_ON = 1;
+    private static final int PERMISSION_CREATE_BACKUP = 10;
+    private static final int PERMISSION_RESTORE_BACKUP = 11;
+    /**
+     * Smallest searchable range
+     */
+    private static final int RANGE_MIN = 5;
+    /**
+     * Greatest {@linkplain #rangeSeek} value,
+     * searchable range value is {@linkplain #RANGE_MIN}+{@linkplain #RANGE_MAX_SHIFT}
+     */
+    private static final int RANGE_MAX_SHIFT = 195;
     private String selectedPlacemarkCategory;
     private PlacemarkCollection selectedPlacemarkCollection;
     private LocationManager locationManager;
@@ -80,9 +100,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Util.initApplicationContext(getApplicationContext());
-        if (Geocoder.isPresent()) {
-            geocoder = new Geocoder(getApplicationContext());
-        }
+        geocoder = LocationUtil.getGeocoder();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         // widget
@@ -102,18 +120,21 @@ public class MainActivity extends AppCompatActivity
         }
 
         // setup range seek
+        rangeSeek.setMax(RANGE_MAX_SHIFT);
         rangeSeek.setOnSeekBarChangeListener(this);
         onProgressChanged(rangeSeek, rangeSeek.getProgress(), false);
 
         // restore preference
         final SharedPreferences preference = getPreferences(MODE_PRIVATE);
         final boolean useGpsPreference = preference.getBoolean(PREFEFERNCE_GPS, false);
-        switchGps.setChecked(useGpsPreference);
+        switchGps.setChecked(useGpsPreference
+                // enable only with permission
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
         latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, "0"));
         longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, "0"));
         nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null));
         favouriteCheck.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
-        rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, rangeSeek.getMax() * 2 / 3), rangeSeek.getMax()));
+        rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, (RANGE_MIN + RANGE_MAX_SHIFT) / 2 - RANGE_MIN), RANGE_MAX_SHIFT));
         setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null));
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0));
 
@@ -131,6 +152,64 @@ public class MainActivity extends AppCompatActivity
                 longitudeText.setText(matcher.group(2));
             }
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        setUseLocationManagerListener(switchGps.isChecked());
+    }
+
+    @Override
+    protected void onStop() {
+        setUseLocationManagerListener(false);
+
+        getPreferences(MODE_PRIVATE).edit()
+                .putBoolean(PREFEFERNCE_GPS, switchGps.isChecked())
+                .putString(PREFEFERNCE_LATITUDE, latitudeText.getText().toString())
+                .putString(PREFEFERNCE_LONGITUDE, longitudeText.getText().toString())
+                .putString(PREFEFERNCE_NAME_FILTER, nameFilterText.getText().toString())
+                .putBoolean(PREFEFERNCE_FAVOURITE, favouriteCheck.isChecked())
+                .putInt(PREFEFERNCE_RANGE, rangeSeek.getProgress())
+                .putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory)
+                .putLong(PREFEFERNCE_COLLECTION, selectedPlacemarkCollection == null ? 0 : selectedPlacemarkCollection.getId())
+                .commit();
+
+        super.onStop();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        // on debug show debug menu
+        menu.findItem(R.id.menu_debug).setVisible(BuildConfig.DEBUG);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify restoreBackup parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case R.id.action_placemark_collections:
+                onManagePlacemarkCollections(null);
+                return true;
+            case R.id.create_backup:
+                showCreateBackupConfirm();
+                return true;
+            case R.id.restore_backup:
+                showRestoreBackupConfirm();
+                return true;
+            case R.id.debug_create_db:
+                DebugUtil.setUpDebugDatabase(this);
+                return true;
+            case R.id.debug_import_collection:
+                debugImportCollection();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setPlacemarkCategory(String placemarkCategory) {
@@ -209,85 +288,18 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        setUseLocationManagerListener(switchGps.isChecked());
-    }
-
-    @Override
-    protected void onStop() {
-        setUseLocationManagerListener(false);
-
-        getPreferences(MODE_PRIVATE).edit()
-                .putBoolean(PREFEFERNCE_GPS, switchGps.isChecked())
-                .putString(PREFEFERNCE_LATITUDE, latitudeText.getText().toString())
-                .putString(PREFEFERNCE_LONGITUDE, longitudeText.getText().toString())
-                .putString(PREFEFERNCE_NAME_FILTER, nameFilterText.getText().toString())
-                .putBoolean(PREFEFERNCE_FAVOURITE, favouriteCheck.isChecked())
-                .putInt(PREFEFERNCE_RANGE, rangeSeek.getProgress())
-                .putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory)
-                .putLong(PREFEFERNCE_COLLECTION, selectedPlacemarkCollection == null ? 0 : selectedPlacemarkCollection.getId())
-                .commit();
-
-        super.onStop();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.findItem(R.id.create_backup).setEnabled(BackupManager.isCreateBackupSupported());
-        menu.findItem(R.id.restore_backup).setEnabled(BackupManager.isRestoreBackupSupported());
-        // on debug show debug menu
-        menu.findItem(R.id.menu_debug).setVisible(BuildConfig.DEBUG);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        switch (item.getItemId()) {
-            case R.id.action_placemark_collections:
-                onManagePlacemarkCollections(null);
-                return true;
-            case R.id.create_backup:
-                createBackup();
-                return true;
-            case R.id.restore_backup:
-                restoreBackup();
-                return true;
-            case R.id.debug_create_db:
-                setUpDebugDatabase();
-                return true;
-            case R.id.debug_import_collection:
-                debugImportCollection();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     public void onSearchAddress(final View view) {
+        if (futureSearchAddress != null) {
+            futureSearchAddress.cancel(true);
+        }
         if (switchGps.isChecked()) {
-            // if gps toast address
-            if (futureSearchAddress != null) {
-                futureSearchAddress.cancel(true);
-            }
-            futureSearchAddress = Util.EXECUTOR.submit(new Runnable() {
+            // if gps on toast address
+            futureSearchAddress = LocationUtil.getAddressStringAsync(new Coordinates(Float.parseFloat(latitudeText.getText().toString()),
+                    Float.parseFloat(longitudeText.getText().toString())), new Consumer<String>() {
                 @Override
-                public void run() {
-                    try {
-                        final List<Address> addresses = geocoder.getFromLocation(
-                                Double.parseDouble(latitudeText.getText().toString()),
-                                Double.parseDouble(longitudeText.getText().toString()),
-                                1);
-                        if (!addresses.isEmpty()) {
-                            Util.showToast(Util.toString(addresses.get(0)), Toast.LENGTH_LONG);
-                        }
-                    } catch (IOException e) {
-                        Log.w(MainActivity.class.getSimpleName(), "Error search address", e);
+                public void accept(String address) {
+                    if (address != null) {
+                        Util.showToast(address, Toast.LENGTH_LONG);
                     }
                 }
             });
@@ -308,6 +320,9 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             try {
+                                // clear old coordinates
+                                onLocationChanged(null);
+                                // search new location;
                                 final String address = editText.getText().toString();
                                 preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply();
                                 searchAddress(address, view.getContext());
@@ -316,7 +331,7 @@ public class MainActivity extends AppCompatActivity
                             }
                         }
                     })
-                    .setNegativeButton(R.string.close, new DismissOnClickListener())
+                    .setNegativeButton(R.string.close, DismissOnClickListener.INSTANCE)
                     .show();
         }
     }
@@ -336,7 +351,7 @@ public class MainActivity extends AppCompatActivity
                 final String[] options = new String[addresses.size()];
                 for (int i = options.length - 1; i >= 0; --i) {
                     final Address a = addresses.get(i);
-                    options[i] = Util.toString(a);
+                    options[i] = LocationUtil.toString(a);
                 }
                 new AlertDialog.Builder(context)
                         .setItems(options, new DialogInterface.OnClickListener() {
@@ -344,7 +359,7 @@ public class MainActivity extends AppCompatActivity
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
                                 final Address a = addresses.get(which);
-                                onLocationChanged(Util.newLocation(a.getLatitude(), a.getLongitude()));
+                                onLocationChanged(LocationUtil.newLocation(a.getLatitude(), a.getLongitude()));
                             }
                         }).show();
             }
@@ -381,7 +396,7 @@ public class MainActivity extends AppCompatActivity
                 intent.putExtra(PlacemarkListActivity.ARG_LONGITUDE, Float.parseFloat(longitudeText.getText().toString()));
                 intent.putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.getText().toString());
                 intent.putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked());
-                intent.putExtra(PlacemarkListActivity.ARG_RANGE, rangeSeek.getProgress() * 1000);
+                intent.putExtra(PlacemarkListActivity.ARG_RANGE, (rangeSeek.getProgress() + RANGE_MIN) * 1000);
                 intent.putExtra(PlacemarkListActivity.ARG_COLLECTION_IDS, collectionsIds);
                 context.startActivity(intent);
             }
@@ -395,80 +410,76 @@ public class MainActivity extends AppCompatActivity
         startActivity(new Intent(this, PlacemarkCollectionListActivity.class));
     }
 
+    private void showCreateBackupConfirm() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.action_create_backup))
+                .setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()))
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                        createBackup();
+                    }
+                })
+                .setNegativeButton(R.string.no, DismissOnClickListener.INSTANCE)
+                .show();
+    }
+
     private void createBackup() {
-        final BackupManager backupManager = new BackupManager(getApplicationContext());
-        try {
-            Util.showToast(getString(R.string.action_create_backup), Toast.LENGTH_SHORT);
-            backupManager.create();
-            Util.showToast(getString(R.string.backup_file, BackupManager.BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
-        } catch (Exception e) {
-            Log.w(MainActivity.class.getSimpleName(), "create backup failed", e);
-            Util.showToast(e);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            try {
+                final BackupManager backupManager = new BackupManager(PlacemarkCollectionDao.getInstance(), PlacemarkDao.getInstance());
+                Util.showToast(getString(R.string.action_create_backup), Toast.LENGTH_SHORT);
+                backupManager.create(BackupManager.DEFAULT_BACKUP_FILE);
+                Util.showToast(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
+            } catch (Exception e) {
+                Log.w(MainActivity.class.getSimpleName(), "create backup failed", e);
+                Util.showToast(e);
+            }
+        } else {
+            // request permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_CREATE_BACKUP);
         }
     }
 
-    private void restoreBackup() {
-        final BackupManager backupManager = new BackupManager(getApplicationContext());
+    private void showRestoreBackupConfirm() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            Util.openFileChooser(BackupManager.DEFAULT_BACKUP_FILE,
+                    new Consumer<File>() {
+                        @Override
+                        public void accept(final File file) {
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle(getString(R.string.action_restore_backup))
+                                    .setMessage(getString(R.string.backup_file, file.getAbsolutePath()))
+                                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            dialogInterface.dismiss();
+                                            restoreBackup(file);
+                                        }
+                                    })
+                                    .setNegativeButton(R.string.no, DismissOnClickListener.INSTANCE)
+                                    .show();
+                        }
+                    }, this);
+        } else {
+            // request permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_RESTORE_BACKUP);
+        }
+    }
+
+    private void restoreBackup(@NonNull final File file) {
         try {
+            final BackupManager backupManager = new BackupManager(PlacemarkCollectionDao.getInstance(), PlacemarkDao.getInstance());
             Util.showToast(getString(R.string.action_restore_backup), Toast.LENGTH_SHORT);
-            backupManager.restore();
-            Util.showToast(getString(R.string.backup_file, BackupManager.BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
+            backupManager.restore(file);
+            Util.showToast(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
             setPlacemarkCollection(null);
         } catch (Exception e) {
             Log.w(MainActivity.class.getSimpleName(), "restore backup failed", e);
             Util.showToast(e);
-        }
-    }
-
-    private void setUpDebugDatabase() {
-        if (!BuildConfig.DEBUG) throw new Error();
-
-        try (final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open();
-             final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open()) {
-            final SQLiteDatabase placemarkCollectionDatabase = placemarkCollectionDao.getDatabase();
-            final SQLiteDatabase placemarkDatabase = placemarkDao.getDatabase();
-            placemarkCollectionDatabase.beginTransaction();
-            placemarkDatabase.beginTransaction();
-            try {
-                // clear all database
-                for (final PlacemarkCollection placemarkCollection : placemarkCollectionDao.findAllPlacemarkCollection()) {
-                    placemarkDao.deleteByCollectionId(placemarkCollection.getId());
-                    placemarkCollectionDao.delete(placemarkCollection);
-                }
-
-                // recreate test database
-                final PlacemarkCollection placemarkCollection = new PlacemarkCollection();
-                for (int pci = 15; pci >= 0; --pci) {
-                    placemarkCollection.setId(0);
-                    placemarkCollection.setName("Placemark Collection " + pci);
-                    placemarkCollection.setCategory(pci == 0 ? null : "Category " + (pci % 7));
-                    placemarkCollection.setDescription("Placemark Collection long long long description");
-                    placemarkCollection.setSource("source " + pci);
-                    placemarkCollection.setPoiCount(pci);
-                    placemarkCollection.setLastUpdate(pci * 10_000_000);
-                    placemarkCollectionDao.insert(placemarkCollection);
-                    Log.i(MainActivity.class.getSimpleName(), "inserted " + placemarkCollection);
-
-                    final Placemark placemark = new Placemark();
-                    for (int lat = -60; lat < 60; ++lat) {
-                        for (int lon = -90; lon < 90; lon += 2) {
-                            placemark.setId(0);
-                            placemark.setName("Placemark " + lat + "," + lon + "/" + pci);
-                            placemark.setDescription((lat + lon) % 10 == 0 ? null : "Placemark description");
-                            placemark.setLatitude((float) (lat + Math.sin(lat + pci)));
-                            placemark.setLongitude((float) (lon + Math.sin(lon - pci)));
-                            placemark.setCollectionId(placemarkCollection.getId());
-                            placemarkDao.insert(placemark);
-                        }
-                    }
-                }
-
-                placemarkDatabase.setTransactionSuccessful();
-                placemarkCollectionDatabase.setTransactionSuccessful();
-            } finally {
-                placemarkDatabase.endTransaction();
-                placemarkCollectionDatabase.endTransaction();
-            }
         }
     }
 
@@ -488,7 +499,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        rangeLabel.setText(getString(R.string.search_range, progress));
+        rangeLabel.setText(getString(R.string.search_range, progress + RANGE_MIN));
     }
 
     @Override
@@ -508,22 +519,50 @@ public class MainActivity extends AppCompatActivity
 
     private void setUseLocationManagerListener(final boolean on) {
         boolean locationManagerListenerEnabled = false;
-        if (on) {
-            setUseLocationManagerListener(false);
-            onLocationChanged(null);
-            for (final String provider : locationManager.getAllProviders()) {
-                Log.i(MainActivity.class.getSimpleName(), "provider " + provider);
-                // search updated location
-                onLocationChanged(locationManager.getLastKnownLocation(provider));
-                locationManager.requestLocationUpdates(provider, LOCATION_TIME_ACCURACY, LOCATION_RANGE_ACCURACY, this);
-                locationManagerListenerEnabled = true;
+        try {
+            if (on) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    setUseLocationManagerListener(false);
+                    onLocationChanged(null);
+                    for (final String provider : locationManager.getAllProviders()) {
+                        Log.i(MainActivity.class.getSimpleName(), "provider " + provider);
+                        // search updated location
+                        onLocationChanged(locationManager.getLastKnownLocation(provider));
+                        locationManager.requestLocationUpdates(provider, LOCATION_TIME_ACCURACY, LOCATION_RANGE_ACCURACY, this);
+                        locationManagerListenerEnabled = true;
+                    }
+                } else {
+                    // request permission
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_GPS_ON);
+                }
+            } else {
+                locationManager.removeUpdates(this);
             }
-        } else {
-            locationManager.removeUpdates(this);
+        } catch (SecurityException se) {
+            Util.showToast(se);
         }
         Log.i(MainActivity.class.getSimpleName(), "status " + locationManagerListenerEnabled);
+        switchGps.setChecked(locationManagerListenerEnabled);
         latitudeText.setEnabled(!locationManagerListenerEnabled);
         longitudeText.setEnabled(!locationManagerListenerEnabled);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+        final boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        switch (requestCode) {
+            case PERMISSION_GPS_ON:
+                setUseLocationManagerListener(granted);
+                break;
+            case PERMISSION_CREATE_BACKUP:
+                if (granted) createBackup();
+                break;
+            case PERMISSION_RESTORE_BACKUP:
+                if (granted) showRestoreBackupConfirm();
+                break;
+        }
     }
 
     /**

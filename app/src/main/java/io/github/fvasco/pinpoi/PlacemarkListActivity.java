@@ -4,9 +4,12 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -29,7 +32,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
-import io.github.fvasco.pinpoi.model.Placemark;
+import io.github.fvasco.pinpoi.model.PlacemarkSearchResult;
+import io.github.fvasco.pinpoi.util.Coordinates;
+import io.github.fvasco.pinpoi.util.LocationUtil;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -52,7 +57,8 @@ public class PlacemarkListActivity extends AppCompatActivity {
            /*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198',
            /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196'
     };
-
+    private FloatingActionButton starFab;
+    private FloatingActionButton mapFab;
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -62,6 +68,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     private float longitude;
     private PlacemarkDao placemarkDao;
     private long[] placemarkIdArray;
+    private PlacemarkDetailFragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +76,8 @@ public class PlacemarkListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_placemark_list);
         Util.initApplicationContext(getApplicationContext());
         placemarkDao = PlacemarkDao.getInstance().open();
+        starFab = (FloatingActionButton) findViewById(R.id.fabStar);
+        mapFab = (FloatingActionButton) findViewById(R.id.fabMap);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -116,91 +125,112 @@ public class PlacemarkListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(final @NonNull RecyclerView recyclerView) {
-        final SimpleItemRecyclerViewAdapter adapter = new SimpleItemRecyclerViewAdapter();
-        recyclerView.setAdapter(adapter);
+        final RecyclerView.Adapter oldAdapter = recyclerView.getAdapter();
+        if (oldAdapter == null || oldAdapter.getItemCount() == 0) {
+            final SimpleItemRecyclerViewAdapter adapter = new SimpleItemRecyclerViewAdapter();
+            recyclerView.setAdapter(adapter);
 
-        // load parameters
-        final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        latitude = getIntent().getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN));
-        longitude = getIntent().getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN));
-        final int range = getIntent().getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0));
-        String nameFilter = getIntent().getStringExtra(ARG_NAME_FILTER);
-        if (nameFilter == null) {
-            nameFilter = preferences.getString(ARG_NAME_FILTER, null);
-        }
-        final boolean favourite = getIntent().getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false));
-        final String nameFilterFinal = nameFilter;
-
-        // read collections id or parse from preference
-        long[] collectionIds = getIntent().getLongArrayExtra(ARG_COLLECTION_IDS);
-        if (collectionIds == null) {
-            final Set<String> stringIds = preferences.getStringSet(ARG_COLLECTION_IDS, Collections.EMPTY_SET);
-            collectionIds = new long[stringIds.size()];
-            int i = 0;
-            for (final String id : stringIds) {
-                collectionIds[i] = Long.parseLong(id);
-                ++i;
+            // load parameters
+            final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+            latitude = getIntent().getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN));
+            longitude = getIntent().getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN));
+            final int range = getIntent().getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0));
+            String nameFilter = getIntent().getStringExtra(ARG_NAME_FILTER);
+            if (nameFilter == null) {
+                nameFilter = preferences.getString(ARG_NAME_FILTER, null);
             }
-        }
+            final boolean favourite = getIntent().getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false));
+            final String nameFilterFinal = nameFilter;
 
-        // create string set of collection id
-        // for preference
-        // and deferred job
-        final Set<String> collectionIdSet = new TreeSet<>();
-        final List<Long> collectionIdList = new ArrayList<>(collectionIds.length);
-        for (final long id : collectionIds) {
-            collectionIdList.add(id);
-            collectionIdSet.add(String.valueOf(id));
-        }
-
-        // save parameters in preferences
-        preferences.edit()
-                .putFloat(ARG_LATITUDE, latitude)
-                .putFloat(ARG_LONGITUDE, longitude)
-                .putInt(ARG_RANGE, range)
-                .putBoolean(ARG_FAVOURITE, favourite)
-                .putString(ARG_NAME_FILTER, nameFilter)
-                .putStringSet(ARG_COLLECTION_IDS, collectionIdSet)
-                .apply();
-
-        final ProgressDialog progress = new ProgressDialog(recyclerView.getContext());
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-        progress.show();
-        Util.EXECUTOR.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final Collection<Placemark> placemarks =
-                            placemarkDao.findAllPlacemarkNear(Util.newLocation(latitude, longitude),
-                                    range, nameFilterFinal, favourite, collectionIdList);
-                    Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks " + placemarks.size());
-                    if (placemarks.isEmpty()) {
-                        Util.showToast(getString(R.string.error_no_placemark), Toast.LENGTH_LONG);
-                    } else {
-                        Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter.setPlacemarks(placemarks);
-                            }
-                        });
-                    }
-
-                    // create placemark id list for swipe
-                    placemarkIdArray = new long[placemarks.size()];
-                    int i = 0;
-                    for (final Placemark p : placemarks) {
-                        placemarkIdArray[i] = p.getId();
-                        ++i;
-                    }
-                } catch (Exception e) {
-                    Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
-                    Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
-                } finally {
-                    progress.dismiss();
+            // read collections id or parse from preference
+            long[] collectionIds = getIntent().getLongArrayExtra(ARG_COLLECTION_IDS);
+            if (collectionIds == null) {
+                final Set<String> stringIds = preferences.getStringSet(ARG_COLLECTION_IDS, Collections.EMPTY_SET);
+                collectionIds = new long[stringIds.size()];
+                int i = 0;
+                for (final String id : stringIds) {
+                    collectionIds[i] = Long.parseLong(id);
+                    ++i;
                 }
             }
-        });
+
+            // create string set of collection id
+            // for preference
+            // and deferred job
+            final Set<String> collectionIdSet = new TreeSet<>();
+            final List<Long> collectionIdList = new ArrayList<>(collectionIds.length);
+            for (final long id : collectionIds) {
+                collectionIdList.add(id);
+                collectionIdSet.add(String.valueOf(id));
+            }
+
+            // save parameters in preferences
+            preferences.edit()
+                    .putFloat(ARG_LATITUDE, latitude)
+                    .putFloat(ARG_LONGITUDE, longitude)
+                    .putInt(ARG_RANGE, range)
+                    .putBoolean(ARG_FAVOURITE, favourite)
+                    .putString(ARG_NAME_FILTER, nameFilter)
+                    .putStringSet(ARG_COLLECTION_IDS, collectionIdSet)
+                    .apply();
+
+            final ProgressDialog progress = new ProgressDialog(recyclerView.getContext());
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setIndeterminate(true);
+            progress.show();
+            Util.EXECUTOR.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final Collection<PlacemarkSearchResult> placemarks =
+                                placemarkDao.findAllPlacemarkNear(new Coordinates(latitude, longitude),
+                                        range, nameFilterFinal, favourite, collectionIdList);
+                        Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks " + placemarks.size());
+                        if (placemarks.isEmpty()) {
+                            Util.showToast(getString(R.string.error_no_placemark), Toast.LENGTH_LONG);
+                        } else {
+                            Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    adapter.setPlacemarks(placemarks);
+                                }
+                            });
+                        }
+
+                        // create placemark id list for left/right swipe in placemark detail
+                        placemarkIdArray = new long[placemarks.size()];
+                        int i = 0;
+                        for (final PlacemarkSearchResult p : placemarks) {
+                            placemarkIdArray[i] = p.getId();
+                            ++i;
+                        }
+                    } catch (Exception e) {
+                        Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
+                        Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
+                    } finally {
+                        progress.dismiss();
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        resetStarFabIcon();
+    }
+
+    private void resetStarFabIcon() {
+        fragment.resetStarFabIcon(starFab);
+    }
+
+    public void onStarClick(final View view) {
+        fragment.onStarClick(starFab);
+    }
+
+    public void onMapClick(final View view) {
+        fragment.onMapClick(view);
     }
 
     public class SimpleItemRecyclerViewAdapter
@@ -209,30 +239,30 @@ public class PlacemarkListActivity extends AppCompatActivity {
         private final DecimalFormat decimalFormat = new DecimalFormat();
         private final StringBuilder stringBuilder = new StringBuilder();
         private final float[] floatArray = new float[2];
-        private Placemark[] mValues;
+        private PlacemarkSearchResult[] placemarks;
 
         public SimpleItemRecyclerViewAdapter() {
             decimalFormat.setMinimumFractionDigits(1);
             decimalFormat.setMaximumFractionDigits(1);
         }
 
-        public void setPlacemarks(final Collection<Placemark> placemarks) {
-            mValues = placemarks.toArray(new Placemark[placemarks.size()]);
+        public void setPlacemarks(final Collection<PlacemarkSearchResult> placemarks) {
+            this.placemarks = placemarks.toArray(new PlacemarkSearchResult[placemarks.size()]);
             notifyDataSetChanged();
         }
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.placemark_list_content, parent, false);
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            final Placemark p = mValues[position];
-            holder.mItem = p;
-            Location.distanceBetween(latitude, longitude, p.getLatitude(), p.getLongitude(), floatArray);
+            final PlacemarkSearchResult placemark = placemarks[position];
+            holder.placemark = placemark;
+            Location.distanceBetween(latitude, longitude, placemark.getLatitude(), placemark.getLongitude(), floatArray);
             final float distance = floatArray[0];
             // calculate index for arrow
             int arrowIndex = Math.round(floatArray[1] + 45F / 2F);
@@ -246,61 +276,70 @@ public class PlacemarkListActivity extends AppCompatActivity {
 
             stringBuilder.setLength(0);
             if (distance < 1_000F) {
-                stringBuilder.append(Integer.toString((int) distance)).append(' ');
+                stringBuilder.append(Integer.toString((int) distance)).append(" m");
             } else {
                 stringBuilder.append(distance < 10_000F
                         ? decimalFormat.format(distance / 1_000F)
                         : Integer.toString((int) distance / 1_000))
-                        .append(" k");
+                        .append(" ㎞");
             }
-            stringBuilder.append("m ").append(ARROWS[arrowIndex]);
-            holder.mInfoView.setText(stringBuilder);
-            holder.mContentView.setText(p.getName());
+            stringBuilder.append(' ').append(ARROWS[arrowIndex])
+                    .append("  ").append(placemark.getName());
+            holder.view.setText(stringBuilder.toString());
+            holder.view.setTypeface(placemark.isFlagged() ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
 
-            holder.mView.setOnClickListener(new View.OnClickListener() {
+            holder.view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.mItem.getId());
+                        arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.placemark.getId());
                         arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
-                        PlacemarkDetailFragment fragment = new PlacemarkDetailFragment();
+                        fragment = new PlacemarkDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.placemark_detail_container, fragment)
                                 .commit();
+
+                        // show fab
+                        starFab.setVisibility(View.VISIBLE);
+                        mapFab.setVisibility(View.VISIBLE);
+                        mapFab.setOnLongClickListener(fragment.longClickListener);
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, PlacemarkDetailActivity.class);
-                        intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.mItem.getId());
+                        intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.placemark.getId());
                         intent.putExtra(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
                         context.startActivity(intent);
                     }
+                }
+            });
+            holder.view.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    LocationUtil.openExternalMap(holder.placemark, false, view.getContext());
+                    return true;
                 }
             });
         }
 
         @Override
         public int getItemCount() {
-            return mValues == null ? 0 : mValues.length;
+            return placemarks == null ? 0 : placemarks.length;
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
-            public final TextView mInfoView;
-            public final TextView mContentView;
-            public Placemark mItem;
+            public final TextView view;
+            public PlacemarkSearchResult placemark;
 
             public ViewHolder(View view) {
                 super(view);
-                mView = view;
-                mInfoView = (TextView) view.findViewById(R.id.info);
-                mContentView = (TextView) view.findViewById(R.id.content);
+                this.view = (TextView) view.findViewById(android.R.id.text1);
             }
 
             @Override
             public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
+                return super.toString() + " '" + placemark + "'";
             }
         }
     }

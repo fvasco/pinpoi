@@ -2,13 +2,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fab_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/category"
+        android:padding="@dimen/text_margin"
+        android:text="@string/category" />
+
+    <AutoCompleteTextView
+        android:id="@+id/category"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text|textCapCharacters"
+        android:padding="@dimen/text_margin"
+        android:singleLine="true" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:labelFor="@+id/description"
-        android:padding="16dp"
+        android:padding="@dimen/text_margin"
         android:text="@string/description" />
 
     <EditText
@@ -17,23 +38,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textMultiLine"
-        android:padding="16dp"
+        android:padding="@dimen/text_margin"
         tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionDetailFragment" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:labelFor="@+id/category"
-        android:padding="16dp"
-        android:text="@string/category" />
-
-    <AutoCompleteTextView
-        android:id="@+id/category"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="text|textCapCharacters"
-        android:padding="16dp"
-        android:singleLine="true" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -45,7 +51,7 @@
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:labelFor="@+id/source"
-            android:padding="16dp"
+            android:padding="@dimen/text_margin"
             android:text="@string/source" />
 
         <ImageButton
@@ -62,24 +68,23 @@
         android:id="@+id/source"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textUri"
-        android:padding="16dp"
+        android:inputType="textUri|textMultiLine"
+        android:padding="@dimen/text_margin"
         android:singleLine="true" />
 
     <TextView
         android:id="@+id/last_update"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp" />
+        android:padding="@dimen/text_margin" />
 
     <TextView
         android:id="@+id/poi_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp" />
+        android:padding="@dimen/text_margin" />
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_gravity="center_horizontal" />
+        android:layout_height="64dp" />
 </LinearLayout>

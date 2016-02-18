@@ -1,27 +1,28 @@
 package io.github.fvasco.pinpoi.util;
 
+import android.app.AlertDialog;
 import android.content.Context;
-import android.location.Address;
-import android.location.Location;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.BuildConfig;
+import android.util.Log;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import io.github.fvasco.pinpoi.model.Placemark;
-
 /**
- * Common utility for multi thread develop
+ * Miscellaneous common utility
  *
  * @author Francesco Vasco
  */
@@ -47,30 +48,10 @@ public final class Util {
         APPLICATION_CONTEXT = context;
     }
 
+    @NonNull
     public static Context getApplicationContext() {
-        //noinspection PointlessBooleanExpression
-        if (BuildConfig.DEBUG && APPLICATION_CONTEXT == null) {
-            throw new AssertionError();
-        }
+        Objects.requireNonNull(APPLICATION_CONTEXT, "No context defined");
         return APPLICATION_CONTEXT;
-    }
-
-    public static Location newLocation(double latitude, double longitude) {
-        final Location l = new Location(Util.class.getSimpleName());
-        l.setLatitude(latitude);
-        l.setLongitude(longitude);
-        l.setAccuracy(0);
-        l.setTime(System.currentTimeMillis());
-        return l;
-    }
-
-    public static Location newLocation(@NonNull final Placemark placemark) {
-        return newLocation(placemark.getLatitude(), placemark.getLongitude());
-    }
-
-    public static String formatCoordinate(@NonNull final Placemark placemark) {
-        return Float.toString(placemark.getLatitude())
-                + ',' + Float.toString(placemark.getLongitude());
     }
 
     public static void showToast(@NonNull final Throwable throwable) {
@@ -79,6 +60,9 @@ public final class Util {
     }
 
     public static void showToast(@NonNull final CharSequence message, final int duration) {
+        if (io.github.fvasco.pinpoi.BuildConfig.DEBUG) {
+            Log.i(Util.class.getSimpleName(), message.toString());
+        }
         MAIN_LOOPER_HANDLER.post(new Runnable() {
             @Override
             public void run() {
@@ -107,6 +91,43 @@ public final class Util {
         return text != null && text.matches("\\w+:/{1,3}\\w+.+");
     }
 
+    public static void openFileChooser(final File dir, final Consumer<File> fileConsumer, final Context context) {
+        if (dir.isDirectory() && dir.canRead()) {
+            File[] files = dir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.canRead() && !pathname.getName().startsWith(".");
+                }
+            });
+            final String[] fileNames = new String[files.length + 1];
+            // last is up dir
+            fileNames[files.length] = "..";
+            for (int i = files.length - 1; i >= 0; --i) {
+                final File file = files[i];
+                fileNames[i] = file.isDirectory()
+                        ? file.getName() + '/'
+                        : file.getName();
+            }
+            Arrays.sort(fileNames);
+            new AlertDialog.Builder(context)
+                    .setTitle(dir.getAbsolutePath())
+                    .setItems(fileNames, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            final File file = new File(dir, fileNames[which]).getAbsoluteFile();
+                            if (file.isDirectory()) {
+                                openFileChooser(file, fileConsumer, context);
+                            } else {
+                                fileConsumer.accept(file);
+                            }
+                        }
+                    }).show();
+        } else {
+            openFileChooser(dir.getParentFile(), fileConsumer, context);
+        }
+    }
+
     /**
      * Safe trim for string, null check
      */
@@ -123,43 +144,6 @@ public final class Util {
                 stringBuilder.append(separator);
             }
             stringBuilder.append(text);
-        }
-    }
-
-    /**
-     * Convert an {@linkplain Address} to a string
-     */
-    public static String toString(Address a) {
-        if (a == null) {
-            return null;
-        }
-        final String separator = ", ";
-        if (a.getMaxAddressLineIndex() == 0) {
-            return a.getAddressLine(0);
-        } else if (a.getMaxAddressLineIndex() > 0) {
-            final StringBuilder stringBuilder = new StringBuilder(a.getAddressLine(0));
-            for (int i = 1; i <= a.getMaxAddressLineIndex(); ++i) {
-                stringBuilder.append(separator).append(a.getAddressLine(i));
-            }
-            return stringBuilder.toString();
-        } else {
-            final StringBuilder stringBuilder = new StringBuilder();
-            append(a.getFeatureName(), separator, stringBuilder);
-            append(a.getLocality(), separator, stringBuilder);
-            append(a.getAdminArea(), separator, stringBuilder);
-            append(a.getCountryCode(), separator, stringBuilder);
-            return isEmpty(stringBuilder) ? a.toString() : stringBuilder.toString();
-        }
-    }
-
-    /**
-     * Copy stream
-     */
-    public static void copy(final InputStream is, final OutputStream os) throws IOException {
-        final byte[] buf = new byte[4 * 1024];
-        int c;
-        while ((c = is.read(buf)) >= 0) {
-            os.write(buf, 0, c);
         }
     }
 

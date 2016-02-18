@@ -6,7 +6,10 @@ import android.test.RenamingDelegatingContext;
 
 import org.junit.Test;
 
+import java.io.File;
+
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
+import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 
 /**
@@ -15,61 +18,67 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 public class BackupManagerTest extends AndroidTestCase {
 
     private Context testContext;
+    private File backupFile;
+    private PlacemarkCollectionDao placemarkCollectionDao;
+    private PlacemarkDao placemarkDao;
+    private BackupManager backupManager;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         testContext = new RenamingDelegatingContext(getContext(), "test_");
-        BackupManager.BACKUP_FILE.delete();
+        backupFile = new File(testContext.getCacheDir(), "test.backup");
+        placemarkCollectionDao = new PlacemarkCollectionDao(testContext);
+        placemarkDao = new PlacemarkDao(testContext);
+        //noinspection ResultOfMethodCallIgnored
+        if (backupFile.exists()) {
+            assertTrue(backupFile.delete());
+        }
+
+        // init database
+        DebugUtil.setUpDebugDatabase(testContext);
+        backupManager = new BackupManager(placemarkCollectionDao, placemarkDao);
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        BackupManager.BACKUP_FILE.delete();
+        //noinspection ResultOfMethodCallIgnored
+        backupFile.delete();
     }
 
     @Test
     public void testCreate() throws Exception {
-        if (!BackupManager.isCreateBackupSupported()) return;
-        try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open()) {
-            final PlacemarkCollection placemarkCollection = new PlacemarkCollection();
-            placemarkCollection.setName("name");
-            placemarkCollection.setDescription("description");
-            placemarkCollection.setCategory("category");
-            placemarkCollection.setSource("source");
-            placemarkCollectionDao.insert(placemarkCollection);
-        }
-        final BackupManager backupManager = new BackupManager(testContext);
-        backupManager.create();
-        assertTrue(BackupManager.BACKUP_FILE.isFile());
+        backupManager.create(backupFile);
+        assertTrue(backupFile.length() > 0);
     }
 
     @Test
     public void testRestore() throws Exception {
-        if (!BackupManager.isCreateBackupSupported()
-                || !BackupManager.isRestoreBackupSupported()) return;
-
         testCreate();
 
-        final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext);
-        placemarkCollectionDao.open();
-        try {
-            for (final PlacemarkCollection placemarkCollection : placemarkCollectionDao.findAllPlacemarkCollection()) {
-                placemarkCollectionDao.delete(placemarkCollection);
+        try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open();
+             final PlacemarkDao placemarkDao = new PlacemarkDao(testContext).open()) {
+            placemarkCollectionDao.getDatabase().beginTransaction();
+            placemarkDao.getDatabase().beginTransaction();
+            try {
+                for (final PlacemarkCollection placemarkCollection : placemarkCollectionDao.findAllPlacemarkCollection()) {
+                    placemarkDao.findAllPlacemarkByCollectionId(placemarkCollection.getId());
+                    placemarkCollectionDao.delete(placemarkCollection);
+                }
+                placemarkCollectionDao.getDatabase().setTransactionSuccessful();
+                placemarkDao.getDatabase().setTransactionSuccessful();
+            } finally {
+                placemarkCollectionDao.getDatabase().endTransaction();
+                placemarkDao.getDatabase().endTransaction();
             }
-        } finally {
-            placemarkCollectionDao.close();
         }
+        backupManager.restore(backupFile);
 
-        final BackupManager backupManager = new BackupManager(testContext);
-        backupManager.restore();
-
-        placemarkCollectionDao.open();
-        try {
+        try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open();
+             final PlacemarkDao placemarkDao = new PlacemarkDao(testContext).open()) {
             assertTrue(!placemarkCollectionDao.findAllPlacemarkCollection().isEmpty());
-        } finally {
-            placemarkCollectionDao.close();
+            assertTrue(!placemarkDao.findAllPlacemarkByCollectionId(1).isEmpty());
         }
     }
 }

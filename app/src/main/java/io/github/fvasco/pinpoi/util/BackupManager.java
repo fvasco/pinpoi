@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi.util;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.util.Log;
@@ -9,15 +8,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import io.github.fvasco.pinpoi.BuildConfig;
 import io.github.fvasco.pinpoi.dao.AbstractDao;
-import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
-import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 
 /**
  * Create and restore backup
@@ -26,64 +26,70 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao;
  */
 public class BackupManager {
 
-    public static final File BACKUP_FILE = new File(Environment.getExternalStorageDirectory(), "pinpoi.backup");
-    private static final File BACKUP_DIR = Environment.getExternalStorageDirectory();
+    public static final File DEFAULT_BACKUP_FILE = new File(Environment.getExternalStorageDirectory(), "pinpoi.backup");
     private final AbstractDao[] daos;
 
-    public BackupManager(final Context context) {
-        daos = new AbstractDao[]{
-                new PlacemarkCollectionDao(context),
-                new PlacemarkDao(context)
-        };
+    public BackupManager(final AbstractDao... daos) {
+        this.daos = daos;
     }
 
-    public static boolean isRestoreBackupSupported() {
-        return BACKUP_DIR.isDirectory() && BACKUP_DIR.canRead();
-    }
-
-    public static boolean isCreateBackupSupported() {
-        return BACKUP_DIR.isDirectory() && BACKUP_DIR.canWrite();
-    }
-
-    public void create() throws IOException {
-        if (!isCreateBackupSupported()) {
-            throw new IllegalStateException();
-        }
-        try (final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(BACKUP_FILE))) {
+    public void create(final File file) throws IOException {
+        try (final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(file))) {
+            final WritableByteChannel zipChannel = Channels.newChannel(zipOutputStream);
             for (final AbstractDao dao : daos) {
-                dao.open();
-                try (SQLiteDatabase database = dao.getDatabase()) {
-                    final File databasePath = new File(database.getPath());
-                    final ZipEntry zipEntry = new ZipEntry(databasePath.getName());
-                    zipOutputStream.putNextEntry(zipEntry);
-                    try (final InputStream inputStream = new FileInputStream(databasePath)) {
-                        Util.copy(inputStream, zipOutputStream);
+                synchronized (dao) {
+                    final File databaseFile;
+                    dao.open();
+                    try (SQLiteDatabase database = dao.getDatabase()) {
+                        databaseFile = new File(database.getPath());
+                    } finally {
+                        dao.close();
                     }
-                } finally {
-                    dao.close();
+                    final ZipEntry zipEntry = new ZipEntry(databaseFile.getName());
+                    zipOutputStream.putNextEntry(zipEntry);
+                    try (final FileChannel databaseChannel = new FileInputStream(databaseFile).getChannel()) {
+                        long count = 0;
+                        final long max = databaseFile.length();
+                        while (count != max) {
+                            count += databaseChannel.transferTo(count, max - count, zipChannel);
+                        }
+                    }
+                    zipOutputStream.closeEntry();
                 }
-                zipOutputStream.closeEntry();
             }
         }
     }
 
-    public void restore() throws IOException {
-        if (!BACKUP_FILE.isFile() || !BACKUP_FILE.canRead()) {
-            throw new IllegalStateException("Can't read" + BACKUP_FILE.getAbsolutePath());
-        }
-        try (final ZipFile zipFile = new ZipFile(BACKUP_FILE)) {
+    public void restore(final File file) throws IOException {
+        try (final ZipFile zipFile = new ZipFile(file)) {
             for (final AbstractDao dao : daos) {
-                dao.open();
-                try (SQLiteDatabase database = dao.getDatabase()) {
-                    final File databasePath = new File(database.getPath());
-                    final String databaseName = databasePath.getName();
-                    Log.i(BackupManager.class.getSimpleName(), "restore database " + databaseName);
-                    final InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(databaseName));
-                    try (final OutputStream outputStream = new FileOutputStream(databasePath)) {
-                        Util.copy(inputStream, outputStream);
+                synchronized (dao) {
+                    final File databasePath;
+                    dao.open();
+                    try (SQLiteDatabase database = dao.getDatabase()) {
+                        databasePath = new File(database.getPath());
+                    } finally {
+                        dao.close();
                     }
-                } finally {
-                    dao.close();
+                    try {
+                        final String databaseName = databasePath.getName();
+                        Log.i(BackupManager.class.getSimpleName(), "restore database " + databaseName);
+                        final ZipEntry zipEntry = zipFile.getEntry(databaseName);
+                        final ReadableByteChannel entryChannel = Channels.newChannel(zipFile.getInputStream(zipEntry));
+                        try (final FileChannel fileChannel = new FileOutputStream(databasePath).getChannel()) {
+                            long count = 0;
+                            final long max = zipEntry.getSize();
+                            fileChannel.truncate(max);
+                            while (count != max) {
+                                count += fileChannel.transferFrom(entryChannel, count, max - count);
+                            }
+                            if (BuildConfig.DEBUG && databasePath.length() != zipEntry.getSize()) {
+                                throw new IOException("Backup failed");
+                            }
+                        }
+                    } finally {
+                        dao.reset();
+                    }
                 }
             }
         }
