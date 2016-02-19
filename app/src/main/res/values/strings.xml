@@ -15,7 +15,7 @@
     <string name="source">Source URL (or local file path)</string>
     <string name="description">Description</string>
     <string name="update">Update %1$s</string>
-    <string name="update_collection_success">Update success %1$s, %2$d POIs imported</string>
+    <string name="update_collection_success">Update success %1$s, %2$,d POIs imported</string>
     <string name="error_update">Update error %1$s: %2$s</string>
     <string name="error_search">Search error: %1$s</string>
     <string name="error_no_placemark">no placemark found</string>
@@ -32,7 +32,7 @@
     <string name="error_network">Network error</string>
     <string name="error_no_address_found">Error: no address found</string>
     <string name="close">Close</string>
-    <string name="poi_count">%1$d sites in this collection</string>
+    <string name="poi_count">%1$,d POIs in this collection</string>
     <string name="last_update">Last update at %1$tc</string>
     <string name="name_filter">Name filter</string>
     <string name="only_favourite">Only favourites</string>
@@ -42,4 +42,5 @@
     <string name="menu_backup">Backup</string>
     <string name="action_delete">Delete</string>
     <string name="action_rename">Rename</string>
+    <string name="any_filter">(any)</string>
 </resources>

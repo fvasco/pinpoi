@@ -48,11 +48,14 @@ public class BackupManager {
                     final ZipEntry zipEntry = new ZipEntry(databaseFile.getName());
                     zipOutputStream.putNextEntry(zipEntry);
                     try (final FileChannel databaseChannel = new FileInputStream(databaseFile).getChannel()) {
+                        dao.lock();
                         long count = 0;
                         final long max = databaseFile.length();
                         while (count != max) {
                             count += databaseChannel.transferTo(count, max - count, zipChannel);
                         }
+                    } finally {
+                        dao.reset();
                     }
                     zipOutputStream.closeEntry();
                 }
@@ -77,6 +80,7 @@ public class BackupManager {
                         final ZipEntry zipEntry = zipFile.getEntry(databaseName);
                         final ReadableByteChannel entryChannel = Channels.newChannel(zipFile.getInputStream(zipEntry));
                         try (final FileChannel fileChannel = new FileOutputStream(databasePath).getChannel()) {
+                            dao.lock();
                             long count = 0;
                             final long max = zipEntry.getSize();
                             fileChannel.truncate(max);

@@ -22,8 +22,8 @@ public class ZipImporter extends AbstractImporter {
         try (final ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                if (!zipEntry.isDirectory()) {
-                    final String entryName = zipEntry.getName();
+                final String entryName = zipEntry.getName();
+                if (!zipEntry.isDirectory() && !entryName.startsWith(".")) {
                     final AbstractImporter importer = ImporterFacade.createImporter(entryName);
                     if (importer != null) {
                         Log.d(ZipImporter.class.getSimpleName(), "Import entry " + entryName);

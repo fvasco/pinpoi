@@ -1,22 +1,6 @@
 package io.github.fvasco.pinpoi.importer;
 
-import android.support.annotation.NonNull;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import io.github.fvasco.pinpoi.model.Placemark;
+import io.github.fvasco.pinpoi.util.Util;
 
 /**
  * KML importer
@@ -26,69 +10,35 @@ import io.github.fvasco.pinpoi.model.Placemark;
 /*
  * Read KML data using SAX
  */
-public class GpxImporter extends AbstractImporter {
+public class GpxImporter extends AbstractXmlImporter {
 
-    private final SAXParser saxParser;
-
-    public GpxImporter() {
-        try {
-            SAXParserFactory spf = SAXParserFactory.newInstance();
-            spf.setNamespaceAware(true);
-            saxParser = spf.newSAXParser();
-        } catch (SAXException | ParserConfigurationException ex) {
-            throw new RuntimeException(ex);
+    @Override
+    protected void handleStartTag() {
+        switch (tag) {
+            case "wpt":
+                newPlacemark();
+                placemark.setLatitude(Float.parseFloat(parser.getAttributeValue(null, "lat")));
+                placemark.setLongitude(Float.parseFloat(parser.getAttributeValue(null, "lon")));
+                break;
+            case "link":
+                if (placemark != null && Util.isEmpty(placemark.getDescription()))
+                    placemark.setDescription(parser.getAttributeValue(null, "href"));
+                break;
         }
     }
 
     @Override
-    protected void importImpl(@NonNull final InputStream is) throws IOException {
-        try {
-            XMLReader xmlReader = saxParser.getXMLReader();
-            xmlReader.setContentHandler(new GpxContentHandler());
-            xmlReader.parse(new InputSource(is));
-        } catch (SAXException ex) {
-            throw new IOException("Error reading GPX file", ex);
-        }
-    }
-
-    private final class GpxContentHandler extends DefaultHandler implements ContentHandler {
-
-        private final StringBuilder stringBuilder = new StringBuilder();
-        private Placemark placemark;
-
-        @Override
-        public void characters(char[] ch, int start, int length) throws SAXException {
-            stringBuilder.append(ch, start, length);
-        }
-
-        @Override
-        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-            if ("wpt".equals(localName)) {
-                placemark = new Placemark();
-                placemark.setLongitude(Float.parseFloat(attributes.getValue("lon")));
-                placemark.setLatitude(Float.parseFloat(attributes.getValue("lat")));
-            }
-            stringBuilder.setLength(0);
-        }
-
-        @Override
-        public void endElement(String uri, String localName, String qName) throws SAXException {
-            if (placemark != null && stringBuilder.length() > 0) {
-                final String string = stringBuilder.toString().trim();
-                switch (localName) {
-                    case "wpt":
-                        importPlacemark(placemark);
-                        placemark = null;
-                        break;
-                    case "name":
-                        placemark.setName(string);
-                        break;
-                    case "desc":
-                        placemark.setDescription(string);
-                        break;
-                }
-            }
-            stringBuilder.setLength(0);
+    protected void handleEndTag() {
+        switch (tag) {
+            case "wpt":
+                importPlacemark();
+                break;
+            case "name":
+                placemark.setName(text);
+                break;
+            case "desc":
+                placemark.setDescription(text);
+                break;
         }
     }
 

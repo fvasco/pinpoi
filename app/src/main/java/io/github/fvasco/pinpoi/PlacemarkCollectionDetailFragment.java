@@ -155,7 +155,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
         final int poiCount = placemarkCollection.getPoiCount();
         poiCountText.setText(getString(R.string.poi_count, poiCount));
         lastUpdateText.setText(getString(R.string.last_update, placemarkCollection.getLastUpdate()));
-        lastUpdateText.setVisibility(poiCount == 0 ? View.INVISIBLE : View.VISIBLE);
+        lastUpdateText.setVisibility(poiCount == 0 ? View.GONE : View.VISIBLE);
     }
 
     public String getRequiredPermissionToUpdatePlacemarkCollection() {
@@ -166,11 +166,8 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
 
     public void updatePlacemarkCollection() {
         final ProgressDialog progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage(getString(R.string.update, placemarkCollection.getName()));
-        progressDialog.setProgressStyle(placemarkCollection.getPoiCount() > 0
-                ? ProgressDialog.STYLE_HORIZONTAL
-                : ProgressDialog.STYLE_SPINNER);
-        progressDialog.show();
+        progressDialog.setTitle(getString(R.string.update, placemarkCollection.getName()));
+        progressDialog.setMessage(sourceText.getText());
         Util.EXECUTOR.submit(new Runnable() {
             @Override
             public void run() {
@@ -178,6 +175,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                     savePlacemarkCollection();
                     final ImporterFacade importerFacade = new ImporterFacade();
                     importerFacade.setProgressDialog(progressDialog);
+                    importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count));
                     final int count = importerFacade.importPlacemarks(placemarkCollection);
                     if (count == 0) {
                         Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), getString(R.string.error_no_placemark)), Toast.LENGTH_LONG);
@@ -189,12 +187,16 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                     Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), e.getLocalizedMessage()), Toast.LENGTH_LONG);
                 } finally {
                     // update placemark collection info
-                    showUpdatedCollectionInfo();
+                    Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showUpdatedCollectionInfo();
+                        }
+                    });
                 }
             }
         });
     }
-
 
     public void renamePlacemarkCollection(String newPlacemarkCollectionName) {
         if (!Util.isEmpty(newPlacemarkCollectionName)

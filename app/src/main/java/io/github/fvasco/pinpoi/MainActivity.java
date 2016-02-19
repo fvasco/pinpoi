@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity
     public void openPlacemarkCategoryChooser(View view) {
         try (final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open()) {
             final List<String> categories = collectionDao.findAllPlacemarkCollectionCategory();
-            categories.add(0, "");
+            categories.add(0, getString(R.string.any_filter));
             new AlertDialog.Builder(view.getContext())
                     .setTitle(getString(R.string.collection))
                     .setItems(categories.toArray(new String[categories.size()]),
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     dialog.dismiss();
-                                    setPlacemarkCategory(categories.get(which));
+                                    setPlacemarkCategory(which == 0 ? null : categories.get(which));
                                 }
                             }).show();
         }
@@ -264,7 +264,10 @@ public class MainActivity extends AppCompatActivity
                 if (placemarkCollection.getPoiCount() == 0) {
                     iterator.remove();
                 } else {
-                    placemarkCollectionNames.add(placemarkCollection.getCategory() + " / " + placemarkCollection.getName());
+                    placemarkCollectionNames.add(
+                            selectedPlacemarkCategory != null || Util.isEmpty(placemarkCollection.getCategory())
+                                    ? placemarkCollection.getName()
+                                    : placemarkCollection.getCategory() + " / " + placemarkCollection.getName());
                 }
             }
             if (selectedPlacemarkCategory == null && placemarkCollections.isEmpty()) {
@@ -273,7 +276,7 @@ public class MainActivity extends AppCompatActivity
                 setPlacemarkCollection(placemarkCollections.get(0));
             } else {
                 placemarkCollections.add(0, null);
-                placemarkCollectionNames.add(0, "");
+                placemarkCollectionNames.add(0, getString(R.string.any_filter));
                 new AlertDialog.Builder(view.getContext())
                         .setTitle(getString(R.string.collection))
                         .setItems(placemarkCollectionNames.toArray(new String[placemarkCollectionNames.size()]),
@@ -281,7 +284,8 @@ public class MainActivity extends AppCompatActivity
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         dialog.dismiss();
-                                        setPlacemarkCollection(placemarkCollections.get(which));
+                                        setPlacemarkCollection(
+                                                which == 0 ? null : placemarkCollections.get(which));
                                     }
                                 }).show();
             }
@@ -428,15 +432,21 @@ public class MainActivity extends AppCompatActivity
     private void createBackup() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED) {
-            try {
-                final BackupManager backupManager = new BackupManager(PlacemarkCollectionDao.getInstance(), PlacemarkDao.getInstance());
-                Util.showToast(getString(R.string.action_create_backup), Toast.LENGTH_SHORT);
-                backupManager.create(BackupManager.DEFAULT_BACKUP_FILE);
-                Util.showToast(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
-            } catch (Exception e) {
-                Log.w(MainActivity.class.getSimpleName(), "create backup failed", e);
-                Util.showToast(e);
-            }
+            Util.showProgressDialog(
+                    getString(R.string.action_create_backup),
+                    getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()),
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                final BackupManager backupManager = new BackupManager(PlacemarkCollectionDao.getInstance(), PlacemarkDao.getInstance());
+                                backupManager.create(BackupManager.DEFAULT_BACKUP_FILE);
+                            } catch (Exception e) {
+                                Log.w(MainActivity.class.getSimpleName(), "create backup failed", e);
+                                Util.showToast(e);
+                            }
+                        }
+                    }, this);
         } else {
             // request permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_CREATE_BACKUP);
@@ -471,16 +481,26 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void restoreBackup(@NonNull final File file) {
-        try {
-            final BackupManager backupManager = new BackupManager(PlacemarkCollectionDao.getInstance(), PlacemarkDao.getInstance());
-            Util.showToast(getString(R.string.action_restore_backup), Toast.LENGTH_SHORT);
-            backupManager.restore(file);
-            Util.showToast(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()), Toast.LENGTH_LONG);
-            setPlacemarkCollection(null);
-        } catch (Exception e) {
-            Log.w(MainActivity.class.getSimpleName(), "restore backup failed", e);
-            Util.showToast(e);
-        }
+        Util.showProgressDialog(getString(R.string.action_restore_backup),
+                getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.getAbsolutePath()),
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            final BackupManager backupManager = new BackupManager(PlacemarkCollectionDao.getInstance(), PlacemarkDao.getInstance());
+                            backupManager.restore(file);
+                            Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    setPlacemarkCollection(null);
+                                }
+                            });
+                        } catch (Exception e) {
+                            Log.w(MainActivity.class.getSimpleName(), "restore backup failed", e);
+                            Util.showToast(e);
+                        }
+                    }
+                }, this);
     }
 
     private void debugImportCollection() {

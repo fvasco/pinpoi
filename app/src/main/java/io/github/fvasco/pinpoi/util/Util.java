@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi.util;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Handler;
@@ -9,6 +10,9 @@ import android.support.annotation.NonNull;
 import android.support.design.BuildConfig;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -30,10 +34,18 @@ public final class Util {
     public static final Handler MAIN_LOOPER_HANDLER = new Handler(Looper.getMainLooper());
     public static final ExecutorService EXECUTOR =
             Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
+    public static final XmlPullParserFactory XML_PULL_PARSER_FACTORY;
     private static Context APPLICATION_CONTEXT;
 
     static {
         HttpURLConnection.setFollowRedirects(true);
+        try {
+            XML_PULL_PARSER_FACTORY = XmlPullParserFactory.newInstance();
+            XML_PULL_PARSER_FACTORY.setNamespaceAware(true);
+            XML_PULL_PARSER_FACTORY.setValidating(false);
+        } catch (XmlPullParserException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Util() {
@@ -126,6 +138,36 @@ public final class Util {
         } else {
             openFileChooser(dir.getParentFile(), fileConsumer, context);
         }
+    }
+
+    /**
+     * Show indeterminate progress dialog and execute runnable in background
+     *
+     * @param title    progress dialog title
+     * @param message  progress dialog message
+     * @param runnable task to execute in background
+     * @param context  dialog context
+     */
+    public static void showProgressDialog(final CharSequence title, final CharSequence message,
+                                          final Runnable runnable, final Context context) {
+        final ProgressDialog progressDialog = new ProgressDialog(context);
+        progressDialog.setTitle(title);
+        progressDialog.setMessage(message);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setIndeterminate(true);
+        progressDialog.show();
+        Util.EXECUTOR.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.i(Util.class.getSimpleName(), "showProgressDialog begin: " + title);
+                    runnable.run();
+                } finally {
+                    Log.i(Util.class.getSimpleName(), "showProgressDialog end: " + title);
+                    progressDialog.dismiss();
+                }
+            }
+        });
     }
 
     /**

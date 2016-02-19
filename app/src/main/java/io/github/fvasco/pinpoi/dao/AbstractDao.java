@@ -5,9 +5,10 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
-import android.support.design.BuildConfig;
 
 import java.util.Objects;
+
+import io.github.fvasco.pinpoi.BuildConfig;
 
 /**
  * Generic Dao.
@@ -18,7 +19,7 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     private final Context context;
     protected SQLiteDatabase database;
     private SQLiteOpenHelper sqLiteOpenHelper;
-    private volatile int openCount = 0;
+    private volatile int openCount;
 
     public AbstractDao(@NonNull final Context context) {
         Objects.requireNonNull(context);
@@ -29,9 +30,8 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     protected abstract SQLiteOpenHelper createSqLiteOpenHelper(@NonNull Context context);
 
     public synchronized T open() throws SQLException {
-        //noinspection PointlessBooleanExpression
-        if (BuildConfig.DEBUG && openCount < 0) {
-            throw new AssertionError(openCount);
+        if (openCount < 0) {
+            throw new IllegalStateException("Database locked");
         }
         if (openCount == 0) {
             //noinspection PointlessBooleanExpression
@@ -49,8 +49,7 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     }
 
     public synchronized void close() {
-        //noinspection PointlessBooleanExpression
-        if (BuildConfig.DEBUG && openCount <= 0) {
+        if (openCount <= 0) {
             throw new AssertionError(openCount);
         }
         --openCount;
@@ -64,15 +63,34 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     }
 
     /**
+     * Lock database, use {@linkplain #reset()} to unlock
+     */
+    public synchronized void lock() {
+        if (openCount > 0) {
+            throw new IllegalStateException("Database is open");
+        }
+        if (sqLiteOpenHelper != null) {
+            sqLiteOpenHelper.close();
+            sqLiteOpenHelper = null;
+        }
+        if (BuildConfig.DEBUG && database != null) throw new AssertionError();
+        openCount = -1;
+    }
+
+    /**
      * Reinitialize dao state
      *
      * @throws IllegalStateException Error if dao instance is open
      */
     public synchronized void reset() throws IllegalStateException {
-        if (openCount != 0) {
+        if (openCount > 0) {
             throw new IllegalStateException("Dao in use");
         }
+        if (sqLiteOpenHelper != null) {
+            sqLiteOpenHelper.close();
+        }
         sqLiteOpenHelper = createSqLiteOpenHelper(context);
+        openCount = 0;
     }
 
     public SQLiteDatabase getDatabase() {
@@ -82,7 +100,12 @@ public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseabl
     @Override
     protected void finalize() throws Throwable {
         try {
-            close();
+            if (database != null) {
+                database.close();
+            }
+            if (sqLiteOpenHelper != null) {
+                sqLiteOpenHelper.close();
+            }
         } finally {
             super.finalize();
         }

@@ -15,7 +15,7 @@
     <string name="source">URL sorgente (o percorso di un file locale)</string>
     <string name="description">Descrizione</string>
     <string name="update">Aggiornamento %1$s</string>
-    <string name="update_collection_success">Aggiornamento riuscito %1$s, importati %2$d PdI</string>
+    <string name="update_collection_success">Aggiornamento riuscito %1$s, importati %2$,d PdI</string>
     <string name="error_update">Errore durante l\'aggiornamendo di %1$s: %2$s</string>
     <string name="error_search">Errore di ricerca: %1$s</string>
     <string name="error_no_placemark">Nessun punto trovato</string>
@@ -32,7 +32,7 @@
     <string name="error_network">Errore di comunicazione con il server</string>
     <string name="error_no_address_found">Errore: nessun indirizzo trovato</string>
     <string name="close">Chiudi</string>
-    <string name="poi_count">%1$d punti in questa collezione</string>
+    <string name="poi_count">%1$,d punti in questa collezione</string>
     <string name="last_update">Ultimo aggiornamento il %1$tc</string>
     <string name="name_filter">Filtro sul nome</string>
     <string name="only_favourite">Solo favoriti</string>
@@ -42,4 +42,5 @@
     <string name="menu_backup">Backup</string>
     <string name="action_delete">Elimina</string>
     <string name="action_rename">Rinomina</string>
+    <string name="any_filter">(qualsiasi)</string>
 </resources>

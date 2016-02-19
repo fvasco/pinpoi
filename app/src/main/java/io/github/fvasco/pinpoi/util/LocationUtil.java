@@ -51,7 +51,7 @@ public class LocationUtil {
                 geocoder = new Geocoder(Util.getApplicationContext());
             }
             addressCacheFile = new File(Util.getApplicationContext().getCacheDir(), "addressCache");
-            restoreCache();
+            restoreAddressCache();
         }
     }
 
@@ -141,19 +141,28 @@ public class LocationUtil {
         }
     }
 
+    /**
+     * Format coordinate for GPS parser
+     */
     public static String formatCoordinate(@NonNull final PlacemarkBase placemark) {
         return Float.toString(placemark.getLatitude())
                 + ',' + Float.toString(placemark.getLongitude());
     }
 
-    public static void openExternalMap(final PlacemarkBase placemark, final boolean showChooser, final Context context) {
+    /**
+     * Open external map app
+     *
+     * @param placemark       placemark to open
+     * @param forceAppChooser if true show always app chooser
+     */
+    public static void openExternalMap(final PlacemarkBase placemark, final boolean forceAppChooser, final Context context) {
         try {
             final String coordinateFormatted = formatCoordinate(placemark);
             final Uri uri = new Uri.Builder().scheme("geo").authority(coordinateFormatted)
                     .appendQueryParameter("q", coordinateFormatted + '(' + placemark.getName() + ')')
                     .build();
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            if (showChooser) {
+            if (forceAppChooser) {
                 intent = Intent.createChooser(intent, placemark.getName());
             }
             context.startActivity(intent);
@@ -163,7 +172,7 @@ public class LocationUtil {
         }
     }
 
-    private static void restoreCache() {
+    private static void restoreAddressCache() {
         if (addressCacheFile.canRead()) {
             try (final DataInputStream inputStream = new DataInputStream(new FileInputStream(addressCacheFile))) {
                 // first item is entry count

@@ -36,7 +36,7 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
     /**
      * Max result for {@linkplain #findAllPlacemarkNear(Coordinates, double, String, boolean, Collection)}
      */
-    private static final int MAX_NEAR_RESULT = 100;
+    private static final int MAX_NEAR_RESULT = 256;
     private static final boolean SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
 
     // 2^20

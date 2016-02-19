@@ -9,10 +9,13 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -20,11 +23,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import io.github.fvasco.pinpoi.BuildConfig;
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.Placemark;
 import io.github.fvasco.pinpoi.model.PlacemarkCollection;
 import io.github.fvasco.pinpoi.util.Consumer;
+import io.github.fvasco.pinpoi.util.ProgressDialogInputStream;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
@@ -49,8 +54,9 @@ public class ImporterFacade implements Consumer<Placemark> {
     private final Placemark STOP_PLACEMARK = new Placemark();
     private final PlacemarkDao placemarkDao;
     private final PlacemarkCollectionDao placemarkCollectionDao;
-    private final BlockingQueue<Placemark> placemarkQueue = new ArrayBlockingQueue<>(64);
+    private final BlockingQueue<Placemark> placemarkQueue = new ArrayBlockingQueue<>(256);
     private ProgressDialog progressDialog;
+    private String progressDialogMessageFormat;
 
     public ImporterFacade() {
         this(Util.getApplicationContext());
@@ -62,38 +68,65 @@ public class ImporterFacade implements Consumer<Placemark> {
     }
 
     @Nullable
-    static AbstractImporter createImporter(@NonNull String resource) {
+    static AbstractImporter createImporter(@NonNull final String resource) {
         String path;
         try {
-            path = Util.isUri(resource)
-                    ? Uri.parse(resource).getLastPathSegment()
-                    : resource;
-            if (Util.isEmpty(path)) {
+            if (Util.isUri(resource)) {
+                final List<String> segments = Uri.parse(resource).getPathSegments();
+                path = null;
+                for (int i = segments.size() - 1; i >= 0 && Util.isEmpty(path); --i) {
+                    path = segments.get(i);
+                }
+            } else {
                 path = resource;
             }
         } catch (Exception e) {
             path = resource;
         }
-        path = path.toLowerCase();
-        if (path.endsWith(".kml")) {
-            return new KmlImporter();
-        } else if (path.endsWith(".zip") || path.endsWith(".kmz")) {
-            return new ZipImporter();
-        } else if (path.endsWith(".gpx")) {
-            return new GpxImporter();
-        } else if (path.endsWith(".ov2")) {
-            return new Ov2Importer();
-        } else if (path.endsWith(".asc") || path.endsWith(".csv") || path.endsWith(".txt")) {
-            return new TextImporter();
+        final AbstractImporter res;
+        if (path == null || path.length() < 3) {
+            res = null;
+        } else {
+            final String end = path.substring(path.length() - 3);
+            switch (end.toLowerCase()) {
+                case "kml":
+                    res = new KmlImporter();
+                    break;
+                case "kmz":
+                case "zip":
+                    res = new ZipImporter();
+                    break;
+                case "gpx":
+                    res = new GpxImporter();
+                    break;
+                case "ov2":
+                    res = new Ov2Importer();
+                    break;
+                case "asc":
+                case "csv":
+                case "txt":
+                    res = new TextImporter();
+                    break;
+                default:
+                    res = null;
+            }
         }
-        return null;
+        Log.d(ImporterFacade.class.getSimpleName(),
+                "Importer for " + resource + " is " + (res == null ? null : res.getClass().getSimpleName()));
+        return res;
     }
 
     /**
-     * Set progress dialog to show and update
+     * Set optional progress dialog to show and update with progress
+     *
+     * @see #setProgressDialogMessageFormat(String)
      */
     public void setProgressDialog(ProgressDialog progressDialog) {
         this.progressDialog = progressDialog;
+    }
+
+    public void setProgressDialogMessageFormat(String progressDialogMessageFormat) {
+        this.progressDialogMessageFormat = progressDialogMessageFormat;
     }
 
     /**
@@ -108,13 +141,6 @@ public class ImporterFacade implements Consumer<Placemark> {
         Objects.requireNonNull(resource, "Null source");
         placemarkCollectionDao.open();
         try {
-            if (progressDialog != null) {
-                progressDialog.setIndeterminate(placemarkCollection.getPoiCount() <= 0);
-                if (placemarkCollection.getPoiCount() > 0) {
-                    progressDialog.setMax(placemarkCollection.getPoiCount());
-                }
-            }
-
             final AbstractImporter importer = createImporter(resource);
             if (importer == null) {
                 throw new IOException("Cannot import " + resource);
@@ -126,13 +152,37 @@ public class ImporterFacade implements Consumer<Placemark> {
             final Future<Void> importFuture = Util.EXECUTOR.submit(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    try (final InputStream inputStream = new BufferedInputStream(
-                            resource.startsWith("/")
-                                    ? new FileInputStream(resource)
-                                    : new URL(resource).openStream())) {
+                    InputStream inputStream;
+                    final int max;
+                    if (resource.startsWith("/")) {
+                        final File file = new File(resource);
+                        max = (int) file.length();
+                        inputStream = new BufferedInputStream(new FileInputStream(file));
+                    } else {
+                        final URLConnection urlConnection = new URL(resource).openConnection();
+                        inputStream = urlConnection.getInputStream();
+                        max = urlConnection.getContentLength();
+                    }
+                    if (progressDialog != null) {
+                        progressDialog.setIndeterminate(max <= 0);
+                        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                        if (max > 0) {
+                            progressDialog.setMax(max);
+                            inputStream = new ProgressDialogInputStream(inputStream, progressDialog);
+                        }
+                        Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.show();
+                            }
+                        });
+                    }
+
+                    try {
                         importer.importPlacemarks(inputStream);
                     } finally {
                         placemarkQueue.put(STOP_PLACEMARK);
+                        inputStream.close();
                     }
                     return null;
                 }
@@ -149,16 +199,29 @@ public class ImporterFacade implements Consumer<Placemark> {
                     try {
                         placemarkDao.insert(placemark);
                         ++placemarkCount;
-                        if (progressDialog != null) {
-                            progressDialog.setProgress(placemarkCount);
-                            if (placemarkCount == progressDialog.getMax()) {
-                                progressDialog.setIndeterminate(true);
-                            }
+                        if (progressDialog != null && progressDialogMessageFormat != null) {
+                            final String message = String.format(progressDialogMessageFormat, placemarkCount);
+                            Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.setMessage(message);
+                                }
+                            });
                         }
                     } catch (IllegalArgumentException e) {
                         // discard (duplicate?) placemark
-                        Log.i(ImporterFacade.class.getSimpleName(), "Placemark discarded " + placemark, e);
+                        if (BuildConfig.DEBUG) {
+                            Log.i(ImporterFacade.class.getSimpleName(), "Placemark discarded " + placemark, e);
+                        }
                     }
+                }
+                if (progressDialog != null) {
+                    Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressDialog.setIndeterminate(true);
+                        }
+                    });
                 }
                 // wait import and check exception
                 importFuture.get();
@@ -171,17 +234,10 @@ public class ImporterFacade implements Consumer<Placemark> {
                     placemarkDaoDatabase.setTransactionSuccessful();
                 }
                 return placemarkCount;
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Error importing placemark", e);
+            } catch (InterruptedException | RuntimeException e) {
+                throw new IOException("Error importing placemark", e);
             } catch (ExecutionException e) {
-                final Throwable target = e.getCause();
-                if (target instanceof RuntimeException) {
-                    throw (RuntimeException) target;
-                } else if (target instanceof IOException) {
-                    throw (IOException) target;
-                } else {
-                    throw new RuntimeException("Error importing placemark", e);
-                }
+                throw new IOException("Error importing placemark", e.getCause());
             } finally {
                 importFuture.cancel(true);
                 placemarkDaoDatabase.endTransaction();
@@ -190,7 +246,12 @@ public class ImporterFacade implements Consumer<Placemark> {
         } finally {
             placemarkCollectionDao.close();
             if (progressDialog != null) {
-                progressDialog.dismiss();
+                Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressDialog.dismiss();
+                    }
+                });
             }
         }
     }

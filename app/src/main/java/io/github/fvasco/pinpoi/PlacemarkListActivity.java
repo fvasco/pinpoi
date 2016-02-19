@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -99,6 +99,11 @@ public class PlacemarkListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -174,44 +179,42 @@ public class PlacemarkListActivity extends AppCompatActivity {
                     .putStringSet(ARG_COLLECTION_IDS, collectionIdSet)
                     .apply();
 
-            final ProgressDialog progress = new ProgressDialog(recyclerView.getContext());
-            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progress.setIndeterminate(true);
-            progress.show();
-            Util.EXECUTOR.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        final Collection<PlacemarkSearchResult> placemarks =
-                                placemarkDao.findAllPlacemarkNear(new Coordinates(latitude, longitude),
-                                        range, nameFilterFinal, favourite, collectionIdList);
-                        Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks " + placemarks.size());
-                        if (placemarks.isEmpty()) {
-                            Util.showToast(getString(R.string.error_no_placemark), Toast.LENGTH_LONG);
-                        } else {
-                            Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    adapter.setPlacemarks(placemarks);
+            Util.showProgressDialog(getString(R.string.title_placemark_list), null,
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                final Collection<PlacemarkSearchResult> placemarks =
+                                        placemarkDao.findAllPlacemarkNear(new Coordinates(latitude, longitude),
+                                                range, nameFilterFinal, favourite, collectionIdList);
+                                Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks " + placemarks.size());
+                                if (placemarks.isEmpty()) {
+                                    Util.showToast(getString(R.string.error_no_placemark), Toast.LENGTH_LONG);
+                                } else {
+                                    // create array in background thread
+                                    final PlacemarkSearchResult[] placemarksArray =
+                                            placemarks.toArray(new PlacemarkSearchResult[placemarks.size()]);
+                                    Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            adapter.setPlacemarks(placemarksArray);
+                                        }
+                                    });
                                 }
-                            });
-                        }
 
-                        // create placemark id list for left/right swipe in placemark detail
-                        placemarkIdArray = new long[placemarks.size()];
-                        int i = 0;
-                        for (final PlacemarkSearchResult p : placemarks) {
-                            placemarkIdArray[i] = p.getId();
-                            ++i;
+                                // set up placemark id list for left/right swipe in placemark detail
+                                placemarkIdArray = new long[placemarks.size()];
+                                int i = 0;
+                                for (final PlacemarkSearchResult p : placemarks) {
+                                    placemarkIdArray[i] = p.getId();
+                                    ++i;
+                                }
+                            } catch (Exception e) {
+                                Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
+                                Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
+                            }
                         }
-                    } catch (Exception e) {
-                        Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
-                        Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
-                    } finally {
-                        progress.dismiss();
-                    }
-                }
-            });
+                    }, recyclerView.getContext());
         }
     }
 
@@ -246,8 +249,9 @@ public class PlacemarkListActivity extends AppCompatActivity {
             decimalFormat.setMaximumFractionDigits(1);
         }
 
-        public void setPlacemarks(final Collection<PlacemarkSearchResult> placemarks) {
-            this.placemarks = placemarks.toArray(new PlacemarkSearchResult[placemarks.size()]);
+        public void setPlacemarks(@NonNull final PlacemarkSearchResult[] placemarks) {
+            Objects.requireNonNull(placemarks);
+            this.placemarks = placemarks;
             notifyDataSetChanged();
         }
 
