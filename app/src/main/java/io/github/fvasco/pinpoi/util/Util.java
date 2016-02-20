@@ -36,7 +36,7 @@ public final class Util {
     public static final ExecutorService EXECUTOR =
             Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
     public static final XmlPullParserFactory XML_PULL_PARSER_FACTORY;
-    private static final Pattern HTML_TAGS_PATTERN = Pattern.compile("<\\w+>|<br/>|<table\\W", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HTML_PATTERN = Pattern.compile("<(\\w+)(\\s.*)?>.*<\\/\\1>", Pattern.DOTALL);
     private static Context APPLICATION_CONTEXT;
 
     static {
@@ -102,7 +102,7 @@ public final class Util {
      * Try to detect HTML text
      */
     public static boolean isHtml(final CharSequence text) {
-        return text != null && HTML_TAGS_PATTERN.matcher(text).find();
+        return text != null && HTML_PATTERN.matcher(text).matches();
     }
 
     /**

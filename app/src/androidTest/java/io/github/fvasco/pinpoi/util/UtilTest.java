@@ -26,6 +26,20 @@ public class UtilTest extends AndroidTestCase {
     }
 
     @Test
+    public void testIsHtml() throws Exception {
+        assertTrue(!Util.isHtml(null));
+        assertTrue(!Util.isHtml(""));
+        assertTrue(!Util.isHtml("plain text"));
+        assertTrue(!Util.isHtml("strange <text>"));
+        assertTrue(!Util.isHtml("very strange <text"));
+        assertTrue(!Util.isHtml("<bad>"));
+        assertTrue(!Util.isHtml("so </bad>"));
+        assertTrue(!Util.isHtml("<bad></bad2>"));
+        assertTrue(Util.isHtml("<good>text</good>"));
+        assertTrue(Util.isHtml("<good>text\ntext2</good>"));
+    }
+
+    @Test
     public void testIsUri() throws Exception {
         assertTrue(!Util.isUri(null));
         assertTrue(!Util.isUri(""));
