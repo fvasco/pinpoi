@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 /**
  * Miscellaneous common utility
@@ -35,6 +36,7 @@ public final class Util {
     public static final ExecutorService EXECUTOR =
             Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
     public static final XmlPullParserFactory XML_PULL_PARSER_FACTORY;
+    private static final Pattern HTML_TAGS_PATTERN = Pattern.compile("<\\w+>|<br/>|<table\\W", Pattern.CASE_INSENSITIVE);
     private static Context APPLICATION_CONTEXT;
 
     static {
@@ -88,18 +90,25 @@ public final class Util {
      *
      * @return true if string {@linkplain String#isEmpty()} or null
      */
-    public static boolean isEmpty(CharSequence text) {
+    public static boolean isEmpty(final CharSequence text) {
         return text == null || text.length() == 0;
     }
 
-    public static boolean isEmpty(Collection c) {
+    public static boolean isEmpty(final Collection c) {
         return c == null || c.isEmpty();
+    }
+
+    /**
+     * Try to detect HTML text
+     */
+    public static boolean isHtml(final CharSequence text) {
+        return text != null && HTML_TAGS_PATTERN.matcher(text).find();
     }
 
     /**
      * Check if text is a uri
      */
-    public static boolean isUri(String text) {
+    public static boolean isUri(final String text) {
         return text != null && text.matches("\\w+:/{1,3}\\w+.+");
     }
 
