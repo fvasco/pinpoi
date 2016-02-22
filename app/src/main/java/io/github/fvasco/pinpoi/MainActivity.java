@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFEFERNCE_COLLECTION = "collection";
     private static final String PREFEFERNCE_GPS = "gps";
     private static final String PREFEFERNCE_ADDRESS = "address";
+    private static final String PREFEFERNCE_SHOW_MAP = "displayMap";
     private static final int PERMISSION_GPS_ON = 1;
     private static final int PERMISSION_CREATE_BACKUP = 10;
     private static final int PERMISSION_RESTORE_BACKUP = 11;
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity
     private static final int RANGE_MIN = 5;
     /**
      * Greatest {@linkplain #rangeSeek} value,
-     * searchable range value is {@linkplain #RANGE_MIN}+{@linkplain #RANGE_MAX_SHIFT}
+     * searchable range value is this plus {@linkplain #RANGE_MIN}
      */
     private static final int RANGE_MAX_SHIFT = 195;
     private String selectedPlacemarkCategory;
@@ -89,6 +90,7 @@ public class MainActivity extends AppCompatActivity
     private TextView longitudeText;
     private TextView nameFilterText;
     private CheckBox favouriteCheck;
+    private CheckBox showMapCheck;
     private TextView rangeLabel;
     private Switch switchGps;
     private Geocoder geocoder;
@@ -112,6 +114,7 @@ public class MainActivity extends AppCompatActivity
         longitudeText = (TextView) findViewById(R.id.longitudeText);
         nameFilterText = (TextView) findViewById(R.id.name_filter_text);
         favouriteCheck = (CheckBox) findViewById(R.id.favouriteCheck);
+        showMapCheck = (CheckBox) findViewById(R.id.showMapCheck);
         switchGps = (Switch) findViewById(R.id.switchGps);
         switchGps.setOnCheckedChangeListener(this);
         final Button searchAddressButton = (Button) findViewById(R.id.search_address_button);
@@ -126,14 +129,12 @@ public class MainActivity extends AppCompatActivity
 
         // restore preference
         final SharedPreferences preference = getPreferences(MODE_PRIVATE);
-        final boolean useGpsPreference = preference.getBoolean(PREFEFERNCE_GPS, false);
-        switchGps.setChecked(useGpsPreference
-                // enable only with permission
-                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+        switchGps.setChecked(preference.getBoolean(PREFEFERNCE_GPS, false));
         latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, "0"));
         longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, "0"));
         nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null));
         favouriteCheck.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
+        showMapCheck.setChecked(preference.getBoolean(PREFEFERNCE_SHOW_MAP, false));
         rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, (RANGE_MIN + RANGE_MAX_SHIFT) / 2 - RANGE_MIN), RANGE_MAX_SHIFT));
         setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null));
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0));
@@ -161,20 +162,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onStop() {
-        setUseLocationManagerListener(false);
-
+    protected void onPause() {
         getPreferences(MODE_PRIVATE).edit()
                 .putBoolean(PREFEFERNCE_GPS, switchGps.isChecked())
                 .putString(PREFEFERNCE_LATITUDE, latitudeText.getText().toString())
                 .putString(PREFEFERNCE_LONGITUDE, longitudeText.getText().toString())
                 .putString(PREFEFERNCE_NAME_FILTER, nameFilterText.getText().toString())
                 .putBoolean(PREFEFERNCE_FAVOURITE, favouriteCheck.isChecked())
+                .putBoolean(PREFEFERNCE_SHOW_MAP, showMapCheck.isChecked())
                 .putInt(PREFEFERNCE_RANGE, rangeSeek.getProgress())
                 .putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory)
                 .putLong(PREFEFERNCE_COLLECTION, selectedPlacemarkCollection == null ? 0 : selectedPlacemarkCollection.getId())
-                .commit();
+                .apply();
+        super.onPause();
+    }
 
+    @Override
+    protected void onStop() {
+        setUseLocationManagerListener(false);
         super.onStop();
     }
 
@@ -392,7 +397,7 @@ public class MainActivity extends AppCompatActivity
                 collectionsIds = new long[]{selectedPlacemarkCollection.getId()};
             }
             if (collectionsIds.length == 0) {
-                Toast.makeText(MainActivity.this, R.string.error_no_placemark, Toast.LENGTH_LONG).show();
+                Util.showToast(getString(R.string.n_placemarks_found, 0), Toast.LENGTH_LONG);
             } else {
                 Context context = view.getContext();
                 final Intent intent = new Intent(context, PlacemarkListActivity.class);
@@ -400,6 +405,7 @@ public class MainActivity extends AppCompatActivity
                 intent.putExtra(PlacemarkListActivity.ARG_LONGITUDE, Float.parseFloat(longitudeText.getText().toString()));
                 intent.putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.getText().toString());
                 intent.putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked());
+                intent.putExtra(PlacemarkListActivity.ARG_SHOW_MAP, showMapCheck.isChecked());
                 intent.putExtra(PlacemarkListActivity.ARG_RANGE, (rangeSeek.getProgress() + RANGE_MIN) * 1000);
                 intent.putExtra(PlacemarkListActivity.ARG_COLLECTION_IDS, collectionsIds);
                 context.startActivity(intent);

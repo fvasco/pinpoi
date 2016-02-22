@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -14,11 +13,15 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +36,7 @@ import java.util.TreeSet;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult;
+import io.github.fvasco.pinpoi.util.Consumer;
 import io.github.fvasco.pinpoi.util.Coordinates;
 import io.github.fvasco.pinpoi.util.LocationUtil;
 import io.github.fvasco.pinpoi.util.Util;
@@ -52,11 +56,13 @@ public class PlacemarkListActivity extends AppCompatActivity {
     public static final String ARG_FAVOURITE = "favourite";
     public static final String ARG_COLLECTION_IDS = "collectionIds";
     public static final String ARG_NAME_FILTER = "nameFilter";
+    public static final String ARG_SHOW_MAP = "showMap";
     // clockwise arrow
     private static final char[] ARROWS = new char[]{
            /*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198',
            /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196'
     };
+    private WebView mapWebView;
     private FloatingActionButton starFab;
     private FloatingActionButton mapFab;
     /**
@@ -64,11 +70,11 @@ public class PlacemarkListActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
-    private float latitude;
-    private float longitude;
     private PlacemarkDao placemarkDao;
     private long[] placemarkIdArray;
     private PlacemarkDetailFragment fragment;
+    private Coordinates searchCoordinate;
+    private int range;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,18 +85,27 @@ public class PlacemarkListActivity extends AppCompatActivity {
         starFab = (FloatingActionButton) findViewById(R.id.fabStar);
         mapFab = (FloatingActionButton) findViewById(R.id.fabMap);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
         // Show the Up button in the action bar.
-        ActionBar actionBar = getSupportActionBar();
+        final ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        View recyclerView = findViewById(R.id.placemark_list);
-        setupRecyclerView((RecyclerView) recyclerView);
+        final View recyclerView = findViewById(R.id.placemark_list);
+        mapWebView = (WebView) findViewById(R.id.mapWebView);
+        if (savedInstanceState == null
+                ? getIntent().getBooleanExtra(ARG_SHOW_MAP, false)
+                : savedInstanceState.getBoolean(ARG_SHOW_MAP)) {
+            recyclerView.setVisibility(View.GONE);
+            setupWebView(mapWebView);
+        } else {
+            setupRecyclerView((RecyclerView) recyclerView);
+            mapWebView.setVisibility(View.GONE);
+        }
 
         if (findViewById(R.id.placemark_detail_container) != null) {
             // The detail container view will be present only in the
@@ -104,6 +119,12 @@ public class PlacemarkListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(ARG_SHOW_MAP, mapWebView.getVisibility() == View.VISIBLE);
     }
 
     @Override
@@ -134,87 +155,117 @@ public class PlacemarkListActivity extends AppCompatActivity {
         if (oldAdapter == null || oldAdapter.getItemCount() == 0) {
             final SimpleItemRecyclerViewAdapter adapter = new SimpleItemRecyclerViewAdapter();
             recyclerView.setAdapter(adapter);
-
-            // load parameters
-            final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-            latitude = getIntent().getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN));
-            longitude = getIntent().getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN));
-            final int range = getIntent().getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0));
-            String nameFilter = getIntent().getStringExtra(ARG_NAME_FILTER);
-            if (nameFilter == null) {
-                nameFilter = preferences.getString(ARG_NAME_FILTER, null);
-            }
-            final boolean favourite = getIntent().getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false));
-            final String nameFilterFinal = nameFilter;
-
-            // read collections id or parse from preference
-            long[] collectionIds = getIntent().getLongArrayExtra(ARG_COLLECTION_IDS);
-            if (collectionIds == null) {
-                final Set<String> stringIds = preferences.getStringSet(ARG_COLLECTION_IDS, Collections.EMPTY_SET);
-                collectionIds = new long[stringIds.size()];
-                int i = 0;
-                for (final String id : stringIds) {
-                    collectionIds[i] = Long.parseLong(id);
-                    ++i;
-                }
-            }
-
-            // create string set of collection id
-            // for preference
-            // and deferred job
-            final Set<String> collectionIdSet = new TreeSet<>();
-            final List<Long> collectionIdList = new ArrayList<>(collectionIds.length);
-            for (final long id : collectionIds) {
-                collectionIdList.add(id);
-                collectionIdSet.add(String.valueOf(id));
-            }
-
-            // save parameters in preferences
-            preferences.edit()
-                    .putFloat(ARG_LATITUDE, latitude)
-                    .putFloat(ARG_LONGITUDE, longitude)
-                    .putInt(ARG_RANGE, range)
-                    .putBoolean(ARG_FAVOURITE, favourite)
-                    .putString(ARG_NAME_FILTER, nameFilter)
-                    .putStringSet(ARG_COLLECTION_IDS, collectionIdSet)
-                    .apply();
-
-            Util.showProgressDialog(getString(R.string.title_placemark_list), null,
-                    new Runnable() {
+            searchPoi(new Consumer<Collection<PlacemarkSearchResult>>() {
+                @Override
+                public void accept(Collection<PlacemarkSearchResult> placemarks) {
+                    // create array in background thread
+                    final PlacemarkSearchResult[] placemarksArray =
+                            placemarks.toArray(new PlacemarkSearchResult[placemarks.size()]);
+                    Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
                         @Override
                         public void run() {
-                            try {
-                                final Collection<PlacemarkSearchResult> placemarks =
-                                        placemarkDao.findAllPlacemarkNear(new Coordinates(latitude, longitude),
-                                                range, nameFilterFinal, favourite, collectionIdList);
-                                Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks " + placemarks.size());
-                                if (placemarks.isEmpty()) {
-                                    Util.showToast(getString(R.string.error_no_placemark), Toast.LENGTH_LONG);
-                                } else {
-                                    // create array in background thread
-                                    final PlacemarkSearchResult[] placemarksArray =
-                                            placemarks.toArray(new PlacemarkSearchResult[placemarks.size()]);
-                                    Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            adapter.setPlacemarks(placemarksArray);
-                                        }
-                                    });
-                                }
-
-                                // set up placemark id list for left/right swipe in placemark detail
-                                placemarkIdArray = new long[placemarks.size()];
-                                int i = 0;
-                                for (final PlacemarkSearchResult p : placemarks) {
-                                    placemarkIdArray[i] = p.getId();
-                                    ++i;
-                                }
-                            } catch (Exception e) {
-                                Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
-                                Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
-                            }
+                            adapter.setPlacemarks(placemarksArray);
                         }
-                    }, recyclerView.getContext());
+                    });
+                }
+            });
+        }
+    }
+
+    private void searchPoi(final @NonNull Consumer<Collection<PlacemarkSearchResult>> placemarksConsumer) {
+        // load parameters
+        final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        final float latitude = getIntent().getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN));
+        final float longitude = getIntent().getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN));
+        searchCoordinate = new Coordinates(latitude, longitude);
+        range = getIntent().getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0));
+        String nameFilter = getIntent().getStringExtra(ARG_NAME_FILTER);
+        if (nameFilter == null) {
+            nameFilter = preferences.getString(ARG_NAME_FILTER, null);
+        }
+        final boolean favourite = getIntent().getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false));
+        final String nameFilterFinal = nameFilter;
+
+        // read collections id or parse from preference
+        long[] collectionIds = getIntent().getLongArrayExtra(ARG_COLLECTION_IDS);
+        if (collectionIds == null) {
+            final Set<String> stringIds = preferences.getStringSet(ARG_COLLECTION_IDS, Collections.EMPTY_SET);
+            collectionIds = new long[stringIds.size()];
+            int i = 0;
+            for (final String id : stringIds) {
+                collectionIds[i] = Long.parseLong(id);
+                ++i;
+            }
+        }
+
+        // create string set of collection id
+        // for preference
+        // and deferred job
+        final Set<String> collectionIdSet = new TreeSet<>();
+        final List<Long> collectionIdList = new ArrayList<>(collectionIds.length);
+        for (final long id : collectionIds) {
+            collectionIdList.add(id);
+            collectionIdSet.add(String.valueOf(id));
+        }
+
+        // save parameters in preferences
+        preferences.edit()
+                .putFloat(ARG_LATITUDE, latitude)
+                .putFloat(ARG_LONGITUDE, longitude)
+                .putInt(ARG_RANGE, range)
+                .putBoolean(ARG_FAVOURITE, favourite)
+                .putString(ARG_NAME_FILTER, nameFilter)
+                .putStringSet(ARG_COLLECTION_IDS, collectionIdSet)
+                .apply();
+
+        Util.showProgressDialog(getString(R.string.title_placemark_list), null,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            final Collection<PlacemarkSearchResult> placemarks =
+                                    placemarkDao.findAllPlacemarkNear(searchCoordinate,
+                                            range, nameFilterFinal, favourite, collectionIdList);
+                            Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks.size()=" + placemarks.size());
+                            Util.showToast(getString(R.string.n_placemarks_found, placemarks.size()), Toast.LENGTH_LONG);
+                            placemarksConsumer.accept(placemarks);
+
+                            // set up placemark id list for left/right swipe in placemark detail
+                            placemarkIdArray = new long[placemarks.size()];
+                            int i = 0;
+                            for (final PlacemarkSearchResult p : placemarks) {
+                                placemarkIdArray[i] = p.getId();
+                                ++i;
+                            }
+                        } catch (Exception e) {
+                            Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
+                            Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
+                        }
+                    }
+                }, this);
+    }
+
+    @JavascriptInterface
+    public void openPlacemark(final long placemarkId) {
+        if (mTwoPane) {
+            Bundle arguments = new Bundle();
+            arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId);
+            arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
+            fragment = new PlacemarkDetailFragment();
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.placemark_detail_container, fragment)
+                    .commit();
+
+            // show fab
+            starFab.setVisibility(View.VISIBLE);
+            mapFab.setVisibility(View.VISIBLE);
+            mapFab.setOnLongClickListener(fragment.longClickListener);
+        } else {
+            Intent intent = new Intent(this, PlacemarkDetailActivity.class);
+            intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId);
+            intent.putExtra(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
+            this.startActivity(intent);
         }
     }
 
@@ -234,6 +285,71 @@ public class PlacemarkListActivity extends AppCompatActivity {
 
     public void onMapClick(final View view) {
         fragment.onMapClick(view);
+    }
+
+    private void setupWebView(final WebView mapWebView) {
+        mapWebView.addJavascriptInterface(this, "pinpoi");
+        final WebSettings webSettings = mapWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+        webSettings.setAllowContentAccess(false);
+        webSettings.setAllowFileAccessFromFileURLs(false);
+        webSettings.setAllowUniversalAccessFromFileURLs(false);
+        webSettings.setGeolocationEnabled(false);
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
+        webSettings.setSupportMultipleWindows(false);
+
+        searchPoi(new Consumer<Collection<PlacemarkSearchResult>>() {
+            @Override
+            public void accept(Collection<PlacemarkSearchResult> placemarksSearchResult) {
+                final StringBuilder html = new StringBuilder(1024 + placemarksSearchResult.size() * 256);
+                final String leafletVersion = "0.7.7";
+                int zoom = (int) Math.ceil(Math.log(40_000_000 / range) / Math.log(2));
+                if (zoom < 0) zoom = 0;
+                if (zoom > 18) zoom = 18;
+                html.append("<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />")
+                        .append("<style>\n" + "body {padding: 0; margin: 0;}\n" + "html, body, #map {height: 100%;}\n" + "</style>")
+                        .append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v" + leafletVersion + "/leaflet.css\" />")
+                        .append("<script src=\"http://cdn.leafletjs.com/leaflet/v" + leafletVersion + "/leaflet.js\"></script>")
+                        .append("</html>");
+                html.append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>");
+                html.append("var map = L.map('map').setView([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + zoom + ");");
+                html.append("L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
+                        "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
+                        "}).addTo(map);\n");
+                // search center marker
+                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], 1, {\n" +
+                        "color: 'blue',fillOpacity: 1}).addTo(map);\n");
+                // search limit circle
+                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + range + "," +
+                        " {color: 'red',fillOpacity: 0}).addTo(map);\n");
+                for (final PlacemarkSearchResult psr : placemarksSearchResult) {
+                    html.append("L.marker([" + psr.getLatitude() + "," + psr.getLongitude() + "]).addTo(map)")
+                            .append(".bindPopup(\"")
+                            .append("<a href='javascript:pinpoi.openPlacemark(" + psr.getId() + ")'>");
+                    if (psr.isFlagged()) html.append("<b>");
+                    html.append(Html.escapeHtml(psr.getName()));
+                    if (psr.isFlagged()) html.append("</b>");
+                    html.append("</a>")
+                            .append("\");\n");
+                }
+                html.append("</script>\n" + "</body>\n" + "</html>");
+                if (BuildConfig.DEBUG)
+                    Log.i(PlacemarkListActivity.class.getSimpleName(), "Map HTML " + html);
+                final String htmlText = html.toString();
+                Util.MAIN_LOOPER_HANDLER.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            mapWebView.loadData(htmlText, "text/html", null);
+                        } catch (final Throwable e) {
+                            Log.e(PlacemarkListActivity.class.getSimpleName(), "mapWebView.loadData", e);
+                            Util.showToast(e);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     public class SimpleItemRecyclerViewAdapter
@@ -266,7 +382,9 @@ public class PlacemarkListActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             final PlacemarkSearchResult placemark = placemarks[position];
             holder.placemark = placemark;
-            Location.distanceBetween(latitude, longitude, placemark.getLatitude(), placemark.getLongitude(), floatArray);
+            Location.distanceBetween(searchCoordinate.latitude, searchCoordinate.longitude,
+                    placemark.getLatitude(), placemark.getLongitude(),
+                    floatArray);
             final float distance = floatArray[0];
             // calculate index for arrow
             int arrowIndex = Math.round(floatArray[1] + 45F / 2F);
@@ -295,27 +413,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
             holder.view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mTwoPane) {
-                        Bundle arguments = new Bundle();
-                        arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.placemark.getId());
-                        arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
-                        fragment = new PlacemarkDetailFragment();
-                        fragment.setArguments(arguments);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.placemark_detail_container, fragment)
-                                .commit();
-
-                        // show fab
-                        starFab.setVisibility(View.VISIBLE);
-                        mapFab.setVisibility(View.VISIBLE);
-                        mapFab.setOnLongClickListener(fragment.longClickListener);
-                    } else {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, PlacemarkDetailActivity.class);
-                        intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, holder.placemark.getId());
-                        intent.putExtra(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
-                        context.startActivity(intent);
-                    }
+                    openPlacemark(holder.placemark.getId());
                 }
             });
             holder.view.setOnLongClickListener(new View.OnLongClickListener() {
@@ -347,4 +445,5 @@ public class PlacemarkListActivity extends AppCompatActivity {
             }
         }
     }
+
 }

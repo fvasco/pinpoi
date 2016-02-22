@@ -178,7 +178,7 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
                     importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count));
                     final int count = importerFacade.importPlacemarks(placemarkCollection);
                     if (count == 0) {
-                        Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), getString(R.string.error_no_placemark)), Toast.LENGTH_LONG);
+                        Util.showToast(getString(R.string.error_update, placemarkCollection.getName(), getString(R.string.n_placemarks_found, 0)), Toast.LENGTH_LONG);
                     } else {
                         Util.showToast(getString(R.string.update_collection_success, placemarkCollection.getName(), count), Toast.LENGTH_LONG);
                     }
