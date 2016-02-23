@@ -77,6 +77,14 @@ public abstract class AbstractImporter {
     }
 
     /**
+     * Configure importer from another
+     */
+    protected void configureFrom(final AbstractImporter importer) {
+        setCollectionId(importer.getCollectionId());
+        setConsumer(importer.getConsumer());
+    }
+
+    /**
      * Read datas, use {@linkplain #importPlacemark(Placemark)} to persistence it
      *
      * @param inputStream data source

@@ -10,6 +10,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -98,6 +99,8 @@ public class PlacemarkDetailFragment extends Fragment {
         collectionDescriptionText = (TextView) rootView.findViewById(R.id.placemark_collection_description);
         noteText = ((EditText) rootView.findViewById(R.id.note));
         placemarkDetail = ((TextView) rootView.findViewById(R.id.placemark_detail));
+        // By default these links will appear but not respond to user input.
+        placemarkDetail.setMovementMethod(LinkMovementMethod.getInstance());
         coordinateText = ((TextView) rootView.findViewById(R.id.coordinates));
         addressText = ((TextView) rootView.findViewById(R.id.address));
         setPlacemark(placemark);

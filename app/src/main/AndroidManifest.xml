@@ -63,7 +63,6 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:scheme="content" />
                 <data android:scheme="file" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
@@ -71,6 +70,7 @@
                 <data android:pathPattern="/.*\\.kml" />
                 <data android:pathPattern="/.*\\.zip" />
                 <data android:pathPattern="/.*\\.kmz" />
+                <data android:pathPattern="/.*\\.rss" />
                 <data android:pathPattern="/.*\\.gpx" />
                 <data android:pathPattern="/.*\\.ov2" />
                 <data android:pathPattern="/.*\\.asc" />
@@ -80,7 +80,6 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:scheme="content" />
                 <data android:scheme="file" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
@@ -88,6 +87,7 @@
                 <data android:mimeType="application/vnd.google-earth.kml+xml" />
                 <data android:mimeType="application/zip" />
                 <data android:mimeType="application/vnd.google-earth.kmz" />
+                <data android:mimeType="application/rss+xml" />
                 <data android:mimeType="application/gpx" />
                 <data android:mimeType="application/gpx+xml" />
                 <data android:mimeType="application/csv" />

@@ -30,6 +30,17 @@ class PlacemarkCollectionDatabase extends SQLiteOpenHelper {
                 ")");
         db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_NAME ON PLACEMARK_COLLECTION (name)");
         db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_CAT_NAME ON PLACEMARK_COLLECTION (category,name)");
+
+        // insert collection example: UNESCO
+        db.execSQL("INSERT INTO PLACEMARK_COLLECTION (name," +
+                "description," +
+                "source," +
+                "last_update,poi_count)" +
+                "VALUES" +
+                "('World Heritage List'," +
+                "'Terms and Conditions of Use: http://whc.unesco.org/en/syndication/'," +
+                "'http://whc.unesco.org/en/list/kml/'," +
+                "0,0)");
     }
 
     @Override

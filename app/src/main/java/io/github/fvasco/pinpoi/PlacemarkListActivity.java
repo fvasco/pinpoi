@@ -13,7 +13,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -304,9 +303,9 @@ public class PlacemarkListActivity extends AppCompatActivity {
             public void accept(Collection<PlacemarkSearchResult> placemarksSearchResult) {
                 final StringBuilder html = new StringBuilder(1024 + placemarksSearchResult.size() * 256);
                 final String leafletVersion = "0.7.7";
-                int zoom = (int) Math.ceil(Math.log(40_000_000 / range) / Math.log(2));
+                int zoom = (int) (Math.log(40_000_000 / range) / Math.log(2));
                 if (zoom < 0) zoom = 0;
-                if (zoom > 18) zoom = 18;
+                else if (zoom > 18) zoom = 18;
                 html.append("<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />")
                         .append("<style>\n" + "body {padding: 0; margin: 0;}\n" + "html, body, #map {height: 100%;}\n" + "</style>")
                         .append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v" + leafletVersion + "/leaflet.css\" />")
@@ -328,7 +327,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
                             .append(".bindPopup(\"")
                             .append("<a href='javascript:pinpoi.openPlacemark(" + psr.getId() + ")'>");
                     if (psr.isFlagged()) html.append("<b>");
-                    html.append(Html.escapeHtml(psr.getName()));
+                    html.append(Util.escapeJavascript(psr.getName()));
                     if (psr.isFlagged()) html.append("</b>");
                     html.append("</a>")
                             .append("\");\n");

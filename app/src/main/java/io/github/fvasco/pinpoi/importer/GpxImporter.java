@@ -3,12 +3,9 @@ package io.github.fvasco.pinpoi.importer;
 import io.github.fvasco.pinpoi.util.Util;
 
 /**
- * KML importer
+ * GPX importer
  *
  * @author Francesco Vasco
- */
-/*
- * Read KML data using SAX
  */
 public class GpxImporter extends AbstractXmlImporter {
 
@@ -29,6 +26,7 @@ public class GpxImporter extends AbstractXmlImporter {
 
     @Override
     protected void handleEndTag() {
+        if (placemark == null) return;
         switch (tag) {
             case "wpt":
                 importPlacemark();

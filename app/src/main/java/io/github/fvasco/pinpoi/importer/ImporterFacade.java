@@ -38,6 +38,7 @@ import io.github.fvasco.pinpoi.util.Util;
  * <li>KML</li>
  * <li>KMZ</li>
  * <li>GPX</li>
+ * <li>RSS</li>
  * <li>OV2 Tomtom</li>
  * <li>ASC, CSV files</li>
  * </ul>
@@ -95,6 +96,10 @@ public class ImporterFacade implements Consumer<Placemark> {
                 case "kmz":
                 case "zip":
                     res = new ZipImporter();
+                    break;
+                case "xml":
+                case "rss":
+                    res = new GeoRssImporter();
                     break;
                 case "gpx":
                     res = new GpxImporter();

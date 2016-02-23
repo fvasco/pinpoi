@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Iterator;
 
 import io.github.fvasco.pinpoi.BuildConfig;
 import io.github.fvasco.pinpoi.model.Placemark;
@@ -54,9 +55,7 @@ public abstract class AbstractXmlImporter extends AbstractImporter {
                         text = parser.getText();
                         break;
                     case XmlPullParser.END_TAG:
-                        if (placemark != null) {
-                            handleEndTag();
-                        }
+                        handleEndTag();
                         tag = tagStack.removeLast();
                         text = null;
                         break;
@@ -84,12 +83,24 @@ public abstract class AbstractXmlImporter extends AbstractImporter {
     }
 
     /**
+     * Check if current path match given tags, except current tag in {@linkplain #tag}
+     */
+    protected boolean checkCurrentPath(final String... tags) {
+        if (tags.length != tagStack.size() - 1) return false;
+        final Iterator<String> iterator = tagStack.descendingIterator();
+        for (int i = tags.length - 1; i >= 0; --i) {
+            if (!tags[i].equals(iterator.next())) return false;
+        }
+        return true;
+    }
+
+    /**
      * Handle a start tag
      */
-    protected abstract void handleStartTag();
+    protected abstract void handleStartTag() throws IOException;
 
     /**
      * Handle a end tag, text is in {@linkplain #text} attribute
      */
-    protected abstract void handleEndTag();
+    protected abstract void handleEndTag() throws IOException;
 }

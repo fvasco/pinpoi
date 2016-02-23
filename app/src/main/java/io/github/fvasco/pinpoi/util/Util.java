@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,7 +37,7 @@ public final class Util {
     public static final ExecutorService EXECUTOR =
             Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
     public static final XmlPullParserFactory XML_PULL_PARSER_FACTORY;
-    private static final Pattern HTML_PATTERN = Pattern.compile("<(\\w+)(\\s.*)?>.*<\\/\\1>", Pattern.DOTALL);
+    private static final Pattern HTML_PATTERN = Pattern.compile("<(\\w+)(\\s.*)?>.*<\\/\\1>");
     private static Context APPLICATION_CONTEXT;
 
     static {
@@ -102,7 +103,7 @@ public final class Util {
      * Try to detect HTML text
      */
     public static boolean isHtml(final CharSequence text) {
-        return text != null && HTML_PATTERN.matcher(text).matches();
+        return text != null && HTML_PATTERN.matcher(text).find();
     }
 
     /**
@@ -110,6 +111,44 @@ public final class Util {
      */
     public static boolean isUri(final String text) {
         return text != null && text.matches("\\w+:/{1,3}\\w+.+");
+    }
+
+    /**
+     * Escape text for Javascript
+     */
+    public static String escapeJavascript(final CharSequence text) {
+        final StringBuilder out = new StringBuilder(text.length() + text.length() / 2);
+        for (int i = 0, max = text.length(); i < max; ++i) {
+            final char c = text.charAt(i);
+            switch (c) {
+                // C escape
+                case '\'':
+                case '\"':
+                case '\\':
+                case '/':
+                    out.append('\\').append(c);
+                    break;
+
+                // html escape
+                case '<':
+                    out.append("&lt;");
+                    break;
+                case '>':
+                    out.append("&gt;");
+                    break;
+                case '&':
+                    out.append("&amp;");
+                    break;
+
+                default:
+                    if (c < 32 || c > 0x7F) {
+                        out.append("0x").append(Integer.toHexString(c));
+                    } else {
+                        out.append(c);
+                    }
+            }
+        }
+        return out.toString();
     }
 
     public static void openFileChooser(final File dir, final Consumer<File> fileConsumer, final Context context) {
@@ -206,6 +245,17 @@ public final class Util {
     public static void skip(final InputStream inputStream, int skip) throws IOException {
         while (skip > 0) {
             skip -= inputStream.skip(skip);
+        }
+    }
+
+    /**
+     * Copy stream to another
+     */
+    public static void copy(final InputStream inputStream, final OutputStream outputStream) throws IOException {
+        final byte[] buffer = new byte[16 * 1024];
+        int count;
+        while ((count = inputStream.read(buffer)) >= 0) {
+            outputStream.write(buffer, 0, count);
         }
     }
 }

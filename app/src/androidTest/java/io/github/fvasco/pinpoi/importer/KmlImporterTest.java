@@ -12,19 +12,10 @@ import io.github.fvasco.pinpoi.model.Placemark;
 public class KmlImporterTest extends AbstractImporterTestCase {
 
     @Test
-    public void testImportImpl() throws Exception {
-        List<Placemark> list;
-        list = importPlacemark(new KmlImporter(), "test1.kml");
-        assertEquals(1, list.size());
-        Placemark p = list.get(0);
-        assertEquals("New York City", p.getName());
-        assertEquals("New York City description", p.getDescription());
-        assertEquals(-74.006393, p.getLongitude(), 0.1);
-        assertEquals(40.714172, p.getLatitude(), 0.1);
-
-        list = importPlacemark(new KmlImporter(), "test2.kml");
+    public void testImport2() throws Exception {
+        final List<Placemark> list = importPlacemark(new KmlImporter(), "test2.kml");
         assertEquals(2, list.size());
-        p = list.get(0);
+        Placemark p = list.get(0);
         assertEquals("New York City", p.getName());
         assertEquals("New York City description", p.getDescription());
         assertEquals(-74.006393, p.getLongitude(), 0.1);

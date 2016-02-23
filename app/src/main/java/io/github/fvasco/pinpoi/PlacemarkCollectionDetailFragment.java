@@ -98,6 +98,10 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
             sourceText.setText(placemarkCollection.getSource());
             categoryText.setText(placemarkCollection.getCategory());
             showUpdatedCollectionInfo();
+
+            if (placemarkCollection.getPoiCount() == 0) {
+                Util.showToast(getString(R.string.poi_count, 0), Toast.LENGTH_SHORT);
+            }
         }
 
         return rootView;
