@@ -11,6 +11,8 @@ PinPoi is free, really!
 
 Enjoy.
 
+Features and screenshots https://fvasco.github.io/pinpoi/
+
 Download and install APK https://f-droid.org/repository/browse/?fdid=io.github.fvasco.pinpoi
 
 [![Build Status](https://travis-ci.org/fvasco/pinpoi.svg)](https://github.com/fvasco/pinpoi)
