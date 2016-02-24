@@ -1,14 +1,18 @@
 package io.github.fvasco.pinpoi;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -56,6 +60,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     public static final String ARG_COLLECTION_IDS = "collectionIds";
     public static final String ARG_NAME_FILTER = "nameFilter";
     public static final String ARG_SHOW_MAP = "showMap";
+    private static final int PERMISSION_SHOW_MAP = 1;
     // clockwise arrow
     private static final char[] ARROWS = new char[]{
            /*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198',
@@ -64,6 +69,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     private WebView mapWebView;
     private FloatingActionButton starFab;
     private FloatingActionButton mapFab;
+    private RecyclerView recyclerView;
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -94,16 +100,19 @@ public class PlacemarkListActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        final View recyclerView = findViewById(R.id.placemark_list);
+        recyclerView = (RecyclerView) findViewById(R.id.placemark_list);
         mapWebView = (WebView) findViewById(R.id.mapWebView);
         if (savedInstanceState == null
                 ? getIntent().getBooleanExtra(ARG_SHOW_MAP, false)
                 : savedInstanceState.getBoolean(ARG_SHOW_MAP)) {
-            recyclerView.setVisibility(View.GONE);
-            setupWebView(mapWebView);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
+                    == PackageManager.PERMISSION_GRANTED) {
+                setupWebView(mapWebView);
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, PERMISSION_SHOW_MAP);
+            }
         } else {
-            setupRecyclerView((RecyclerView) recyclerView);
-            mapWebView.setVisibility(View.GONE);
+            setupRecyclerView(recyclerView);
         }
 
         if (findViewById(R.id.placemark_detail_container) != null) {
@@ -118,6 +127,17 @@ public class PlacemarkListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_SHOW_MAP && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            setupWebView(mapWebView);
+        } else {
+            setupRecyclerView(recyclerView);
+        }
     }
 
     @Override
@@ -150,6 +170,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(final @NonNull RecyclerView recyclerView) {
+        recyclerView.setVisibility(View.VISIBLE);
         final RecyclerView.Adapter oldAdapter = recyclerView.getAdapter();
         if (oldAdapter == null || oldAdapter.getItemCount() == 0) {
             final SimpleItemRecyclerViewAdapter adapter = new SimpleItemRecyclerViewAdapter();
@@ -287,6 +308,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     }
 
     private void setupWebView(final WebView mapWebView) {
+        mapWebView.setVisibility(View.VISIBLE);
         mapWebView.addJavascriptInterface(this, "pinpoi");
         final WebSettings webSettings = mapWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -301,38 +323,56 @@ public class PlacemarkListActivity extends AppCompatActivity {
         searchPoi(new Consumer<Collection<PlacemarkSearchResult>>() {
             @Override
             public void accept(Collection<PlacemarkSearchResult> placemarksSearchResult) {
+                // this list helps to divide placemarks in category
                 final StringBuilder html = new StringBuilder(1024 + placemarksSearchResult.size() * 256);
                 final String leafletVersion = "0.7.7";
                 int zoom = (int) (Math.log(40_000_000 / range) / Math.log(2));
                 if (zoom < 0) zoom = 0;
                 else if (zoom > 18) zoom = 18;
                 html.append("<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />")
-                        .append("<style>\n" + "body {padding: 0; margin: 0;}\n" + "html, body, #map {height: 100%;}\n" + "</style>")
+                        .append("<style>\n"
+                                + "body {padding: 0; margin: 0;}\n"
+                                + "html, body, #map {height: 100%;}\n"
+                                + "</style>")
                         .append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v" + leafletVersion + "/leaflet.css\" />")
                         .append("<script src=\"http://cdn.leafletjs.com/leaflet/v" + leafletVersion + "/leaflet.js\"></script>")
+                                // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
+                        .append("<script src=\"https://ivansanchez.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js\"></script>")
                         .append("</html>");
                 html.append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>");
-                html.append("var map = L.map('map').setView([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + zoom + ");");
+                html.append("var map = L.map('map').setView([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + zoom + ");\n");
+                // limit min zoom
+                html.append("map.options.minZoom = ").append(Integer.toString(Math.max(0, zoom - 1))).append(";\n");
                 html.append("L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
                         "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
                         "}).addTo(map);\n");
                 // search center marker
-                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], 1, {\n" +
-                        "color: 'blue',fillOpacity: 1}).addTo(map);\n");
+                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], 1, {" +
+                        "color: 'red',fillOpacity: 1}).addTo(map);\n");
                 // search limit circle
+                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + (range / 2) + "," +
+                        " {color: 'orange',fillOpacity: 0}).addTo(map);\n");
                 html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + range + "," +
                         " {color: 'red',fillOpacity: 0}).addTo(map);\n");
+                // mark placemark top ten :)
+                int placemarkPosition = 0;
                 for (final PlacemarkSearchResult psr : placemarksSearchResult) {
-                    html.append("L.marker([" + psr.getLatitude() + "," + psr.getLongitude() + "]).addTo(map)")
-                            .append(".bindPopup(\"")
+                    ++placemarkPosition;
+                    html.append("L.marker([" + psr.getLatitude() + "," + psr.getLongitude() + "],{");
+                    if (psr.isFlagged()) {
+                        html.append("icon:L.icon.glyph({glyph:'<b><tt>" + placemarkPosition + "</tt></b>',glyphColor: 'yellow'})");
+                    } else {
+                        html.append("icon:L.icon.glyph({glyph:'" + placemarkPosition + "'})");
+                    }
+                    html.append("}).addTo(map)"
+                            + ".bindPopup(\"")
                             .append("<a href='javascript:pinpoi.openPlacemark(" + psr.getId() + ")'>");
                     if (psr.isFlagged()) html.append("<b>");
                     html.append(Util.escapeJavascript(psr.getName()));
                     if (psr.isFlagged()) html.append("</b>");
-                    html.append("</a>")
-                            .append("\");\n");
+                    html.append("</a>").append("\");\n");
                 }
-                html.append("</script>\n" + "</body>\n" + "</html>");
+                html.append("</script>" + "</body>" + "</html>");
                 if (BuildConfig.DEBUG)
                     Log.i(PlacemarkListActivity.class.getSimpleName(), "Map HTML " + html);
                 final String htmlText = html.toString();

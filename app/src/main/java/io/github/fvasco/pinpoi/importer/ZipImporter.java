@@ -27,8 +27,7 @@ public class ZipImporter extends AbstractImporter {
                     final AbstractImporter importer = ImporterFacade.createImporter(entryName);
                     if (importer != null) {
                         Log.d(ZipImporter.class.getSimpleName(), "Import entry " + entryName);
-                        importer.setCollectionId(getCollectionId());
-                        importer.setConsumer(getConsumer());
+                        importer.configureFrom(this);
                         importer.importImpl(new ZipGuardInputStream(zipInputStream));
                     }
                 }

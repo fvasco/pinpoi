@@ -7,6 +7,7 @@ import android.test.RenamingDelegatingContext;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.List;
 
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao;
 import io.github.fvasco.pinpoi.dao.PlacemarkDao;
@@ -57,6 +58,17 @@ public class BackupManagerTest extends AndroidTestCase {
     public void testRestore() throws Exception {
         testCreate();
 
+        final int placemarkCollectionCount;
+        final long placemarkCollectionId;
+        final int placemarkCount;
+        try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open();
+             final PlacemarkDao placemarkDao = new PlacemarkDao(testContext).open()) {
+            List<PlacemarkCollection> allPlacemarkCollection = placemarkCollectionDao.findAllPlacemarkCollection();
+            placemarkCollectionCount = allPlacemarkCollection.size();
+            placemarkCollectionId = allPlacemarkCollection.get(0).getId();
+            placemarkCount = placemarkDao.findAllPlacemarkByCollectionId(placemarkCollectionId).size();
+        }
+
         try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open();
              final PlacemarkDao placemarkDao = new PlacemarkDao(testContext).open()) {
             placemarkCollectionDao.getDatabase().beginTransaction();
@@ -77,8 +89,8 @@ public class BackupManagerTest extends AndroidTestCase {
 
         try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(testContext).open();
              final PlacemarkDao placemarkDao = new PlacemarkDao(testContext).open()) {
-            assertTrue(!placemarkCollectionDao.findAllPlacemarkCollection().isEmpty());
-            assertTrue(!placemarkDao.findAllPlacemarkByCollectionId(1).isEmpty());
+            assertEquals(placemarkCollectionCount, placemarkCollectionDao.findAllPlacemarkCollection().size());
+            assertEquals(placemarkCount, placemarkDao.findAllPlacemarkByCollectionId(placemarkCollectionId).size());
         }
     }
 }

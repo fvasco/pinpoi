@@ -12,11 +12,18 @@ import java.net.URL;
  * @author Francesco Vasco
  */
 public class KmlImporter extends AbstractXmlImporter {
+
+    private double latitude, longitude;
+    private int coordinateCount;
+
     @Override
     protected void handleStartTag() {
         switch (tag) {
             case "Placemark":
                 newPlacemark();
+                latitude = 0;
+                longitude = 0;
+                coordinateCount = 0;
         }
     }
 
@@ -37,6 +44,11 @@ public class KmlImporter extends AbstractXmlImporter {
         } else {
             switch (tag) {
                 case "Placemark":
+                    if (coordinateCount > 0) {
+                        // set placemark to center
+                        placemark.setLongitude((float) (latitude / (double) coordinateCount));
+                        placemark.setLatitude((float) (longitude / (double) coordinateCount));
+                    }
                     importPlacemark();
                     break;
                 case "name":
@@ -46,10 +58,14 @@ public class KmlImporter extends AbstractXmlImporter {
                     placemark.setDescription(text);
                     break;
                 case "coordinates":
-                    // format: longitude, latitute, altitude
-                    final String[] coordinates = text.split(",", 3);
-                    placemark.setLongitude(Float.parseFloat(coordinates[0]));
-                    placemark.setLatitude(Float.parseFloat(coordinates[1]));
+                    // read multiple lines if present (point, line, polygon)
+                    for (final String line : text.trim().split("\\s+")) {
+                        // format: longitude, latitute, altitude
+                        final String[] coordinates = line.split(",", 3);
+                        latitude += Double.parseDouble(coordinates[0]);
+                        longitude += Double.parseDouble(coordinates[1]);
+                        ++coordinateCount;
+                    }
                     break;
             }
         }

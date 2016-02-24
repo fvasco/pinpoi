@@ -63,9 +63,10 @@ public abstract class AbstractXmlImporter extends AbstractImporter {
                 eventType = parser.next();
             }
             if (BuildConfig.DEBUG && tag != DOCUMENT_TAG) throw new AssertionError(tag);
+            if (BuildConfig.DEBUG && placemark != null) throw new AssertionError(placemark);
             if (BuildConfig.DEBUG && text != null) throw new AssertionError(text);
         } catch (XmlPullParserException e) {
-            throw new IOException("Error reading GPX file", e);
+            throw new IOException("Error reading XML file", e);
         }
     }
 

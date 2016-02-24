@@ -37,7 +37,7 @@ public final class Util {
     public static final ExecutorService EXECUTOR =
             Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3));
     public static final XmlPullParserFactory XML_PULL_PARSER_FACTORY;
-    private static final Pattern HTML_PATTERN = Pattern.compile("<(\\w+)(\\s.*)?>.*<\\/\\1>");
+    private static final Pattern HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL);
     private static Context APPLICATION_CONTEXT;
 
     static {
@@ -116,7 +116,7 @@ public final class Util {
     /**
      * Escape text for Javascript
      */
-    public static String escapeJavascript(final CharSequence text) {
+    public static CharSequence escapeJavascript(final CharSequence text) {
         final StringBuilder out = new StringBuilder(text.length() + text.length() / 2);
         for (int i = 0, max = text.length(); i < max; ++i) {
             final char c = text.charAt(i);
@@ -131,24 +131,27 @@ public final class Util {
 
                 // html escape
                 case '<':
-                    out.append("&lt;");
-                    break;
                 case '>':
-                    out.append("&gt;");
-                    break;
                 case '&':
-                    out.append("&amp;");
+                    out.append("&#x").append(Integer.toHexString(c)).append(';');
                     break;
 
+                case '\b':
+                    out.append("\\b");
+                case '\f':
+                    out.append("\\f");
+                case '\n':
+                    out.append("\\n");
+                case '\t':
+                    out.append("\\t");
+                case '\r':
+                    out.append("\\r");
+
                 default:
-                    if (c < 32 || c > 0x7F) {
-                        out.append("0x").append(Integer.toHexString(c));
-                    } else {
-                        out.append(c);
-                    }
+                    out.append(c);
             }
         }
-        return out.toString();
+        return out;
     }
 
     public static void openFileChooser(final File dir, final Consumer<File> fileConsumer, final Context context) {

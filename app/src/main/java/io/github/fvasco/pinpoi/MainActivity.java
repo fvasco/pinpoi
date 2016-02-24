@@ -213,6 +213,12 @@ public class MainActivity extends AppCompatActivity
             case R.id.debug_import_collection:
                 debugImportCollection();
                 return true;
+            case R.id.action_web_site:
+                // branch gh-pages
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse("https://fvasco.github.io/pinpoi"));
+                startActivity(i);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -567,7 +573,7 @@ public class MainActivity extends AppCompatActivity
         } catch (SecurityException se) {
             Util.showToast(se);
         }
-        Log.i(MainActivity.class.getSimpleName(), "status " + locationManagerListenerEnabled);
+        Log.i(MainActivity.class.getSimpleName(), "setUseLocationManagerListener.status " + locationManagerListenerEnabled);
         switchGps.setChecked(locationManagerListenerEnabled);
         latitudeText.setEnabled(!locationManagerListenerEnabled);
         longitudeText.setEnabled(!locationManagerListenerEnabled);

@@ -19,15 +19,21 @@ public abstract class AbstractImporterTestCase extends AndroidTestCase {
      *
      * @param resource resource file name
      * @return list of imported placemark
-     * @throws Exception
      */
     public List<Placemark> importPlacemark(final AbstractImporter importer, final String resource) throws Exception {
+        try (final InputStream is = getClass().getResourceAsStream(resource)) {
+            return importPlacemark(importer, is);
+        }
+    }
+
+    /**
+     * Execute import
+     */
+    public List<Placemark> importPlacemark(final AbstractImporter importer, final InputStream is) throws Exception {
         final ListConsumer<Placemark> list = new ListConsumer<>();
         importer.setCollectionId(1);
         importer.setConsumer(list);
-        try (final InputStream is = getClass().getResourceAsStream(resource)) {
-            importer.importPlacemarks(is);
-        }
+        importer.importPlacemarks(is);
         for (final Placemark p : list) {
             assertEquals(0, p.getId());
             assertNotNull(p.getName());
