@@ -246,8 +246,8 @@ public class PlacemarkListActivity extends AppCompatActivity {
                             final Collection<PlacemarkSearchResult> placemarks =
                                     placemarkDao.findAllPlacemarkNear(searchCoordinate,
                                             range, nameFilterFinal, favourite, collectionIdList);
-                            Log.d(PlacemarkListActivity.class.getSimpleName(), "placemarks.size()=" + placemarks.size());
-                            Util.showToast(getString(R.string.n_placemarks_found, placemarks.size()), Toast.LENGTH_LONG);
+                            Log.d(PlacemarkListActivity.class.getSimpleName(), "searchPoi progress placemarks.size()=" + placemarks.size());
+                            Util.showToast(getString(R.string.n_placemarks_found, placemarks.size()), Toast.LENGTH_SHORT);
                             placemarksConsumer.accept(placemarks);
 
                             // set up placemark id list for left/right swipe in placemark detail
@@ -258,7 +258,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
                                 ++i;
                             }
                         } catch (Exception e) {
-                            Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "updatePlacemarkCollection", e);
+                            Log.e(PlacemarkCollectionDetailFragment.class.getSimpleName(), "searchPoi progress", e);
                             Util.showToast(getString(R.string.error_search, e.getLocalizedMessage()), Toast.LENGTH_LONG);
                         }
                     }
@@ -329,7 +329,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
                 int zoom = (int) (Math.log(40_000_000 / range) / Math.log(2));
                 if (zoom < 0) zoom = 0;
                 else if (zoom > 18) zoom = 18;
-                html.append("<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />")
+                html.append("<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />")
                         .append("<style>\n"
                                 + "body {padding: 0; margin: 0;}\n"
                                 + "html, body, #map {height: 100%;}\n"
@@ -350,14 +350,22 @@ public class PlacemarkListActivity extends AppCompatActivity {
                 html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], 1, {" +
                         "color: 'red',fillOpacity: 1}).addTo(map);\n");
                 // search limit circle
-                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + (range / 2) + "," +
-                        " {color: 'orange',fillOpacity: 0}).addTo(map);\n");
                 html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + range + "," +
                         " {color: 'red',fillOpacity: 0}).addTo(map);\n");
+                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + (range / 2) + "," +
+                        " {color: 'orange',fillOpacity: 0}).addTo(map);\n");
                 // mark placemark top ten :)
                 int placemarkPosition = 0;
+                // distance to placemark
+                final float[] floatArray = new float[1];
+                final DecimalFormat decimalFormat = new DecimalFormat();
                 for (final PlacemarkSearchResult psr : placemarksSearchResult) {
                     ++placemarkPosition;
+                    Location.distanceBetween(searchCoordinate.latitude, searchCoordinate.longitude,
+                            psr.getLatitude(), psr.getLongitude(),
+                            floatArray);
+                    final int distance = (int) floatArray[0];
+
                     html.append("L.marker([" + psr.getLatitude() + "," + psr.getLongitude() + "],{");
                     if (psr.isFlagged()) {
                         html.append("icon:L.icon.glyph({glyph:'<b><tt>" + placemarkPosition + "</tt></b>',glyphColor: 'yellow'})");
@@ -370,7 +378,9 @@ public class PlacemarkListActivity extends AppCompatActivity {
                     if (psr.isFlagged()) html.append("<b>");
                     html.append(Util.escapeJavascript(psr.getName()));
                     if (psr.isFlagged()) html.append("</b>");
-                    html.append("</a>").append("\");\n");
+                    html.append("</a>")
+                            .append("<br>").append(decimalFormat.format(distance)).append("&nbsp;m")
+                            .append("\");\n");
                 }
                 html.append("</script>" + "</body>" + "</html>");
                 if (BuildConfig.DEBUG)
@@ -380,7 +390,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            mapWebView.loadData(htmlText, "text/html", null);
+                            mapWebView.loadData(htmlText, "text/html; charset=UTF-8", null);
                         } catch (final Throwable e) {
                             Log.e(PlacemarkListActivity.class.getSimpleName(), "mapWebView.loadData", e);
                             Util.showToast(e);

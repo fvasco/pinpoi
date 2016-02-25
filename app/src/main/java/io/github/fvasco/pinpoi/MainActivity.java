@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity
         implements SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
 
     private static final int LOCATION_RANGE_ACCURACY = 100;
-    private static final int LOCATION_TIME_ACCURACY = 5 * 60_000;
+    private static final int LOCATION_TIME_ACCURACY = 2 * 60_000;
     private static final String PREFEFERNCE_LATITUDE = "latitude";
     private static final String PREFEFERNCE_LONGITUDE = "longitude";
     private static final String PREFEFERNCE_NAME_FILTER = "nameFilter";
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity
         nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null));
         favouriteCheck.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
         showMapCheck.setChecked(preference.getBoolean(PREFEFERNCE_SHOW_MAP, false));
-        rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, (RANGE_MIN + RANGE_MAX_SHIFT) / 2 - RANGE_MIN), RANGE_MAX_SHIFT));
+        rangeSeek.setProgress(Math.min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT));
         setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null));
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0));
 
@@ -175,12 +175,6 @@ public class MainActivity extends AppCompatActivity
                 .putLong(PREFEFERNCE_COLLECTION, selectedPlacemarkCollection == null ? 0 : selectedPlacemarkCollection.getId())
                 .apply();
         super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        setUseLocationManagerListener(false);
-        super.onStop();
     }
 
     @Override

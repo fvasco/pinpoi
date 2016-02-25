@@ -49,15 +49,12 @@ public class BackupManagerTest extends AndroidTestCase {
     }
 
     @Test
-    public void testCreate() throws Exception {
+    public void testBackup() throws Exception {
+        // create
         backupManager.create(backupFile);
         assertTrue(backupFile.length() > 0);
-    }
 
-    @Test
-    public void testRestore() throws Exception {
-        testCreate();
-
+        // restore
         final int placemarkCollectionCount;
         final long placemarkCollectionId;
         final int placemarkCount;

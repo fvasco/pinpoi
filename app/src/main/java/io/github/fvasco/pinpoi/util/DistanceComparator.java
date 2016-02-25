@@ -22,7 +22,13 @@ public class DistanceComparator implements Comparator<Coordinates> {
 
     @Override
     public int compare(Coordinates lhs, Coordinates rhs) {
-        return Double.compare(calculateDistance(lhs), calculateDistance(rhs));
+        int res = Double.compare(calculateDistance(lhs), calculateDistance(rhs));
+        if (res == 0) {
+            // equals <==> same coordinates
+            res = Float.compare(lhs.getLatitude(), rhs.getLatitude());
+            if (res == 0) res = Float.compare(lhs.getLongitude(), rhs.getLongitude());
+        }
+        return res;
     }
 
     /**

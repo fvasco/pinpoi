@@ -1,199 +1,172 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:orientation="vertical"
     android:padding="@dimen/activity_vertical_margin"
     tools:context="io.github.fvasco.pinpoi.MainActivity">
 
-
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
         android:orientation="vertical">
 
-        <Switch
-            android:id="@+id/switchGps"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="@string/use_gps" />
-
-        <Button
-            android:id="@+id/search_address_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="onSearchAddress"
-            android:text="@string/search_address" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="vertical">
 
-            <TextView
-                android:layout_width="0dp"
+            <Switch
+                android:id="@+id/switchGps"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight=".4"
-                android:labelFor="@+id/latitudeText"
-                android:text="@string/latitude" />
-
-            <EditText
-                android:id="@+id/latitudeText"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".6"
-                android:ems="10"
-                android:inputType="numberSigned|numberDecimal" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".4"
-                android:labelFor="@+id/longitudeText"
-                android:text="@string/longitude" />
-
-            <EditText
-                android:id="@+id/longitudeText"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".6"
-                android:ems="10"
-                android:inputType="numberSigned|numberDecimal" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".4"
-                android:labelFor="@+id/name_filter_text"
-                android:text="@string/name_filter" />
-
-            <EditText
-                android:id="@+id/name_filter_text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".6"
-                android:inputType="textFilter|textCapCharacters"
-                android:singleLine="true" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".4"
-                android:labelFor="@+id/categoryButton"
-                android:text="@string/category" />
+                android:layout_gravity="center_horizontal"
+                android:text="@string/use_gps" />
 
             <Button
-                android:id="@+id/categoryButton"
-                android:layout_width="0dp"
+                android:id="@+id/search_address_button"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight=".6"
-                android:onClick="openPlacemarkCategoryChooser" />
-        </LinearLayout>
+                android:onClick="onSearchAddress"
+                android:text="@string/search_address" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".4"
+                    android:labelFor="@+id/latitudeText"
+                    android:text="@string/latitude" />
+
+                <EditText
+                    android:id="@+id/latitudeText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".6"
+                    android:ems="10"
+                    android:inputType="numberSigned|numberDecimal" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".4"
+                    android:labelFor="@+id/longitudeText"
+                    android:text="@string/longitude" />
+
+                <EditText
+                    android:id="@+id/longitudeText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".6"
+                    android:ems="10"
+                    android:inputType="numberSigned|numberDecimal" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".4"
+                    android:labelFor="@+id/name_filter_text"
+                    android:text="@string/name_filter" />
+
+                <EditText
+                    android:id="@+id/name_filter_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".6"
+                    android:inputType="textFilter|textCapCharacters"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".4"
+                    android:labelFor="@+id/categoryButton"
+                    android:text="@string/category" />
+
+                <Button
+                    android:id="@+id/categoryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".6"
+                    android:onClick="openPlacemarkCategoryChooser" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".4"
+                    android:labelFor="@+id/collectionButton"
+                    android:text="@string/collection" />
+
+                <Button
+                    android:id="@+id/collectionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".6"
+                    android:onClick="openPlacemarkCollectionChooser" />
+            </LinearLayout>
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".4"
-                android:labelFor="@+id/collectionButton"
-                android:text="@string/collection" />
-
-            <Button
-                android:id="@+id/collectionButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".6"
-                android:onClick="openPlacemarkCollectionChooser" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/rangeLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="16dp"
-            android:text="@string/search_range" />
-
-        <SeekBar
-            android:id="@+id/rangeSeek"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
+                android:id="@+id/rangeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:labelFor="@+id/favouriteCheck"
-                android:text="@string/only_favourite" />
+                android:paddingTop="16dp"
+                android:text="@string/search_range" />
+
+            <SeekBar
+                android:id="@+id/rangeSeek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
             <CheckBox
                 android:id="@+id/favouriteCheck"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="false"
-                android:layout_alignParentRight="true" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:labelFor="@+id/showMapCheck"
-                android:text="@string/show_map" />
+                android:text="@string/only_favourite" />
 
             <CheckBox
                 android:id="@+id/showMapCheck"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="false"
-                android:layout_alignParentRight="true" />
-        </RelativeLayout>
+                android:text="@string/show_map" />
+        </LinearLayout>
+    </ScrollView>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="16dp" />
-
-        <Button
-            android:id="@+id/search_placemark_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="onSearchPoi"
-            android:text="@string/action_search_placemark" />
-
-    </LinearLayout>
-</ScrollView>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/search_placemark_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="8dp"
+        android:onClick="onSearchPoi"
+        android:src="@android:drawable/ic_menu_search" />
+</android.support.design.widget.CoordinatorLayout>
