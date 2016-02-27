@@ -30,6 +30,10 @@ android:
     # if you need to run emulator(s) during your tests
     - sys-img-armeabi-v7a-android-$ANDROID_API_LEVEL
 
+  licenses:
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
 # Emulator Management: Create, Start and Wait
 before_install:
   - android update sdk --all --filter sys-img-x86-android-$ANDROID_API_LEVEL --no-ui
