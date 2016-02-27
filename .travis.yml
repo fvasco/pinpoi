@@ -31,8 +31,11 @@ android:
     - sys-img-armeabi-v7a-android-$ANDROID_API_LEVEL
 
 # Emulator Management: Create, Start and Wait
-before_script:
+before_install:
+  - android update sdk --all --filter sys-img-x86-android-$ANDROID_API_LEVEL --no-ui
   - echo no | android create avd --force -n test -t android-$ANDROID_API_LEVEL --abi armeabi-v7a
   - emulator -avd test -no-audio -no-window &
   - android-wait-for-emulator
+
+before_script:
   - adb shell input keyevent 82 &
