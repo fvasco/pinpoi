@@ -145,8 +145,8 @@ public class LocationUtil {
      * Format coordinate for GPS parser
      */
     public static String formatCoordinate(@NonNull final PlacemarkBase placemark) {
-        return Float.toString(placemark.getLatitude())
-                + ',' + Float.toString(placemark.getLongitude());
+        return Location.convert(placemark.getLatitude(), Location.FORMAT_DEGREES)
+                + ',' + Location.convert(placemark.getLongitude(), Location.FORMAT_DEGREES);
     }
 
     /**

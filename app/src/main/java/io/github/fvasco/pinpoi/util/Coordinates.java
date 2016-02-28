@@ -71,6 +71,7 @@ public class Coordinates implements Cloneable {
 
     @Override
     public String toString() {
-        return Float.toString(latitude) + ',' + Float.toString(longitude);
+        return Location.convert(latitude, Location.FORMAT_DEGREES)
+                + ',' + Location.convert(longitude, Location.FORMAT_DEGREES);
     }
 }
