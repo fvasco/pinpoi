@@ -5,8 +5,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.Objects;
-
 /**
  * Detects left and right swipes across a view.
  */
@@ -21,7 +19,7 @@ public class OnSwipeTouchListener extends GestureDetector.SimpleOnGestureListene
 
 
     public OnSwipeTouchListener(SwipeTouchListener swipeTouchListener, Context context) {
-        Objects.requireNonNull(swipeTouchListener);
+        Util.requireNonNull(swipeTouchListener);
         this.swipeTouchListener = swipeTouchListener;
         gestureDetector = new GestureDetector(context, this);
     }

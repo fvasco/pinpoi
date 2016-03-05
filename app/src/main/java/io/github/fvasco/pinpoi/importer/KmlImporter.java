@@ -35,9 +35,12 @@ public class KmlImporter extends AbstractXmlImporter {
                 final AbstractImporter delegateImporter = ImporterFacade.createImporter(href);
                 Log.i(KmlImporter.class.getSimpleName(), "NetworkLink href " + href + " importer " + delegateImporter);
                 if (delegateImporter != null) {
-                    try (final InputStream inputStream = new URL(href).openStream()) {
+                    final InputStream inputStream = new URL(href).openStream();
+                    try {
                         delegateImporter.configureFrom(this);
                         delegateImporter.importPlacemarks(inputStream);
+                    } finally {
+                        inputStream.close();
                     }
                 }
             }

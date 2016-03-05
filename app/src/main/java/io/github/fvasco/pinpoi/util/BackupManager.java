@@ -30,56 +30,74 @@ public class BackupManager {
 
     public void create(final File file) throws IOException {
         Log.i(BackupManager.class.getSimpleName(), "Create backup " + file.getAbsolutePath());
-        try (final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(file))) {
+        final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(file));
+        try {
             for (final AbstractDao dao : daos) {
                 synchronized (dao) {
                     final File databaseFile;
                     dao.open();
-                    try (SQLiteDatabase database = dao.getDatabase()) {
+                    SQLiteDatabase database = dao.getDatabase();
+                    try {
                         databaseFile = new File(database.getPath());
                     } finally {
+                        database.close();
                         dao.close();
                     }
                     final ZipEntry zipEntry = new ZipEntry(databaseFile.getName());
                     zipOutputStream.putNextEntry(zipEntry);
-                    try (final FileInputStream databaseInputStream = new FileInputStream(databaseFile)) {
+                    final FileInputStream databaseInputStream = new FileInputStream(databaseFile);
+                    try {
                         dao.lock();
                         Util.copy(databaseInputStream, zipOutputStream);
                     } finally {
-                        dao.reset();
+                        try {
+                            databaseInputStream.close();
+                        } finally {
+                            dao.reset();
+                        }
                     }
                     zipOutputStream.closeEntry();
                 }
             }
+        } finally {
+            zipOutputStream.close();
         }
         Log.i(BackupManager.class.getSimpleName(), "Created backup " + file.getAbsolutePath() + " size=" + file.length());
     }
 
     public void restore(final File file) throws IOException {
         Log.i(BackupManager.class.getSimpleName(), "Restore backup " + file.getAbsolutePath() + " size=" + file.length());
-        try (final ZipFile zipFile = new ZipFile(file)) {
+        final ZipFile zipFile = new ZipFile(file);
+        try {
             for (final AbstractDao dao : daos) {
                 synchronized (dao) {
                     final File databasePath;
                     dao.open();
-                    try (SQLiteDatabase database = dao.getDatabase()) {
+                    final SQLiteDatabase database = dao.getDatabase();
+                    try {
                         databasePath = new File(database.getPath());
                     } finally {
+                        database.close();
                         dao.close();
                     }
                     try {
                         final String databaseName = databasePath.getName();
                         Log.i(BackupManager.class.getSimpleName(), "restore database " + databaseName);
                         final ZipEntry zipEntry = zipFile.getEntry(databaseName);
-                        try (final FileOutputStream databaseOutputStream = new FileOutputStream(databasePath)) {
+                        final FileOutputStream databaseOutputStream = new FileOutputStream(databasePath);
+                        try {
                             dao.lock();
                             Util.copy(zipFile.getInputStream(zipEntry), databaseOutputStream);
+                        } finally {
+                            databaseOutputStream.close();
                         }
                     } finally {
                         dao.reset();
                     }
                 }
             }
+        } finally {
+            zipFile.close();
         }
         Log.i(BackupManager.class.getSimpleName(), "Restored backup " + file.getAbsolutePath());
     }

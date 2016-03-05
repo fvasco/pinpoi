@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 
 /**
  * Input stream that control a progress dialog
@@ -18,8 +17,8 @@ public class ProgressDialogInputStream extends FilterInputStream implements Dial
 
     public ProgressDialogInputStream(final InputStream in, final ProgressDialog progressDialog) {
         super(in);
-        Objects.requireNonNull(in);
-        Objects.requireNonNull(progressDialog);
+        Util.requireNonNull(in);
+        Util.requireNonNull(progressDialog);
         this.progressDialog = progressDialog;
         progressDialog.setProgressNumberFormat("%1$,d / %2$,d");
         progressDialog.setCancelable(true);

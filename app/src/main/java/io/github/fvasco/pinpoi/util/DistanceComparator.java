@@ -3,7 +3,6 @@ package io.github.fvasco.pinpoi.util;
 import android.location.Location;
 
 import java.util.Comparator;
-import java.util.Objects;
 
 /**
  * Compare placemark using distance from a specific {@linkplain Coordinates}
@@ -16,7 +15,7 @@ public class DistanceComparator implements Comparator<Coordinates> {
     private final float[] distanceResult = new float[1];
 
     public DistanceComparator(final Coordinates center) {
-        Objects.requireNonNull(center);
+        Util.requireNonNull(center);
         this.center = center;
     }
 

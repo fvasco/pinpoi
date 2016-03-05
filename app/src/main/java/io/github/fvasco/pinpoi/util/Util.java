@@ -22,7 +22,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -55,7 +54,7 @@ public final class Util {
     }
 
     public static void initApplicationContext(@NonNull Context context) {
-        Objects.requireNonNull(context);
+        requireNonNull(context);
         //noinspection PointlessBooleanExpression
         if (BuildConfig.DEBUG && APPLICATION_CONTEXT != null && APPLICATION_CONTEXT != context) {
             throw new AssertionError();
@@ -65,7 +64,7 @@ public final class Util {
 
     @NonNull
     public static Context getApplicationContext() {
-        Objects.requireNonNull(APPLICATION_CONTEXT, "No context defined");
+        requireNonNull(APPLICATION_CONTEXT, "No context defined");
         return APPLICATION_CONTEXT;
     }
 
@@ -84,6 +83,15 @@ public final class Util {
                 Toast.makeText(APPLICATION_CONTEXT, message, duration).show();
             }
         });
+    }
+
+    public static void requireNonNull(final Object o) throws NullPointerException {
+        requireNonNull(o, null);
+    }
+
+    public static void requireNonNull(final Object o, final String message) throws NullPointerException {
+        if (o == null)
+            throw new NullPointerException(message);
     }
 
     /**

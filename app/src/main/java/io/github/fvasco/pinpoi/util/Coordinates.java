@@ -2,8 +2,6 @@ package io.github.fvasco.pinpoi.util;
 
 import android.location.Location;
 
-import java.util.Objects;
-
 import io.github.fvasco.pinpoi.model.Placemark;
 
 /**
@@ -37,14 +35,19 @@ public class Coordinates implements Cloneable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Coordinates that = (Coordinates) o;
-        return Objects.equals(latitude, that.latitude) &&
-                Objects.equals(longitude, that.longitude);
+
+        if (Float.compare(that.latitude, latitude) != 0) return false;
+        return Float.compare(that.longitude, longitude) == 0;
+
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(latitude, longitude);
+        int result = (latitude != +0.0f ? Float.floatToIntBits(latitude) : 0);
+        result = 31 * result + (longitude != +0.0f ? Float.floatToIntBits(longitude) : 0);
+        return result;
     }
 
     public float getLatitude() {

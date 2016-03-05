@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -143,7 +142,7 @@ public class ImporterFacade implements Consumer<Placemark> {
      */
     public int importPlacemarks(@NonNull final PlacemarkCollection placemarkCollection) throws IOException {
         final String resource = placemarkCollection.getSource();
-        Objects.requireNonNull(resource, "Null source");
+        Util.requireNonNull(resource, "Null source");
         placemarkCollectionDao.open();
         try {
             final AbstractImporter importer = createImporter(resource);

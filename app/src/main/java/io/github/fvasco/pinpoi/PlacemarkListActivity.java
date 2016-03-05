@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -313,10 +312,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
         final WebSettings webSettings = mapWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-        webSettings.setAllowContentAccess(false);
-        webSettings.setAllowFileAccessFromFileURLs(false);
-        webSettings.setAllowUniversalAccessFromFileURLs(false);
-        webSettings.setGeolocationEnabled(false);
+        webSettings.setGeolocationEnabled(true);
         webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
         webSettings.setSupportMultipleWindows(false);
 
@@ -415,7 +411,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
         }
 
         public void setPlacemarks(@NonNull final PlacemarkSearchResult[] placemarks) {
-            Objects.requireNonNull(placemarks);
+            Util.requireNonNull(placemarks);
             this.placemarks = placemarks;
             notifyDataSetChanged();
         }

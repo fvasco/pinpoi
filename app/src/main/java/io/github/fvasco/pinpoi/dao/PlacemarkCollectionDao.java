@@ -42,24 +42,31 @@ public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> 
     }
 
     public PlacemarkCollection findPlacemarkCollectionById(final long id) {
-        try (final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                null, "_ID=" + id, null, null, null, null)) {
+        final Cursor cursor = database.query("PLACEMARK_COLLECTION",
+                null, "_ID=" + id, null, null, null, null);
+        try {
             cursor.moveToFirst();
             return cursor.isAfterLast() ? null : cursorToPlacemarkCollection(cursor);
+        } finally {
+            cursor.close();
         }
     }
 
     public PlacemarkCollection findPlacemarkCollectionByName(String name) {
-        try (final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                null, "NAME=?", new String[]{name}, null, null, null)) {
+        final Cursor cursor = database.query("PLACEMARK_COLLECTION",
+                null, "NAME=?", new String[]{name}, null, null, null);
+        try {
             cursor.moveToFirst();
             return cursor.isAfterLast() ? null : cursorToPlacemarkCollection(cursor);
+        } finally {
+            cursor.close();
         }
     }
 
     public List<String> findAllPlacemarkCollectionCategory() {
-        try (final Cursor cursor = database.query(true, "PLACEMARK_COLLECTION",
-                new String[]{"CATEGORY"}, "length(CATEGORY)>0", null, "CATEGORY", null, "CATEGORY", null)) {
+        final Cursor cursor = database.query(true, "PLACEMARK_COLLECTION",
+                new String[]{"CATEGORY"}, "length(CATEGORY)>0", null, "CATEGORY", null, "CATEGORY", null);
+        try {
             final List<String> res = new ArrayList<>();
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
@@ -67,12 +74,15 @@ public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> 
                 cursor.moveToNext();
             }
             return res;
+        } finally {
+            cursor.close();
         }
     }
 
     public List<PlacemarkCollection> findAllPlacemarkCollectionInCategory(String selectedPlacemarkCategory) {
-        try (final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                null, "CATEGORY=?", new String[]{selectedPlacemarkCategory}, null, null, "NAME")) {
+        final Cursor cursor = database.query("PLACEMARK_COLLECTION",
+                null, "CATEGORY=?", new String[]{selectedPlacemarkCategory}, null, null, "NAME");
+        try {
             final List<PlacemarkCollection> res = new ArrayList<>();
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
@@ -80,13 +90,16 @@ public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> 
                 cursor.moveToNext();
             }
             return res;
+        } finally {
+            cursor.close();
         }
 
     }
 
     public List<PlacemarkCollection> findAllPlacemarkCollection() {
-        try (final Cursor cursor = database.query("PLACEMARK_COLLECTION",
-                null, null, null, null, null, "CATEGORY,NAME")) {
+        final Cursor cursor = database.query("PLACEMARK_COLLECTION",
+                null, null, null, null, null, "CATEGORY,NAME");
+        try {
             final List<PlacemarkCollection> res = new ArrayList<>();
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
@@ -94,8 +107,9 @@ public class PlacemarkCollectionDao extends AbstractDao<PlacemarkCollectionDao> 
                 cursor.moveToNext();
             }
             return res;
+        } finally {
+            cursor.close();
         }
-
     }
 
     public void insert(PlacemarkCollection pc) {

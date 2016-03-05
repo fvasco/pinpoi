@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -66,7 +65,7 @@ public class LocationUtil {
     public static Future<String> getAddressStringAsync(
             final Coordinates coordinates,
             final Consumer<String> addressConsumer) {
-        Objects.requireNonNull(coordinates);
+        Util.requireNonNull(coordinates);
         return Util.EXECUTOR.submit(new Callable<String>() {
             @Override
             public String call() throws Exception {
@@ -174,13 +173,18 @@ public class LocationUtil {
 
     private static void restoreAddressCache() {
         if (addressCacheFile.canRead()) {
-            try (final DataInputStream inputStream = new DataInputStream(new FileInputStream(addressCacheFile))) {
-                // first item is entry count
-                for (int i = inputStream.readShort(); i > 0; --i) {
-                    final float latitude = inputStream.readFloat();
-                    final float longitude = inputStream.readFloat();
-                    final String address = inputStream.readUTF();
-                    ADDRESS_CACHE.put(new Coordinates(latitude, longitude), address);
+            try {
+                final DataInputStream inputStream = new DataInputStream(new FileInputStream(addressCacheFile));
+                try {
+                    // first item is entry count
+                    for (int i = inputStream.readShort(); i > 0; --i) {
+                        final float latitude = inputStream.readFloat();
+                        final float longitude = inputStream.readFloat();
+                        final String address = inputStream.readUTF();
+                        ADDRESS_CACHE.put(new Coordinates(latitude, longitude), address);
+                    }
+                } finally {
+                    inputStream.close();
                 }
             } catch (IOException e) {
                 Log.w(LocationUtil.class.getSimpleName(), e);
@@ -192,14 +196,19 @@ public class LocationUtil {
 
     private static void saveAddressCache() {
         if (BuildConfig.DEBUG && !Thread.holdsLock(ADDRESS_CACHE)) throw new AssertionError();
-        try (final DataOutputStream outputStream = new DataOutputStream(new FileOutputStream(addressCacheFile))) {
-            // first item is entry count
-            outputStream.writeShort(ADDRESS_CACHE.size());
-            for (final Map.Entry<Coordinates, String> entry : ADDRESS_CACHE.snapshot().entrySet()) {
-                final Coordinates coordinates = entry.getKey();
-                outputStream.writeFloat(coordinates.getLatitude());
-                outputStream.writeFloat(coordinates.getLongitude());
-                outputStream.writeUTF(entry.getValue());
+        try {
+            final DataOutputStream outputStream = new DataOutputStream(new FileOutputStream(addressCacheFile));
+            try {
+                // first item is entry count
+                outputStream.writeShort(ADDRESS_CACHE.size());
+                for (final Map.Entry<Coordinates, String> entry : ADDRESS_CACHE.snapshot().entrySet()) {
+                    final Coordinates coordinates = entry.getKey();
+                    outputStream.writeFloat(coordinates.getLatitude());
+                    outputStream.writeFloat(coordinates.getLongitude());
+                    outputStream.writeUTF(entry.getValue());
+                }
+            } finally {
+                outputStream.close();
             }
         } catch (IOException e) {
             Log.w(LocationUtil.class.getSimpleName(), e);

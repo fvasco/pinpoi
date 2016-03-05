@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -118,8 +117,9 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
     }
 
     public List<Placemark> findAllPlacemarkByCollectionId(final long collectionId) {
-        try (final Cursor cursor = database.query("PLACEMARK", null,
-                "collection_id=" + collectionId, null, null, null, "_ID")) {
+        final Cursor cursor = database.query("PLACEMARK", null,
+                "collection_id=" + collectionId, null, null, null, "_ID");
+        try {
             final List<Placemark> res = new ArrayList<>();
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
@@ -127,6 +127,8 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
                 cursor.moveToNext();
             }
             return res;
+        } finally {
+            cursor.close();
         }
     }
 
@@ -150,8 +152,8 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
             String nameFilter,
             final boolean onlyFavourite,
             final Collection<Long> collectionIds) {
-        Objects.requireNonNull(coordinates, "coordinates not set");
-        Objects.requireNonNull(collectionIds, "collection not set");
+        Util.requireNonNull(coordinates, "coordinates not set");
+        Util.requireNonNull(collectionIds, "collection not set");
         if (collectionIds.isEmpty()) {
             throw new IllegalArgumentException("collection empty");
         }
@@ -191,7 +193,8 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
 
         final DistanceComparator locationComparator = new DistanceComparator(coordinates);
         final SortedSet<PlacemarkSearchResult> res = new TreeSet<>(locationComparator);
-        try (final Cursor cursor = database.rawQuery(sql.toString(), whereArgs.toArray(new String[whereArgs.size()]))) {
+        final Cursor cursor = database.rawQuery(sql.toString(), whereArgs.toArray(new String[whereArgs.size()]));
+        try {
             cursor.moveToFirst();
             double maxDistance = range;
             while (!cursor.isAfterLast()) {
@@ -209,15 +212,20 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
                 }
                 cursor.moveToNext();
             }
+        } finally {
+            cursor.close();
         }
         return res;
     }
 
     public Placemark getPlacemark(final long id) {
-        try (final Cursor cursor = database.query("PLACEMARK", null,
-                "_ID=" + id, null, null, null, null)) {
+        final Cursor cursor = database.query("PLACEMARK", null,
+                "_ID=" + id, null, null, null, null);
+        try {
             cursor.moveToFirst();
             return cursor.isAfterLast() ? null : cursorToPlacemark(cursor);
+        } finally {
+            cursor.close();
         }
     }
 
@@ -227,9 +235,10 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
      * @return annotaion for a placemark
      */
     public PlacemarkAnnotation loadPlacemarkAnnotation(PlacemarkBase placemark) {
-        try (final Cursor cursor = database.query("PLACEMARK_ANNOTATION", null,
+        final Cursor cursor = database.query("PLACEMARK_ANNOTATION", null,
                 "latitude=" + coordinateToInt(placemark.getLatitude()) + " AND longitude=" + coordinateToInt(placemark.getLongitude()), null,
-                null, null, null)) {
+                null, null, null);
+        try {
             PlacemarkAnnotation res = null;
             cursor.moveToFirst();
             if (!cursor.isAfterLast()) {
@@ -244,6 +253,8 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
                 res.setNote("");
             }
             return res;
+        } finally {
+            cursor.close();
         }
     }
 

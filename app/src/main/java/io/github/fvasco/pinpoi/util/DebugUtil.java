@@ -23,8 +23,9 @@ public final class DebugUtil {
     public static void setUpDebugDatabase(final Context context) {
         if (!BuildConfig.DEBUG) throw new Error();
 
-        try (final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(context).open();
-             final PlacemarkDao placemarkDao = new PlacemarkDao(context).open()) {
+        final PlacemarkCollectionDao placemarkCollectionDao = new PlacemarkCollectionDao(context).open();
+        final PlacemarkDao placemarkDao = new PlacemarkDao(context).open();
+        try {
             final SQLiteDatabase placemarkCollectionDatabase = placemarkCollectionDao.getDatabase();
             final SQLiteDatabase placemarkDatabase = placemarkDao.getDatabase();
             placemarkCollectionDatabase.beginTransaction();
@@ -80,6 +81,9 @@ public final class DebugUtil {
                 placemarkDatabase.endTransaction();
                 placemarkCollectionDatabase.endTransaction();
             }
+        } finally {
+            placemarkDao.close();
+            placemarkCollectionDao.close();
         }
     }
 
