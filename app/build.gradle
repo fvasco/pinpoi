@@ -5,7 +5,7 @@ android {
     buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId "io.github.fvasco.pinpoi"
-        minSdkVersion 16
+        minSdkVersion 14
         targetSdkVersion 23
         versionCode 11
         versionName "0.3.4"

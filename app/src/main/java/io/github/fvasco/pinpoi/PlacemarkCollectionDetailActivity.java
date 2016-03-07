@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -85,8 +86,10 @@ public class PlacemarkCollectionDetailActivity extends AppCompatActivity {
                 //
                 // http://developer.android.com/design/patterns/navigation.html#up-vs-back
                 //
-                navigateUpTo(new Intent(this, PlacemarkCollectionListActivity.class));
-                return true;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    navigateUpTo(new Intent(this, PlacemarkListActivity.class));
+                    return true;
+                }
             case R.id.action_rename:
                 renameCollection();
                 return true;

@@ -230,8 +230,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setPlacemarkCollection(final long placemarkCollectionId) {
-        try (final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open()) {
+        final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open();
+        try {
             setPlacemarkCollection(placemarkCollectionDao.findPlacemarkCollectionById(placemarkCollectionId));
+        } finally {
+            placemarkCollectionDao.close();
         }
     }
 
@@ -241,7 +244,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void openPlacemarkCategoryChooser(View view) {
-        try (final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open()) {
+        final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open();
+        try {
             final List<String> categories = collectionDao.findAllPlacemarkCollectionCategory();
             categories.add(0, getString(R.string.any_filter));
             new AlertDialog.Builder(view.getContext())
@@ -254,11 +258,14 @@ public class MainActivity extends AppCompatActivity
                                     setPlacemarkCategory(which == 0 ? null : categories.get(which));
                                 }
                             }).show();
+        } finally {
+            collectionDao.close();
         }
     }
 
     public void openPlacemarkCollectionChooser(View view) {
-        try (final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open()) {
+        final PlacemarkCollectionDao collectionDao = PlacemarkCollectionDao.getInstance().open();
+        try {
             final List<PlacemarkCollection> placemarkCollections = selectedPlacemarkCategory == null
                     ? collectionDao.findAllPlacemarkCollection()
                     : collectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory);
@@ -294,6 +301,8 @@ public class MainActivity extends AppCompatActivity
                                     }
                                 }).show();
             }
+        } finally {
+            collectionDao.close();
         }
     }
 
@@ -382,7 +391,8 @@ public class MainActivity extends AppCompatActivity
         try {
             long[] collectionsIds;
             if (selectedPlacemarkCollection == null) {
-                try (final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open()) {
+                final PlacemarkCollectionDao placemarkCollectionDao = PlacemarkCollectionDao.getInstance().open();
+                try {
                     final List<PlacemarkCollection> collections = selectedPlacemarkCategory == null
                             ? placemarkCollectionDao.findAllPlacemarkCollection()
                             : placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory);
@@ -392,6 +402,8 @@ public class MainActivity extends AppCompatActivity
                         collectionsIds[i] = placemarkCollection.getId();
                         ++i;
                     }
+                } finally {
+                    placemarkCollectionDao.close();
                 }
             } else {
                 collectionsIds = new long[]{selectedPlacemarkCollection.getId()};

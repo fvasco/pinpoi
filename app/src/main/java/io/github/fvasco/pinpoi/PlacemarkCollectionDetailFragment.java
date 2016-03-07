@@ -217,8 +217,11 @@ public class PlacemarkCollectionDetailFragment extends Fragment {
     }
 
     public void deletePlacemarkCollection() {
-        try (final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open()) {
+        final PlacemarkDao placemarkDao = PlacemarkDao.getInstance().open();
+        try {
             placemarkDao.deleteByCollectionId(placemarkCollection.getId());
+        } finally {
+            placemarkDao.close();
         }
         placemarkCollectionDao.delete(placemarkCollection);
     }

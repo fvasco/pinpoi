@@ -6,23 +6,22 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 
-import java.util.Objects;
-
 import io.github.fvasco.pinpoi.BuildConfig;
+import io.github.fvasco.pinpoi.util.Util;
 
 /**
  * Generic Dao.
  *
  * @author Francesco Vasco
  */
-public abstract class AbstractDao<T extends AbstractDao> implements AutoCloseable {
+public abstract class AbstractDao<T extends AbstractDao> {
     private final Context context;
     protected SQLiteDatabase database;
     private SQLiteOpenHelper sqLiteOpenHelper;
     private volatile int openCount;
 
     public AbstractDao(@NonNull final Context context) {
-        Objects.requireNonNull(context);
+        Util.requireNonNull(context);
         this.context = context;
         reset();
     }

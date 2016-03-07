@@ -3,6 +3,7 @@ package io.github.fvasco.pinpoi;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
@@ -139,8 +140,10 @@ public class PlacemarkDetailActivity extends AppCompatActivity implements OnSwip
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            navigateUpTo(new Intent(this, PlacemarkListActivity.class));
-            return true;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                navigateUpTo(new Intent(this, PlacemarkListActivity.class));
+                return true;
+            }
         }
         return super.onOptionsItemSelected(item);
     }
