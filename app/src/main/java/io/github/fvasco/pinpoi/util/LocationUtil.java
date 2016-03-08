@@ -39,23 +39,23 @@ public class LocationUtil {
      */
     private static final LruCache<Coordinates, String> ADDRESS_CACHE = new LruCache<>(512);
     private static Geocoder geocoder;
-    private static volatile File addressCacheFile;
+    private static File addressCacheFile;
 
     private LocationUtil() {
     }
 
     private static synchronized void init() {
-        if (addressCacheFile == null) {
-            if (Geocoder.isPresent()) {
-                geocoder = new Geocoder(Util.getApplicationContext());
-            }
-            addressCacheFile = new File(Util.getApplicationContext().getCacheDir(), "addressCache");
+        addressCacheFile = new File(Util.getApplicationContext().getCacheDir(), "addressCache");
+        if (Geocoder.isPresent()) {
+            geocoder = new Geocoder(Util.getApplicationContext());
             restoreAddressCache();
         }
     }
 
     public static Geocoder getGeocoder() {
-        init();
+        if (addressCacheFile == null) {
+            init();
+        }
         return geocoder;
     }
 

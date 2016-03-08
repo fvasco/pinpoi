@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity
         showMapCheck = (CheckBox) findViewById(R.id.showMapCheck);
         switchGps = (Switch) findViewById(R.id.switchGps);
         switchGps.setOnCheckedChangeListener(this);
+        switchGps.setEnabled(!locationManager.getAllProviders().isEmpty());
         final Button searchAddressButton = (Button) findViewById(R.id.search_address_button);
         if (geocoder == null) {
             searchAddressButton.setVisibility(View.GONE);
@@ -130,8 +131,8 @@ public class MainActivity extends AppCompatActivity
         // restore preference
         final SharedPreferences preference = getPreferences(MODE_PRIVATE);
         switchGps.setChecked(preference.getBoolean(PREFEFERNCE_GPS, false));
-        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, "0"));
-        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, "0"));
+        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, "50"));
+        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, "10"));
         nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null));
         favouriteCheck.setChecked(preference.getBoolean(PREFEFERNCE_FAVOURITE, false));
         showMapCheck.setChecked(preference.getBoolean(PREFEFERNCE_SHOW_MAP, false));
@@ -156,13 +157,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        setUseLocationManagerListener(switchGps.isChecked());
+    protected void onResume() {
+        setUseLocationManagerListener(switchGps.isChecked()
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+        super.onResume();
     }
 
     @Override
     protected void onPause() {
+        setUseLocationManagerListener(false);
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
         getPreferences(MODE_PRIVATE).edit()
                 .putBoolean(PREFEFERNCE_GPS, switchGps.isChecked())
                 .putString(PREFEFERNCE_LATITUDE, latitudeText.getText().toString())
@@ -174,7 +182,7 @@ public class MainActivity extends AppCompatActivity
                 .putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory)
                 .putLong(PREFEFERNCE_COLLECTION, selectedPlacemarkCollection == null ? 0 : selectedPlacemarkCollection.getId())
                 .apply();
-        super.onPause();
+        super.onStop();
     }
 
     @Override
@@ -560,7 +568,6 @@ public class MainActivity extends AppCompatActivity
         try {
             if (on) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    setUseLocationManagerListener(false);
                     onLocationChanged(null);
                     for (final String provider : locationManager.getAllProviders()) {
                         Log.i(MainActivity.class.getSimpleName(), "provider " + provider);
@@ -580,7 +587,6 @@ public class MainActivity extends AppCompatActivity
             Util.showToast(se);
         }
         Log.i(MainActivity.class.getSimpleName(), "setUseLocationManagerListener.status " + locationManagerListenerEnabled);
-        switchGps.setChecked(locationManagerListenerEnabled);
         latitudeText.setEnabled(!locationManagerListenerEnabled);
         longitudeText.setEnabled(!locationManagerListenerEnabled);
     }
@@ -592,6 +598,7 @@ public class MainActivity extends AppCompatActivity
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
         switch (requestCode) {
             case PERMISSION_GPS_ON:
+                switchGps.setChecked(granted);
                 setUseLocationManagerListener(granted);
                 break;
             case PERMISSION_CREATE_BACKUP:
