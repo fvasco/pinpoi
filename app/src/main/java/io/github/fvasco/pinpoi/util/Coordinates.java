@@ -38,16 +38,14 @@ public class Coordinates implements Cloneable {
 
         Coordinates that = (Coordinates) o;
 
-        if (Float.compare(that.latitude, latitude) != 0) return false;
-        return Float.compare(that.longitude, longitude) == 0;
+        return Float.compare(that.latitude, latitude) == 0
+                && Float.compare(that.longitude, longitude) == 0;
 
     }
 
     @Override
     public int hashCode() {
-        int result = (latitude != +0.0f ? Float.floatToIntBits(latitude) : 0);
-        result = 31 * result + (longitude != +0.0f ? Float.floatToIntBits(longitude) : 0);
-        return result;
+        return Float.floatToIntBits(latitude) ^ Integer.rotateLeft(Float.floatToIntBits(longitude), 16);
     }
 
     public float getLatitude() {

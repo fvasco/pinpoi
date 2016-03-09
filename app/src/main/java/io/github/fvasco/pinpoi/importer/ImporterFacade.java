@@ -200,8 +200,7 @@ public class ImporterFacade implements Consumer<Placemark> {
                 placemarkDao.deleteByCollectionId(placemarkCollection.getId());
                 Placemark placemark;
                 while ((placemark = placemarkQueue.take()) != STOP_PLACEMARK) {
-                    try {
-                        placemarkDao.insert(placemark);
+                    if (placemarkDao.insert(placemark)) {
                         ++placemarkCount;
                         if (progressDialog != null && progressDialogMessageFormat != null) {
                             final String message = String.format(progressDialogMessageFormat, placemarkCount);
@@ -212,10 +211,10 @@ public class ImporterFacade implements Consumer<Placemark> {
                                 }
                             });
                         }
-                    } catch (IllegalArgumentException e) {
+                    } else {
                         // discard (duplicate?) placemark
                         if (BuildConfig.DEBUG) {
-                            Log.i(ImporterFacade.class.getSimpleName(), "Placemark discarded " + placemark, e);
+                            Log.i(ImporterFacade.class.getSimpleName(), "Placemark discarded " + placemark);
                         }
                     }
                 }

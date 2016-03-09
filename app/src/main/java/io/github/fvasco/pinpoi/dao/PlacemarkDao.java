@@ -279,12 +279,9 @@ public class PlacemarkDao extends AbstractDao<PlacemarkDao> {
         }
     }
 
-    public void insert(Placemark p) {
+    public boolean insert(Placemark p) {
         final long id = database.insert("PLACEMARK", null, placemarkToContentValues(p));
-        if (id == -1) {
-            throw new IllegalArgumentException("Data not valid");
-        }
-        p.setId(id);
+        return id > 0;
     }
 
     public void deleteByCollectionId(final long collectionId) {

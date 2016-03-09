@@ -173,7 +173,7 @@ public class PlacemarkCollectionListActivity extends AppCompatActivity {
                             Intent intent = new Intent(context, PlacemarkCollectionDetailActivity.class);
                             intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.getId());
                             startActivity(intent);
-                        } catch (final IllegalArgumentException e) {
+                        } catch (final Exception e) {
                             // cannot insert collection
                             Util.showToast(e);
                         }
