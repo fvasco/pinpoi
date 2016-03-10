@@ -144,16 +144,22 @@ public final class Util {
                     out.append("&#x").append(Integer.toHexString(c)).append(';');
                     break;
 
+                // special characters escape
                 case '\b':
                     out.append("\\b");
+                    break;
                 case '\f':
                     out.append("\\f");
+                    break;
                 case '\n':
                     out.append("\\n");
+                    break;
                 case '\t':
                     out.append("\\t");
+                    break;
                 case '\r':
                     out.append("\\r");
+                    break;
 
                 default:
                     out.append(c);
