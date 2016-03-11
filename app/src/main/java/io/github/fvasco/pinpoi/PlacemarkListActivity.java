@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -267,7 +268,7 @@ public class PlacemarkListActivity extends AppCompatActivity {
     @JavascriptInterface
     public void openPlacemark(final long placemarkId) {
         if (mTwoPane) {
-            Bundle arguments = new Bundle();
+            final Bundle arguments = new Bundle();
             arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId);
             arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray);
             fragment = new PlacemarkDetailFragment();
@@ -336,25 +337,25 @@ public class PlacemarkListActivity extends AppCompatActivity {
                         .append("<script src=\"https://ivansanchez.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js\"></script>")
                         .append("</html>");
                 html.append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>");
-                html.append("var map = L.map('map').setView([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + zoom + ");\n");
+                html.append("var map = L.map('map').setView([" + searchCoordinate + "], " + zoom + ");\n");
                 // limit min zoom
                 html.append("map.options.minZoom = ").append(Integer.toString(Math.max(0, zoom - 1))).append(";\n");
                 html.append("L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
                         "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
                         "}).addTo(map);\n");
                 // search center marker
-                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], 1, {" +
-                        "color: 'red',fillOpacity: 1}).addTo(map);\n");
+                html.append("L.circle([" + searchCoordinate + "], 1, {" +
+                        "color: 'red',fillOpacity: 1}).addTo(map);");
                 // search limit circle
-                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + range + "," +
-                        " {color: 'red',fillOpacity: 0}).addTo(map);\n");
-                html.append("L.circle([" + searchCoordinate.getLatitude() + "," + searchCoordinate.getLongitude() + "], " + (range / 2) + "," +
+                html.append("L.circle([" + searchCoordinate + "], " + range + "," +
+                        " {color: 'red',fillOpacity: 0}).addTo(map);");
+                html.append("L.circle([" + searchCoordinate + "], " + (range / 2) + "," +
                         " {color: 'orange',fillOpacity: 0}).addTo(map);\n");
                 // mark placemark top ten :)
                 int placemarkPosition = 0;
                 // distance to placemark
                 final float[] floatArray = new float[1];
-                final DecimalFormat decimalFormat = new DecimalFormat();
+                final NumberFormat integerFormat = NumberFormat.getIntegerInstance();
                 for (final PlacemarkSearchResult psr : placemarksSearchResult) {
                     ++placemarkPosition;
                     Location.distanceBetween(searchCoordinate.latitude, searchCoordinate.longitude,
@@ -362,20 +363,20 @@ public class PlacemarkListActivity extends AppCompatActivity {
                             floatArray);
                     final int distance = (int) floatArray[0];
 
-                    html.append("L.marker([" + psr.getLatitude() + "," + psr.getLongitude() + "],{");
+                    html.append("L.marker([").append(LocationUtil.formatCoordinate(psr)).append("],{");
                     if (psr.isFlagged()) {
-                        html.append("icon:L.icon.glyph({glyph:'<b><tt>" + placemarkPosition + "</tt></b>',glyphColor: 'yellow'})");
+                        html.append("icon:L.icon.glyph({glyph:'<b><tt>").append(placemarkPosition).append("</tt></b>',glyphColor: 'yellow'})");
                     } else {
-                        html.append("icon:L.icon.glyph({glyph:'" + placemarkPosition + "'})");
+                        html.append("icon:L.icon.glyph({glyph:'").append(placemarkPosition).append("'})");
                     }
                     html.append("}).addTo(map)"
                             + ".bindPopup(\"")
-                            .append("<a href='javascript:pinpoi.openPlacemark(" + psr.getId() + ")'>");
+                            .append("<a href='javascript:pinpoi.openPlacemark(").append(psr.getId()).append(")'>");
                     if (psr.isFlagged()) html.append("<b>");
                     html.append(Util.escapeJavascript(psr.getName()));
                     if (psr.isFlagged()) html.append("</b>");
                     html.append("</a>")
-                            .append("<br>").append(decimalFormat.format(distance)).append("&nbsp;m")
+                            .append("<br>").append(integerFormat.format(distance)).append("&nbsp;m")
                             .append("\");\n");
                 }
                 html.append("</script>" + "</body>" + "</html>");

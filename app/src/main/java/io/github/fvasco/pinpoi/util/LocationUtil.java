@@ -18,10 +18,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -42,9 +45,9 @@ public class LocationUtil {
      * Store resolved address
      */
     private static final LinkedHashMap<Coordinates, String> ADDRESS_CACHE = new LinkedHashMap<>(ADDRESS_CACHE_SIZE * 2, .75F, true);
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.######", new DecimalFormatSymbols(Locale.ENGLISH));
     private static File addressCacheFile;
     private static Geocoder geocoder;
-
 
     private LocationUtil() {
     }
@@ -158,9 +161,18 @@ public class LocationUtil {
      * Format coordinate for GPS parser
      */
     public static String formatCoordinate(@NonNull final PlacemarkBase placemark) {
-        return Location.convert(placemark.getLatitude(), Location.FORMAT_DEGREES)
-                + ',' + Location.convert(placemark.getLongitude(), Location.FORMAT_DEGREES);
+        return formatCoordinate(placemark.getLatitude(), placemark.getLongitude());
     }
+
+    /**
+     * Format coordinate for GPS parser
+     */
+    public static String formatCoordinate(final double latitude, final double longitude) {
+        synchronized (DECIMAL_FORMAT) {
+            return DECIMAL_FORMAT.format(latitude) + ',' + DECIMAL_FORMAT.format(longitude);
+        }
+    }
+
 
     /**
      * Open external map app
