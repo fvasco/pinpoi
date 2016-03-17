@@ -22,7 +22,7 @@
 
         <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/placemark_list"
+            android:id="@+id/placemarkList"
             android:name="io.github.fvasco.pinpoi.PlacemarkListFragment"
             android:layout_width="@dimen/item_width"
             android:layout_height="match_parent"
@@ -40,7 +40,7 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/placemark_detail_container"
+        android:id="@+id/placemarkDetailContainer"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="3" />

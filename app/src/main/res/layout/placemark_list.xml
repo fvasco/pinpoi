@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/placemark_list"
+        android:id="@+id/placemarkList"
         android:name="io.github.fvasco.pinpoi.PlacemarkListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

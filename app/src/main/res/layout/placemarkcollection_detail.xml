@@ -13,12 +13,12 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:labelFor="@+id/category"
+        android:labelFor="@+id/categoryText"
         android:padding="@dimen/text_margin"
         android:text="@string/category" />
 
     <AutoCompleteTextView
-        android:id="@+id/category"
+        android:id="@+id/categoryText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="text|textCapCharacters"
@@ -28,12 +28,12 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:labelFor="@+id/description"
+        android:labelFor="@+id/descriptionText"
         android:padding="@dimen/text_margin"
         android:text="@string/description" />
 
     <EditText
-        android:id="@+id/description"
+        android:id="@+id/descriptionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -48,14 +48,15 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:labelFor="@+id/source"
+            android:labelFor="@+id/sourceText"
             android:padding="@dimen/text_margin"
             android:text="@string/source" />
 
         <ImageButton
-            android:id="@+id/browseBtn"
+            android:id="@+id/browseButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="false"
@@ -65,7 +66,7 @@
     </RelativeLayout>
 
     <EditText
-        android:id="@+id/source"
+        android:id="@+id/sourceText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textUri|textMultiLine"
@@ -73,13 +74,13 @@
         android:singleLine="true" />
 
     <TextView
-        android:id="@+id/last_update"
+        android:id="@+id/lastUpdateText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/text_margin" />
 
     <TextView
-        android:id="@+id/poi_count"
+        android:id="@+id/poiCountText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/text_margin" />

@@ -11,7 +11,7 @@
         android:layout_height="32dp" />
 
     <EditText
-        android:id="@+id/note"
+        android:id="@+id/noteText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -19,35 +19,35 @@
         android:padding="@dimen/text_margin" />
 
     <TextView
-        android:id="@+id/placemark_detail"
+        android:id="@+id/placemarkDetailText"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:textIsSelectable="true"
         tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment" />
 
     <TextView
-        android:id="@+id/coordinates"
+        android:id="@+id/coordinatesText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="3dp"
         android:text="@string/location" />
 
     <TextView
-        android:id="@+id/address"
+        android:id="@+id/addressText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textIsSelectable="true"
         android:visibility="gone" />
 
     <TextView
-        android:id="@+id/placemark_collection_description_title"
+        android:id="@+id/collectionDescriptionTitle"
         style="?android:attr/textAppearanceLarge"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/text_margin" />
 
     <TextView
-        android:id="@+id/placemark_collection_description"
+        android:id="@+id/collectionDescriptionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

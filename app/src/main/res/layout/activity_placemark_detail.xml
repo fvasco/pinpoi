@@ -8,14 +8,14 @@
     tools:ignore="MergeRootFrame">
 
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/app_bar"
+        android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
         android:fitsSystemWindows="true"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
         <android.support.design.widget.CollapsingToolbarLayout
-            android:id="@+id/toolbar_layout"
+            android:id="@+id/toolbarLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
@@ -24,7 +24,7 @@
             app:toolbarId="@+id/toolbar">
 
             <android.support.v7.widget.Toolbar
-                android:id="@+id/detail_toolbar"
+                android:id="@+id/detailToolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
@@ -35,7 +35,7 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.widget.NestedScrollView
-        android:id="@+id/placemark_detail_container"
+        android:id="@+id/placemarkDetailContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
@@ -48,7 +48,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:onClick="onStarClick"
         android:src="@android:drawable/star_off"
-        app:layout_anchor="@+id/placemark_detail_container"
+        app:layout_anchor="@+id/placemarkDetailContainer"
         app:layout_anchorGravity="top|end" />
 
     <android.support.design.widget.FloatingActionButton
@@ -59,7 +59,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:onClick="onMapClick"
         android:src="@android:drawable/ic_dialog_map"
-        app:layout_anchor="@+id/placemark_detail_container"
+        app:layout_anchor="@+id/placemarkDetailContainer"
         app:layout_anchorGravity="bottom|end" />
 
 </android.support.design.widget.CoordinatorLayout>

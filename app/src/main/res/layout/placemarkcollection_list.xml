@@ -2,12 +2,11 @@
 <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/placemarkcollection_list"
+    android:id="@+id/placemarkcollectionList"
     android:name="io.github.fvasco.pinpoi.PlacemarkCollectionListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity"
-    tools:listitem="@layout/placemarkcollection_list_content" />
+    tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity" />

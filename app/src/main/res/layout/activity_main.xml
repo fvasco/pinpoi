@@ -26,7 +26,7 @@
                 android:text="@string/use_gps" />
 
             <Button
-                android:id="@+id/search_address_button"
+                android:id="@+id/searchAddressButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="onSearchAddress"
@@ -83,11 +83,11 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight=".4"
-                    android:labelFor="@+id/name_filter_text"
+                    android:labelFor="@+id/nameFilterText"
                     android:text="@string/name_filter" />
 
                 <EditText
-                    android:id="@+id/name_filter_text"
+                    android:id="@+id/nameFilterText"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight=".6"
@@ -158,11 +158,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/show_map" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
         </LinearLayout>
     </ScrollView>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/search_placemark_button"
+        android:id="@+id/searchPlacemarkButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
