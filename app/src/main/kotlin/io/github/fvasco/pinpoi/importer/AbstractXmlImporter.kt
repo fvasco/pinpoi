@@ -1,8 +1,8 @@
 package io.github.fvasco.pinpoi.importer
 
-import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.Util
+import io.github.fvasco.pinpoi.util.assertDebug
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -50,9 +50,9 @@ abstract class AbstractXmlImporter : AbstractImporter() {
                 }
                 eventType = parser.next()
             }
-            if (BuildConfig.DEBUG && tag !== DOCUMENT_TAG) throw AssertionError(tag)
-            if (BuildConfig.DEBUG && placemark != null) throw AssertionError(placemark)
-            if (BuildConfig.DEBUG && text != "") throw AssertionError(text)
+            assertDebug(tag === DOCUMENT_TAG)
+            assertDebug(placemark == null, placemark)
+            assertDebug(text == "", text)
         } catch (e: XmlPullParserException) {
             throw IOException("Error reading XML file", e)
         }
@@ -63,7 +63,7 @@ abstract class AbstractXmlImporter : AbstractImporter() {
      * Create a new placemark and saves old one
      */
     protected fun newPlacemark() {
-        if (BuildConfig.DEBUG && placemark != null) throw AssertionError(placemark)
+        assertDebug(placemark == null, placemark)
         placemark = Placemark()
     }
 

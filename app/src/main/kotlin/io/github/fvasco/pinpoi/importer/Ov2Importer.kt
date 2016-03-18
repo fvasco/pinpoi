@@ -3,7 +3,6 @@ package io.github.fvasco.pinpoi.importer
 import android.util.Log
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.Coordinates
-import io.github.fvasco.pinpoi.util.Util
 import java.io.DataInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -89,7 +88,7 @@ class Ov2Importer : AbstractImporter() {
                 -> {
                     val total = readIntLE(dataInputStream)
                     Log.i(Ov2Importer::class.java.simpleName, "Skip record type $rectype total $total")
-                    dataInputStream.skipBytes( total - 4)
+                    dataInputStream.skipBytes(total - 4)
                 }
 
                 else -> throw IOException("Unknown record " + rectype)

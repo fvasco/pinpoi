@@ -23,7 +23,6 @@ import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
-import org.jetbrains.anko.toast
 
 /**
  * An activity representing a list of Placemark Collections. This activity
@@ -49,7 +48,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_placemarkcollection_list)
-        Util.applicationContext=applicationContext
+        Util.applicationContext = applicationContext
         placemarkCollectionDao = PlacemarkCollectionDao.instance
         placemarkCollectionDao.open()
 

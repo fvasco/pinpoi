@@ -14,7 +14,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
  * @author Francesco Vasco
  */
 fun setUpDebugDatabase(context: Context) {
-    if (!BuildConfig.DEBUG) throw Error()
+    if (!BuildConfig.DEBUG) throw AssertionError()
 
     val placemarkCollectionDao = PlacemarkCollectionDao(context)
     placemarkCollectionDao.open()

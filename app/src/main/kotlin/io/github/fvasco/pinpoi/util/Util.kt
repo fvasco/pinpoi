@@ -7,12 +7,10 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import io.github.fvasco.pinpoi.BuildConfig
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.util.*
 import java.util.concurrent.Executors
@@ -45,6 +43,14 @@ object Util {
 
 private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
 
+/**
+ * Check value and thorow assertion errror if false
+ */
+inline fun assertDebug(check: Boolean, value: Any? = null) =
+        if (BuildConfig.DEBUG && !check)
+            throw AssertionError(value?.toString())
+        else Unit;
+
 fun showToast(throwable: Throwable) {
     showToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}", Toast.LENGTH_LONG)
 }
@@ -74,7 +80,7 @@ fun CharSequence?.isUri(): Boolean {
  * Escape text for HTML
  */
 fun escapeHtml(text: CharSequence): CharSequence {
-    val out = StringBuilder(text.length + text.length / 2)
+    val out = StringBuilder(text.length + text.length / 4)
     for (c in text) {
         when (c) {
         // html escape
@@ -89,7 +95,7 @@ fun escapeHtml(text: CharSequence): CharSequence {
  * Escape text for Javascript
  */
 fun escapeJavascript(text: CharSequence): CharSequence {
-    val out = StringBuilder(text.length + text.length / 2)
+    val out = StringBuilder(text.length + text.length / 3)
     for (c in text) {
         when (c) {
         // C escape
@@ -180,13 +186,4 @@ fun append(text: CharSequence, separator: CharSequence?, stringBuilder: StringBu
         }
         stringBuilder.append(text)
     }
-}
-
-/**
- * Copy stream to another
- */
-@Throws(IOException::class)
-@Deprecated("use copyTo")
-fun copy(inputStream: InputStream, outputStream: OutputStream) {
-    inputStream.copyTo(outputStream, 8 * 1024)
 }

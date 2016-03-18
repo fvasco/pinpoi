@@ -59,7 +59,7 @@ class PlacemarkCollectionDaoTest : AndroidTestCase() {
 
         val id = pc.id
         // check findPlacemarkCollectionById
-        val dbpc = dao.findPlacemarkCollectionById(id)?:error("not found")
+        val dbpc = dao.findPlacemarkCollectionById(id) ?: error("not found")
         assertEquals(id, dbpc.id)
         assertEquals("test", dbpc.name)
         assertEquals("description", dbpc.description)
@@ -108,7 +108,7 @@ class PlacemarkCollectionDaoTest : AndroidTestCase() {
 
         val id = pc.id
         // check findPlacemarkCollectionByName
-        val dbpc = dao.findPlacemarkCollectionByName("test")?:error("test not found")
+        val dbpc = dao.findPlacemarkCollectionByName("test") ?: error("test not found")
         assertEquals(id, dbpc.id)
         assertEquals("test", dbpc.name)
         assertEquals("description", dbpc.description)

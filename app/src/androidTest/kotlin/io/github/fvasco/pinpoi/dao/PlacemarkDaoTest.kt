@@ -171,7 +171,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
         assertEquals(POMPEI_LOCATION, p.coordinates)
         assertEquals(1, p.collectionId)
 
-        val dbp = dao.getPlacemark(2)?:error("'2' not found")
+        val dbp = dao.getPlacemark(2) ?: error("'2' not found")
         assertEquals(2, dbp.id)
         assertEquals("Ercolano", dbp.name)
         assertEquals("", dbp.description)

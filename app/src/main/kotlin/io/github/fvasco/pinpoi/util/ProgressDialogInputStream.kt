@@ -29,11 +29,6 @@ class ProgressDialogInputStream(private val input: InputStream, private val prog
     }
 
     @Throws(IOException::class)
-    override fun read(buffer: ByteArray): Int {
-        return this.read(buffer, 0, buffer.size)
-    }
-
-    @Throws(IOException::class)
     override fun read(buffer: ByteArray, byteOffset: Int, byteCount: Int): Int {
         val count = super.read(buffer, byteOffset, byteCount)
         if (count >= 0) progressDialog.incrementProgressBy(count)
@@ -47,15 +42,9 @@ class ProgressDialogInputStream(private val input: InputStream, private val prog
         return count
     }
 
-    override fun markSupported(): Boolean {
-        return false
-    }
+    override fun markSupported(): Boolean = false
 
     override fun onCancel(dialog: DialogInterface) {
-        try {
-            input.close()
-        } catch (e: IOException) {
-            // ignore error
-        }
+        input.close()
     }
 }

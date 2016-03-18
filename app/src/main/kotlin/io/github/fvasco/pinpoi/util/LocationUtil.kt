@@ -7,7 +7,6 @@ import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
 import android.util.Log
-import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.PlacemarkDetailActivity
 import io.github.fvasco.pinpoi.model.PlacemarkBase
 import java.io.*
@@ -41,7 +40,7 @@ object LocationUtil {
      */
     fun getAddressStringAsync(
             coordinates: Coordinates,
-            addressConsumer: ((String?)->Unit)?): Future<String> {
+            addressConsumer: ((String?) -> Unit)?): Future<String> {
         return Util.EXECUTOR.submit(Callable<kotlin.String> {
             var addressString: String? = synchronized (ADDRESS_CACHE) {
                 if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
@@ -136,7 +135,7 @@ object LocationUtil {
     }
 
     private fun restoreAddressCache() {
-        if (BuildConfig.DEBUG && !Thread.holdsLock(ADDRESS_CACHE)) throw AssertionError()
+        assertDebug(Thread.holdsLock(ADDRESS_CACHE))
         if (addressCacheFile.canRead()) {
             try {
                 val inputStream = DataInputStream(BufferedInputStream(FileInputStream(addressCacheFile)))
@@ -161,7 +160,7 @@ object LocationUtil {
     }
 
     private fun saveAddressCache() {
-        if (BuildConfig.DEBUG && !Thread.holdsLock(ADDRESS_CACHE)) throw AssertionError()
+        assertDebug(Thread.holdsLock(ADDRESS_CACHE))
         try {
             DataOutputStream(BufferedOutputStream(FileOutputStream(addressCacheFile))).use { outputStream ->
                 // first item is entry count

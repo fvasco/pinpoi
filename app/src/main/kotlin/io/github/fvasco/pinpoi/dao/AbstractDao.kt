@@ -4,7 +4,7 @@ import android.content.Context
 import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import io.github.fvasco.pinpoi.BuildConfig
+import io.github.fvasco.pinpoi.util.assertDebug
 
 /**
  * Generic Dao.
@@ -28,16 +28,10 @@ abstract class AbstractDao(private val context: Context) {
         if (openCount < 0) error("Database locked")
 
         if (openCount == 0) {
-            //noinspection PointlessBooleanExpression
-            if (BuildConfig.DEBUG && database != null) {
-                throw AssertionError()
-            }
+            assertDebug(database == null)
             database = sqLiteOpenHelper.writableDatabase
         }
-        //noinspection PointlessBooleanExpression
-        if (BuildConfig.DEBUG && database == null) {
-            throw AssertionError(openCount)
-        }
+        assertDebug(database != null)
         ++openCount
     }
 
@@ -48,10 +42,9 @@ abstract class AbstractDao(private val context: Context) {
         if (openCount == 0) {
             database?.close()
             database = null
-        } else //noinspection PointlessBooleanExpression
-            if (BuildConfig.DEBUG && database == null) {
-                throw AssertionError(openCount)
-            }
+        } else
+            assertDebug(database != null)
+
     }
 
     /**
@@ -61,7 +54,7 @@ abstract class AbstractDao(private val context: Context) {
         if (openCount > 0) error("Database is open")
 
         sqLiteOpenHelper.close()
-        if (BuildConfig.DEBUG && database != null) throw AssertionError()
+        assertDebug(database == null)
         openCount = -1
     }
 

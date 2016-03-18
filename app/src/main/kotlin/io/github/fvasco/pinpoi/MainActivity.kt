@@ -227,35 +227,28 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     fun onSearchAddress(view: View) {
         futureSearchAddress?.cancel(true)
-        if (switchGps.isChecked) {
-            // if gps on toast address
-            futureSearchAddress = LocationUtil.getAddressStringAsync(Coordinates(java.lang.Float.parseFloat(latitudeText.text.toString()),
-                    java.lang.Float.parseFloat(longitudeText.text.toString()))) {
-                it?.apply { toast(it) }
+        // no gps open search dialog
+        val context = view.context
+        val preference = getPreferences(Context.MODE_PRIVATE)
+
+        val editText = EditText(context)
+        editText.maxLines = 6
+        editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""))
+        editText.selectAll()
+
+        AlertDialog.Builder(context).setMessage(R.string.insert_address).setView(editText).setPositiveButton(R.string.search) { dialog, which ->
+            try {
+                switchGps.isChecked = false;
+                // clear old coordinates
+                onLocationChanged(null)
+                // search new location;
+                val address = editText.text.toString()
+                preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                searchAddress(address, view.context)
+            } finally {
+                dialog.dismiss()
             }
-        } else {
-            // no gps open search dialog
-            val context = view.context
-            val preference = getPreferences(Context.MODE_PRIVATE)
-
-            val editText = EditText(context)
-            editText.maxLines = 6
-            editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""))
-            editText.selectAll()
-
-            AlertDialog.Builder(context).setMessage(R.string.insert_address).setView(editText).setPositiveButton(R.string.search) { dialog, which ->
-                try {
-                    // clear old coordinates
-                    onLocationChanged(null)
-                    // search new location;
-                    val address = editText.text.toString()
-                    preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                    searchAddress(address, view.context)
-                } finally {
-                    dialog.dismiss()
-                }
-            }.setNegativeButton(R.string.close, DismissOnClickListener).show()
-        }
+        }.setNegativeButton(R.string.close, DismissOnClickListener).show()
     }
 
     private fun searchAddress(searchAddress: String, context: Context) {
@@ -390,7 +383,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     private fun debugImportCollection() {
-        if (!BuildConfig.DEBUG) throw Error()
+        if (!BuildConfig.DEBUG) throw AssertionError()
 
         val uri = Uri.Builder().scheme("http").authority("my.poi.server").appendEncodedPath("/dir/subdir/poisource.ov2").appendQueryParameter("q", "customValue").build()
         val intent = Intent(Intent.ACTION_VIEW, uri)

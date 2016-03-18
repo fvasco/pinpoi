@@ -1,8 +1,7 @@
 package io.github.fvasco.pinpoi.util
 
-import java.util.Comparator
-
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
+import java.util.*
 
 /**
  * Compare placemark using distance from a specific [Coordinates]

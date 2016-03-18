@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutionException
 
  * @author Francesco Vasco
  */
-class ImporterFacade @JvmOverloads constructor(context: Context = Util.applicationContext) {
+class ImporterFacade constructor(context: Context = Util.applicationContext) {
 
     /**
      * Signpost for end of elaboration
