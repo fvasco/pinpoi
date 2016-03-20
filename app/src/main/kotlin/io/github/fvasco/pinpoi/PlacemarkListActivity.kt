@@ -265,7 +265,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                     .append("<script src=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js\"></script>")
                     // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
                     .append(
-                            "<script src=\"https://ivansanchez.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js\"></script>")
+                            "<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js\"></script>")
                     .append("</html>")
             html.append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>")
             html.append("var map = L.map('map').setView([$searchCoordinate], $zoom);\n")
