@@ -103,7 +103,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
         val locationComparator = PlacemarkDistanceComparator(coordinates)
         val res = TreeSet(locationComparator)
-        val cursor = database!!.rawQuery(sql.toString(), whereArgs.toArray<String>(arrayOfNulls<String>(whereArgs.size)))
+        val cursor = database!!.rawQuery(sql.toString(), whereArgs.toTypedArray())
         try {
             cursor.moveToFirst()
             var maxDistance = range

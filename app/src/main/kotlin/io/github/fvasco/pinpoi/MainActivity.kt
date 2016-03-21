@@ -18,7 +18,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
@@ -41,7 +40,7 @@ import java.util.regex.Pattern
 class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener, AnkoLogger {
     private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
-    private val locationManager by lazy(LazyThreadSafetyMode.NONE) { getSystemService(Context.LOCATION_SERVICE) as LocationManager }
+    private lateinit var locationManager: LocationManager
     private var lastLocation: Location? = null
     private var futureSearchAddress: Future<*>? = null
 
@@ -49,11 +48,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Util.applicationContext = applicationContext
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         // widget
         switchGps.setOnCheckedChangeListener(this)
         switchGps.isEnabled = !locationManager.allProviders.isEmpty()
-        val searchAddressButton = findViewById(R.id.searchAddressButton) as Button
         if (LocationUtil.geocoder == null) {
             searchAddressButton.visibility = View.GONE
         }
@@ -196,20 +195,20 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             val placemarkCollectionNames = ArrayList<String>()
 
             // skip empty collections
-            for (placemarkCollection in if (selectedPlacemarkCategory == "")
+            for (placemarkCollection in if (selectedPlacemarkCategory.isEmpty())
                 placemarkCollectionDao.findAllPlacemarkCollection()
             else
                 placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)) {
                 if (placemarkCollection.poiCount > 0) {
                     placemarkCollections.add(placemarkCollection)
                     placemarkCollectionNames.add(
-                            if (selectedPlacemarkCategory != placemarkCollection.category)
+                            if (selectedPlacemarkCategory == placemarkCollection.category)
                                 placemarkCollection.name
                             else
                                 placemarkCollection.category + " / " + placemarkCollection.name)
                 }
             }
-            if (selectedPlacemarkCategory == "" && placemarkCollections.isEmpty()) {
+            if (selectedPlacemarkCategory.isEmpty() && placemarkCollections.isEmpty()) {
                 onManagePlacemarkCollections(view)
             } else if (placemarkCollections.size == 1) {
                 setPlacemarkCollection(placemarkCollections[0])
@@ -218,7 +217,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 placemarkCollectionNames.add(0, getString(R.string.any_filter))
                 AlertDialog.Builder(view.context)
                         .setTitle(getString(R.string.collection))
-                        .setItems(placemarkCollectionNames.toArray<String>(arrayOfNulls<String>(placemarkCollectionNames.size))) { dialog, which ->
+                        .setItems(placemarkCollectionNames.toTypedArray()) { dialog, which ->
                             dialog.dismiss()
                             setPlacemarkCollection(
                                     if (which == 0) null else placemarkCollections[which])
