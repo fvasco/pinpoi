@@ -11,4 +11,4 @@ data class PlacemarkAnnotation(
         var id: Long = 0,
         var coordinates: Coordinates = Coordinates.EMPTY,
         var note: String = "",
-        var isFlagged: Boolean = false)
+        var flagged: Boolean = false)

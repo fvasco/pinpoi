@@ -94,10 +94,10 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     }
 
     fun updatePlacemarkCollection(view: View?) {
-        if (fragment != null) {
-            val permission = fragment!!.requiredPermissionToUpdatePlacemarkCollection
+        fragment ?.let {fragment->
+            val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-                fragment!!.updatePlacemarkCollection()
+                fragment.updatePlacemarkCollection()
             } else {
                 // request permission
                 ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_UPDATE)
@@ -114,23 +114,32 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     }
 
     private fun renameCollection() {
-        if (fragment != null) {
+        fragment ?.let {fragment->
             val editText = EditText(baseContext)
-            editText.setText(fragment!!.placemarkCollection!!.name)
-            AlertDialog.Builder(this).setTitle(R.string.action_rename).setView(editText).setPositiveButton(R.string.yes) { dialog, which ->
+            editText.setText(fragment.placemarkCollection!!.name)
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.action_rename)
+                    .setView(editText).setPositiveButton(R.string.yes) { dialog, which ->
                 dialog.dismiss()
-                fragment!!.renamePlacemarkCollection(editText.text.toString())
-            }.setNegativeButton(R.string.no, DismissOnClickListener).show()
+                fragment.renamePlacemarkCollection(editText.text.toString())
+            }
+                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .show()
         }
     }
 
     private fun deleteCollection() {
-        if (fragment != null) {
-            AlertDialog.Builder(this).setTitle(R.string.action_delete).setMessage(R.string.delete_placemark_collection_confirm).setPositiveButton(R.string.yes) { dialog, which ->
-                dialog.dismiss()
-                fragment!!.deletePlacemarkCollection()
-                onBackPressed()
-            }.setNegativeButton(R.string.no, DismissOnClickListener).show()
+        fragment ?.let {fragment->
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.action_delete)
+                    .setMessage(R.string.delete_placemark_collection_confirm)
+                    .setPositiveButton(R.string.yes) { dialog, which ->
+                        dialog.dismiss()
+                        fragment.deletePlacemarkCollection()
+                        onBackPressed()
+                    }
+                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .show()
         }
     }
 

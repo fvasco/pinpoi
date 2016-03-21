@@ -52,7 +52,7 @@ class PlacemarkDetailFragment : Fragment() {
             }
             placemarkDetailText.text = if (placemark == null)
                 null
-            else if (placemark.description.isNullOrEmpty())
+            else if (placemark.description.isEmpty())
                 placemark.name
             else if (placemark.description.isHtml())
                 Html.fromHtml("<p>" + escapeHtml(placemark.name) + "</p>" + placemark.description)
@@ -123,10 +123,9 @@ class PlacemarkDetailFragment : Fragment() {
         super.onDestroy()
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        val rootView = inflater!!.inflate(R.layout.placemark_detail, container, false)
-        return rootView
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View {
+        return inflater.inflate(R.layout.placemark_detail, container, false)
     }
 
     override fun onStart() {
@@ -142,8 +141,8 @@ class PlacemarkDetailFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
-        if (placemark != null) {
-            outState!!.putLong(ARG_PLACEMARK_ID, placemark!!.id)
+        placemark?.let { placemark ->
+            outState!!.putLong(ARG_PLACEMARK_ID, placemark.id)
         }
         super.onSaveInstanceState(outState)
     }
@@ -156,7 +155,7 @@ class PlacemarkDetailFragment : Fragment() {
 
 
     fun resetStarFabIcon(starFab: FloatingActionButton) {
-        val drawable = if (placemarkAnnotation?.isFlagged ?: false)
+        val drawable = if (placemarkAnnotation?.flagged ?: false)
             R.drawable.abc_btn_rating_star_on_mtrl_alpha
         else
             R.drawable.abc_btn_rating_star_off_mtrl_alpha
@@ -169,7 +168,7 @@ class PlacemarkDetailFragment : Fragment() {
     }
 
     fun onStarClick(starFab: FloatingActionButton) {
-        placemarkAnnotation!!.isFlagged = !placemarkAnnotation!!.isFlagged
+        placemarkAnnotation?.flagged = !placemarkAnnotation!!.flagged
         resetStarFabIcon(starFab)
     }
 

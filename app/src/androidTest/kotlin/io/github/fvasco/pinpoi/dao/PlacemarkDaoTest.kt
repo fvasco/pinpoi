@@ -91,7 +91,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
         assertTrue(set.isEmpty())
 
         val placemarkAnnotation = dao.loadPlacemarkAnnotation(pompei)
-        placemarkAnnotation.isFlagged = true
+        placemarkAnnotation.flagged = true
         dao.update(placemarkAnnotation)
 
         set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, "mpe", true, setOf(1L))
@@ -205,7 +205,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
         var pa = dao.loadPlacemarkAnnotation(p)
         assertEquals(p.coordinates, pa.coordinates)
         assertEquals("", pa.note)
-        assertEquals(false, pa.isFlagged)
+        assertEquals(false, pa.flagged)
 
         // test insert
         pa.note = "test note"
@@ -215,21 +215,21 @@ class PlacemarkDaoTest : AndroidTestCase() {
         pa = dao.loadPlacemarkAnnotation(p)
         assertEquals(p.coordinates, pa.coordinates)
         assertEquals("test note", pa.note)
-        assertEquals(false, pa.isFlagged)
+        assertEquals(false, pa.flagged)
 
         // test update
         pa.note = ""
-        pa.isFlagged = true
+        pa.flagged = true
         dao.update(pa)
 
         pa = dao.loadPlacemarkAnnotation(p)
         assertEquals(p.coordinates, pa.coordinates)
         assertEquals("", pa.note)
-        assertEquals(true, pa.isFlagged)
+        assertEquals(true, pa.flagged)
 
         // test delete
         pa.note = ""
-        pa.isFlagged = false
+        pa.flagged = false
         dao.update(pa)
 
         pa = dao.loadPlacemarkAnnotation(p)

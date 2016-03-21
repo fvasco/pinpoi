@@ -34,7 +34,7 @@ fun setUpDebugDatabase(context: Context) {
 
             // recreate test database
             val placemarkCollection = PlacemarkCollection()
-            for (pci in 15 downTo 0) {
+            for (pci in 0..15) {
                 placemarkCollection.id = 0
                 placemarkCollection.name = "Placemark Collection '" + pci + '\''
                 placemarkCollection.category = if (pci == 0) "" else "Category " + pci % 7
@@ -46,9 +46,8 @@ fun setUpDebugDatabase(context: Context) {
                 Log.i("setUpDebugDatabase", "inserted " + placemarkCollection)
 
                 val placemark = Placemark()
-                for (lat in -60..59) {
-                    var lon = -90
-                    while (lon < 90) {
+                for (lat in -60..60) {
+                    for (lon in -90..90 step 2) {
                         placemark.id = 0
                         placemark.name = "Placemark $lat,$lon / $pci"
                         placemark.description = if ((lat + lon) % 10 == 0)
@@ -63,11 +62,10 @@ fun setUpDebugDatabase(context: Context) {
 
                         if ((lat + lon + pci) % 9 == 0) {
                             val placemarkAnnotation = placemarkDao.loadPlacemarkAnnotation(placemark)
-                            placemarkAnnotation.isFlagged = (lat + lon + pci) % 3 == 0
+                            placemarkAnnotation.flagged = (lat + lon + pci) % 3 == 0
                             placemarkAnnotation.note = "Placemark annotation for " + placemark.name
                             placemarkDao.update(placemarkAnnotation)
                         }
-                        lon += 2
                     }
                 }
             }

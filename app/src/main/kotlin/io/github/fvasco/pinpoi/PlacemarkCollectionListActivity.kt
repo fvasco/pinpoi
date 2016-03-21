@@ -69,8 +69,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         }
 
         // load intent parameters to create a new collection
-        val intentUri = intent.data
-        if (intentUri != null) {
+        intent.data?.let { intentUri ->
             createPlacemarkCollection(baseContext, intentUri)
         }
     }
@@ -139,7 +138,10 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             }
             input.setText(fileName)
         }
-        AlertDialog.Builder(this).setTitle(getString(R.string.title_placemarkcollection_detail)).setMessage(getString(R.string.placemark_collection_name)).setView(input).setPositiveButton("Ok") { dialog, whichButton ->
+        AlertDialog.Builder(this)
+                .setTitle(getString(R.string.title_placemarkcollection_detail))
+                .setMessage(getString(R.string.placemark_collection_name))
+                .setView(input).setPositiveButton("Ok") { dialog, whichButton ->
             try {
                 val placemarkCollectionName = input.text.toString()
                 val placemarkCollection = PlacemarkCollection()
@@ -157,7 +159,9 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                 // cannot insert collection
                 showToast(e)
             }
-        }.setNegativeButton("Cancel", DismissOnClickListener).show()
+        }
+                .setNegativeButton("Cancel", DismissOnClickListener)
+                .show()
     }
 
     fun updatePlacemarkCollection(view: View?) {
@@ -184,24 +188,34 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         if (fragment != null) {
             val editText = EditText(baseContext)
             editText.setText(fragment!!.placemarkCollection?.name)
-            AlertDialog.Builder(this).setTitle(R.string.action_rename).setView(editText).setPositiveButton(R.string.yes) { dialog, which ->
-                dialog.dismiss()
-                fragment!!.renamePlacemarkCollection(editText.text.toString())
-                setupRecyclerView()
-            }.setNegativeButton(R.string.no, DismissOnClickListener).show()
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.action_rename)
+                    .setView(editText)
+                    .setPositiveButton(R.string.yes) { dialog, which ->
+                        dialog.dismiss()
+                        fragment!!.renamePlacemarkCollection(editText.text.toString())
+                        setupRecyclerView()
+                    }
+                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .show()
         }
     }
 
     private fun deleteCollection() {
         if (fragment != null) {
-            AlertDialog.Builder(this).setTitle(R.string.action_delete).setMessage(R.string.delete_placemark_collection_confirm).setPositiveButton(R.string.yes) { dialog, which ->
-                dialog.dismiss()
-                fragment!!.deletePlacemarkCollection()
-                fabUpdate.visibility = View.GONE
-                supportFragmentManager.beginTransaction().remove(fragment).commit()
-                fragment = null
-                setupRecyclerView()
-            }.setNegativeButton(R.string.no, DismissOnClickListener).show()
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.action_delete)
+                    .setMessage(R.string.delete_placemark_collection_confirm)
+                    .setPositiveButton(R.string.yes) { dialog, which ->
+                        dialog.dismiss()
+                        fragment!!.deletePlacemarkCollection()
+                        fabUpdate.visibility = View.GONE
+                        supportFragmentManager.beginTransaction().remove(fragment).commit()
+                        fragment = null
+                        setupRecyclerView()
+                    }
+                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .show()
         }
     }
 

@@ -8,5 +8,5 @@ import io.github.fvasco.pinpoi.util.Coordinates
  */
 class PlacemarkSearchResult(var id: Long = 0,
                             override var coordinates: Coordinates,
-                            override var name: String = "", var isFlagged: Boolean = false) :
+                            override var name: String = "", var flagged: Boolean = false) :
         PlacemarkBase

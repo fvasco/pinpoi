@@ -63,11 +63,9 @@ abstract class AbstractDao(private val context: Context) {
 
      * @throws IllegalStateException Error if dao instance is open
      */
-    @Synchronized @Throws(IllegalStateException::class)
+    @Synchronized
     fun reset() {
-        if (openCount > 0) {
-            throw IllegalStateException("Dao in use")
-        }
+        if (openCount > 0) error("Dao in use")
         sqLiteOpenHelper.close()
         sqLiteOpenHelper = createSqLiteOpenHelper(context)
         openCount = 0

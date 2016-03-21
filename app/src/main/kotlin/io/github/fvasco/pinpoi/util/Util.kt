@@ -3,8 +3,10 @@ package io.github.fvasco.pinpoi.util
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.text.Html
 import android.util.Log
 import android.widget.Toast
 import io.github.fvasco.pinpoi.BuildConfig
@@ -72,23 +74,27 @@ fun CharSequence?.isHtml(): Boolean {
 /**
  * Check if text is a uri
  */
-fun CharSequence?.isUri(): Boolean {
-    return this?.matches("\\w+:/{1,3}\\w+.+".toRegex()) ?: false
+inline fun CharSequence?.isUri(): Boolean {
+    return this?.matches("\\w{3,5}:/{1,3}\\w.+".toRegex()) ?: false
 }
 
 /**
  * Escape text for HTML
  */
 fun escapeHtml(text: CharSequence): CharSequence {
-    val out = StringBuilder(text.length + text.length / 4)
-    for (c in text) {
-        when (c) {
-        // html escape
-            '<', '>', '&', '\'', '\"' -> out.append("&#x").append(Integer.toHexString(c.toInt())).append(';')
-            else -> out.append(c)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        return Html.escapeHtml(text)
+    } else {
+        val out = StringBuilder(text.length + text.length / 4)
+        for (c in text) {
+            when (c) {
+            // html escape
+                '<', '>', '&', '\'', '\"' -> out.append("&#x").append(Integer.toHexString(c.toInt())).append(';')
+                else -> out.append(c)
+            }
         }
+        return out
     }
-    return out
 }
 
 /**

@@ -293,15 +293,15 @@ class PlacemarkListActivity : AppCompatActivity() {
                 val distance = floatArray[0].toInt()
 
                 html.append("L.marker([").append(psr.coordinates.toString()).append("],{")
-                if (psr.isFlagged) {
+                if (psr.flagged) {
                     html.append("icon:L.icon.glyph({glyph:'<b><tt>").append(placemarkPosition).append("</tt></b>',glyphColor: 'yellow'})")
                 } else {
                     html.append("icon:L.icon.glyph({glyph:'").append(placemarkPosition).append("'})")
                 }
                 html.append("}).addTo(map)" + ".bindPopup(\"").append("<a href='javascript:pinpoi.openPlacemark(").append(psr.id).append(")'>")
-                if (psr.isFlagged) html.append("<b>")
+                if (psr.flagged) html.append("<b>")
                 html.append(escapeJavascript(psr.name))
-                if (psr.isFlagged) html.append("</b>")
+                if (psr.flagged) html.append("</b>")
                 html.append("</a>").append("<br>").append(integerFormat.format(distance.toLong())).append("&nbsp;m").append("\");\n")
             }
             html.append("</script>" + "</body>" + "</html>")
@@ -369,7 +369,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             }
             stringBuilder.append(' ').append(ARROWS[arrowIndex]).append("  ").append(placemark.name)
             holder.view.text = stringBuilder.toString()
-            holder.view.typeface = if (placemark.isFlagged) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            holder.view.typeface = if (placemark.flagged) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
 
             holder.view.setOnClickListener { openPlacemark(holder.placemark!!.id) }
             holder.view.setOnLongClickListener { view ->

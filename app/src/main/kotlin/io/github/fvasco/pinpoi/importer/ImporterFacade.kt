@@ -158,8 +158,8 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
             }
         } finally {
             placemarkCollectionDao.close()
-            if (progressDialog != null) {
-                Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.dismiss() }
+            progressDialog?.let { pd ->
+                Util.MAIN_LOOPER_HANDLER.post { pd.dismiss() }
             }
         }
     }

@@ -16,7 +16,7 @@ class GpxImporter : AbstractXmlImporter() {
                         java.lang.Float.parseFloat(parser.getAttributeValue(null, "lon")))
             }
             "link" -> placemark?.let { placemark ->
-                if (  placemark.description.isNullOrBlank()) {
+                if (  placemark.description.isBlank()) {
                     placemark.description = parser.getAttributeValue(null, "href") ?: ""
                 }
             }

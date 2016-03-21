@@ -26,9 +26,9 @@ object LocationUtil {
      * Store resolved address
      */
     private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
-    private val addressCacheFile by lazy { File(Util.applicationContext.cacheDir, "addressCache") }
+    private val addressCacheFile by lazy(LazyThreadSafetyMode.NONE) { File(Util.applicationContext.cacheDir, "addressCache") }
 
-    val geocoder: Geocoder? by lazy {
+    val geocoder: Geocoder? by lazy(LazyThreadSafetyMode.NONE) {
         val applicationContext = Util.applicationContext
         if (Geocoder.isPresent())
             Geocoder(applicationContext)
@@ -46,17 +46,15 @@ object LocationUtil {
                 if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
                 ADDRESS_CACHE[coordinates]
             }
-            if (addressString == null // resolve geocoder
-                    && geocoder != null) {
-                val addresses: List<Address>
-                try {
-                    addresses = LocationUtil.geocoder!!.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
+            if (addressString == null) {
+                val addresses = try {
+                    LocationUtil.geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1) ?: listOf()
                 } catch (e: Exception) {
-                    addresses = listOf()
+                    listOf<Address>()
                 }
 
-                if (!addresses.isEmpty()) {
-                    addressString = LocationUtil.toString(addresses[0])
+                if (addresses.isNotEmpty()) {
+                    addressString = LocationUtil.toString(addresses.first())
                     // save result in cache
                     synchronized (ADDRESS_CACHE) {
                         ADDRESS_CACHE.put(coordinates, addressString!!)
@@ -89,9 +87,7 @@ object LocationUtil {
     /**
      * Convert an [Address] to address string
      */
-    fun toString(address: Address?): String? {
-        if (address == null) return null
-
+    fun toString(address: Address): String {
         val separator = ", "
         if (address.maxAddressLineIndex == 0) {
             return address.getAddressLine(0)
@@ -141,7 +137,7 @@ object LocationUtil {
                 val inputStream = DataInputStream(BufferedInputStream(FileInputStream(addressCacheFile)))
                 try {
                     // first item is entry count
-                    for (i in inputStream.readShort() downTo 1) {
+                    repeat(inputStream.readShort().toInt()) {
                         val latitude = inputStream.readFloat()
                         val longitude = inputStream.readFloat()
                         val address = inputStream.readUTF()
@@ -164,11 +160,13 @@ object LocationUtil {
         try {
             DataOutputStream(BufferedOutputStream(FileOutputStream(addressCacheFile))).use { outputStream ->
                 // first item is entry count
+                outputStream.writeShort(Math.min(ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
+
                 val iterator = ADDRESS_CACHE.entries.iterator()
-                for (i in ADDRESS_CACHE.size downTo ADDRESS_CACHE_SIZE + 1) {
+                // if (ADDRESS_CACHE.size > ADDRESS_CACHE_SIZE) skip entries
+                repeat(ADDRESS_CACHE.size - ADDRESS_CACHE_SIZE) {
                     iterator.next()
                 }
-                outputStream.writeShort(Math.min(ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
                 while (iterator.hasNext()) {
                     val entry = iterator.next()
                     val coordinates = entry.key
@@ -182,6 +180,5 @@ object LocationUtil {
             //noinspection ResultOfMethodCallIgnored
             addressCacheFile.delete()
         }
-
     }
 }

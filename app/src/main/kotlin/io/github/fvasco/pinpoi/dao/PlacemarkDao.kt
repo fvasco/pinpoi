@@ -168,7 +168,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun update(placemarkAnnotation: PlacemarkAnnotation) {
-        if (placemarkAnnotation.note.isEmpty() && !placemarkAnnotation.isFlagged) {
+        if (placemarkAnnotation.note.isEmpty() && !placemarkAnnotation.flagged) {
             database!!.delete("PLACEMARK_ANNOTATION", "_ID=" + placemarkAnnotation.id, null)
             placemarkAnnotation.id = 0
         } else {
@@ -214,7 +214,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         cv.put("latitude", coordinateToInt(ca.latitude))
         cv.put("longitude", coordinateToInt(ca.longitude))
         cv.put("note", pa.note.trim())
-        cv.put("flag", if (pa.isFlagged) 1 else 0)
+        cv.put("flag", if (pa.flagged) 1 else 0)
         return cv
     }
 
@@ -240,7 +240,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         pa.id = cursor.getLong(0)
         pa.coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2)))
         pa.note = cursor.getString(3)
-        pa.isFlagged = cursor.getInt(4) != 0
+        pa.flagged = cursor.getInt(4) != 0
         return pa
     }
 

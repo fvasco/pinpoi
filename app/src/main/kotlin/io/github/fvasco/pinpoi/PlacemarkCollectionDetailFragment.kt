@@ -53,10 +53,9 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        val rootView = inflater!!.inflate(R.layout.placemarkcollection_detail, container, false)
-        return rootView
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View {
+        return inflater.inflate(R.layout.placemarkcollection_detail, container, false)
     }
 
     override fun onStart() {

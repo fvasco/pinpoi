@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -19,12 +18,18 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.CompoundButton
+import android.widget.EditText
+import android.widget.SeekBar
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.debug
+import org.jetbrains.anko.error
 import org.jetbrains.anko.toast
 import java.io.File
 import java.io.IOException
@@ -33,10 +38,10 @@ import java.util.concurrent.Future
 import java.util.regex.Pattern
 
 
-class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
-    private var selectedPlacemarkCategory: String? = null
+class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener, AnkoLogger {
+    private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
-    private val locationManager by lazy { getSystemService(Context.LOCATION_SERVICE) as LocationManager }
+    private val locationManager by lazy(LazyThreadSafetyMode.NONE) { getSystemService(Context.LOCATION_SERVICE) as LocationManager }
     private var lastLocation: Location? = null
     private var futureSearchAddress: Future<*>? = null
 
@@ -67,14 +72,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         favouriteCheck.isChecked = preference.getBoolean(PREFEFERNCE_FAVOURITE, false)
         showMapCheck.isChecked = preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)
         rangeSeek.progress = Math.min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
-        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null))
+        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null) ?: "")
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
 
-        // load intent parameters for geo scheme
-        val intentUri = intent.data
-        if (intentUri != null) {
+        // load intent parameters for geo scheme (if present)
+        intent.data?.let { intentUri ->
             val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-            var matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"))
+            var matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q") ?: "")
             if (!matcher.matches()) {
                 matcher = coordinatePattern.matcher(intentUri.authority)
             }
@@ -144,10 +148,10 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         return super.onOptionsItemSelected(item)
     }
 
-    private fun setPlacemarkCategory(placemarkCategory: String?) {
-        selectedPlacemarkCategory = if (selectedPlacemarkCategory.isNullOrBlank()) null else selectedPlacemarkCategory
+    private fun setPlacemarkCategory(placemarkCategory: String) {
+        selectedPlacemarkCategory = placemarkCategory
         categoryButton.text = selectedPlacemarkCategory
-        if (placemarkCategory != selectedPlacemarkCollection?.category) {
+        if (placemarkCategory != "" && placemarkCategory != selectedPlacemarkCollection?.category) {
             setPlacemarkCollection(null)
         }
     }
@@ -172,12 +176,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         placemarkCollectionDao.open()
         try {
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
-            AlertDialog.Builder(view.context).setTitle(getString(R.string.collection)).setItems(
-                    arrayOf(getString(R.string.any_filter), *categories.toTypedArray()),
-                    DialogInterface.OnClickListener { dialog, which ->
+            AlertDialog.Builder(view.context)
+                    .setTitle(getString(R.string.collection))
+                    .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray()), { dialog, which ->
                         dialog.dismiss()
-                        setPlacemarkCategory(if (which == 0) null else categories[which - 1])
-                    }).show()
+                        setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
+                    })
+                    .show()
         } finally {
             placemarkCollectionDao.close()
         }
@@ -191,20 +196,20 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             val placemarkCollectionNames = ArrayList<String>()
 
             // skip empty collections
-            for (placemarkCollection in if (selectedPlacemarkCategory == null)
+            for (placemarkCollection in if (selectedPlacemarkCategory == "")
                 placemarkCollectionDao.findAllPlacemarkCollection()
             else
-                placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory!!)) {
+                placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)) {
                 if (placemarkCollection.poiCount > 0) {
                     placemarkCollections.add(placemarkCollection)
                     placemarkCollectionNames.add(
-                            if (selectedPlacemarkCategory != null || placemarkCollection.category.isNullOrEmpty())
+                            if (selectedPlacemarkCategory != placemarkCollection.category)
                                 placemarkCollection.name
                             else
                                 placemarkCollection.category + " / " + placemarkCollection.name)
                 }
             }
-            if (selectedPlacemarkCategory == null && placemarkCollections.isEmpty()) {
+            if (selectedPlacemarkCategory == "" && placemarkCollections.isEmpty()) {
                 onManagePlacemarkCollections(view)
             } else if (placemarkCollections.size == 1) {
                 setPlacemarkCollection(placemarkCollections[0])
@@ -213,12 +218,12 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 placemarkCollectionNames.add(0, getString(R.string.any_filter))
                 AlertDialog.Builder(view.context)
                         .setTitle(getString(R.string.collection))
-                        .setItems(placemarkCollectionNames.toArray<String>(arrayOfNulls<String>(placemarkCollectionNames.size))
-                        ) { dialog, which ->
+                        .setItems(placemarkCollectionNames.toArray<String>(arrayOfNulls<String>(placemarkCollectionNames.size))) { dialog, which ->
                             dialog.dismiss()
                             setPlacemarkCollection(
                                     if (which == 0) null else placemarkCollections[which])
-                        }.show()
+                        }
+                        .show()
             }
         } finally {
             placemarkCollectionDao.close()
@@ -236,19 +241,24 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""))
         editText.selectAll()
 
-        AlertDialog.Builder(context).setMessage(R.string.insert_address).setView(editText).setPositiveButton(R.string.search) { dialog, which ->
-            try {
-                switchGps.isChecked = false;
-                // clear old coordinates
-                onLocationChanged(null)
-                // search new location;
-                val address = editText.text.toString()
-                preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                searchAddress(address, view.context)
-            } finally {
-                dialog.dismiss()
-            }
-        }.setNegativeButton(R.string.close, DismissOnClickListener).show()
+        AlertDialog.Builder(context)
+                .setMessage(R.string.insert_address)
+                .setView(editText)
+                .setPositiveButton(R.string.search) { dialog, which ->
+                    try {
+                        switchGps.isChecked = false;
+                        // clear old coordinates
+                        onLocationChanged(null)
+                        // search new location;
+                        val address = editText.text.toString()
+                        preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                        searchAddress(address, view.context)
+                    } finally {
+                        dialog.dismiss()
+                    }
+                }
+                .setNegativeButton(R.string.close, DismissOnClickListener)
+                .show()
     }
 
     private fun searchAddress(searchAddress: String, context: Context) {
@@ -272,7 +282,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 }.show()
             }
         } catch (e: IOException) {
-            Log.e(MainActivity::class.java.simpleName, "searchAddress", e)
+            error("searchAddress", e)
             toast(R.string.error_network)
         }
 
@@ -285,39 +295,37 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 val placemarkCollectionDao = PlacemarkCollectionDao.instance
                 placemarkCollectionDao.open()
                 try {
-                    val collections = if (selectedPlacemarkCategory == null)
+                    val collections = if (selectedPlacemarkCategory == "")
                         placemarkCollectionDao.findAllPlacemarkCollection()
                     else
-                        placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory!!)
-                    collectionsIds = LongArray(collections.size)
-                    var i = 0
-                    for (placemarkCollection in collections) {
-                        collectionsIds[i] = placemarkCollection.id
-                        ++i
-                    }
+                        placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)
+                    collectionsIds = collections.filter { it.poiCount > 0 }.map { it.id }.toLongArray()
                 } finally {
                     placemarkCollectionDao.close()
                 }
             } else {
                 collectionsIds = longArrayOf(selectedPlacemarkCollection!!.id)
             }
-            if (collectionsIds.size == 0) {
-                showToast(getString(R.string.n_placemarks_found, 0), Toast.LENGTH_LONG)
+            debug { "onSearchPoi selectedPlacemarkCategory=${selectedPlacemarkCategory}, collectionsIds=${collectionsIds}" }
+            if (collectionsIds.isEmpty()) {
+                toast(getString(R.string.n_placemarks_found, 0))
+                onManagePlacemarkCollections(view)
             } else {
                 val context = view.context
-                val intent = Intent(context, PlacemarkListActivity::class.java)
-                intent.putExtra(PlacemarkListActivity.ARG_LATITUDE, java.lang.Float.parseFloat(latitudeText.text.toString()))
-                intent.putExtra(PlacemarkListActivity.ARG_LONGITUDE, java.lang.Float.parseFloat(longitudeText.text.toString()))
-                intent.putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.text.toString())
-                intent.putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked)
-                intent.putExtra(PlacemarkListActivity.ARG_SHOW_MAP, showMapCheck.isChecked)
-                intent.putExtra(PlacemarkListActivity.ARG_RANGE, (rangeSeek.progress + RANGE_MIN) * 1000)
-                intent.putExtra(PlacemarkListActivity.ARG_COLLECTION_IDS, collectionsIds)
+                val intent = Intent(context, PlacemarkListActivity::class.java).apply {
+                    putExtra(PlacemarkListActivity.ARG_LATITUDE, java.lang.Float.parseFloat(latitudeText.text.toString()))
+                    putExtra(PlacemarkListActivity.ARG_LONGITUDE, java.lang.Float.parseFloat(longitudeText.text.toString()))
+                    putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.text.toString())
+                    putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked)
+                    putExtra(PlacemarkListActivity.ARG_SHOW_MAP, showMapCheck.isChecked)
+                    putExtra(PlacemarkListActivity.ARG_RANGE, (rangeSeek.progress + RANGE_MIN) * 1000)
+                    putExtra(PlacemarkListActivity.ARG_COLLECTION_IDS, collectionsIds)
+                }
                 context.startActivity(intent)
             }
         } catch (e: Exception) {
-            Log.e(MainActivity::class.java.simpleName, "onSearchPoi", e)
-            Toast.makeText(this@MainActivity, R.string.validation_error, Toast.LENGTH_SHORT).show()
+            error("onSearchPoi", e)
+            toast(R.string.validation_error)
         }
 
     }
@@ -327,10 +335,15 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     private fun showCreateBackupConfirm() {
-        AlertDialog.Builder(this).setTitle(getString(R.string.action_create_backup)).setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath)).setPositiveButton(R.string.yes) { dialogInterface, i ->
-            dialogInterface.dismiss()
-            createBackup()
-        }.setNegativeButton(R.string.no, DismissOnClickListener).show()
+        AlertDialog.Builder(this)
+                .setTitle(getString(R.string.action_create_backup))
+                .setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath))
+                .setPositiveButton(R.string.yes) { dialogInterface, i ->
+                    dialogInterface.dismiss()
+                    createBackup()
+                }
+                .setNegativeButton(R.string.no, DismissOnClickListener)
+                .show()
     }
 
     private fun createBackup() {
@@ -356,10 +369,15 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun showRestoreBackupConfirm() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             openFileChooser(BackupManager.DEFAULT_BACKUP_FILE, this) { file ->
-                AlertDialog.Builder(this@MainActivity).setTitle(getString(R.string.action_restore_backup)).setMessage(getString(R.string.backup_file, file.absolutePath)).setPositiveButton(R.string.yes) { dialogInterface, i ->
-                    dialogInterface.dismiss()
-                    restoreBackup(file)
-                }.setNegativeButton(R.string.no, DismissOnClickListener).show()
+                AlertDialog.Builder(this@MainActivity)
+                        .setTitle(getString(R.string.action_restore_backup))
+                        .setMessage(getString(R.string.backup_file, file.absolutePath))
+                        .setPositiveButton(R.string.yes) { dialogInterface, i ->
+                            dialogInterface.dismiss()
+                            restoreBackup(file)
+                        }
+                        .setNegativeButton(R.string.no, DismissOnClickListener)
+                        .show()
             }
         } else {
             // request permission
@@ -369,17 +387,16 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     private fun restoreBackup(file: File) {
         showProgressDialog(getString(R.string.action_restore_backup),
-                getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath),
-                {
-                    try {
-                        val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
-                        backupManager.restore(file)
-                        Util.MAIN_LOOPER_HANDLER.post { setPlacemarkCollection(null) }
-                    } catch (e: Exception) {
-                        Log.w(MainActivity::class.java.simpleName, "restore backup failed", e)
-                        showToast(e)
-                    }
-                }, this)
+                getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), {
+            try {
+                val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
+                backupManager.restore(file)
+                Util.MAIN_LOOPER_HANDLER.post { setPlacemarkCollection(null) }
+            } catch (e: Exception) {
+                Log.w(MainActivity::class.java.simpleName, "restore backup failed", e)
+                showToast(e)
+            }
+        }, this)
     }
 
     private fun debugImportCollection() {
