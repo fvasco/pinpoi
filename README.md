@@ -25,5 +25,3 @@ Do you like PinPoi or do you wish a better one?
 Offer me a fruit juice ;)
 
 [![Donate](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)](https://www.paypal.me/FrancescoVasco/1)
-
-[![Build Status](https://travis-ci.org/fvasco/pinpoi.svg)](https://travis-ci.org/fvasco/pinpoi)
