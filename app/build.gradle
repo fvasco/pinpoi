@@ -9,8 +9,8 @@ android {
         applicationId "io.github.fvasco.pinpoi"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 16
-        versionName "0.4.2"
+        versionCode 17
+        versionName "0.4.3"
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {
@@ -21,15 +21,11 @@ android {
     }
     productFlavors {
     }
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-        test.java.srcDirs += 'src/androidTest/kotlin'
-    }
 }
 
 buildscript {
     ext.android_support_version = '23.2.0'
-    ext.kotlin_version = '1.0.1'
+    ext.kotlin_version = '1.0.1-1'
     ext.anko_version = '0.8.3'
     repositories {
         mavenCentral()
