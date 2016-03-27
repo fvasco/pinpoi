@@ -95,7 +95,6 @@ class BackupManager(private vararg val daos: AbstractDao) {
     }
 
     companion object {
-        @JvmStatic
         val DEFAULT_BACKUP_FILE = File(Environment.getExternalStorageDirectory(), "pinpoi.backup")
     }
 }

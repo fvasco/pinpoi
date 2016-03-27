@@ -501,29 +501,29 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     companion object {
 
-        private val LOCATION_RANGE_ACCURACY = 100
-        private val LOCATION_TIME_ACCURACY = 2 * 60000
-        private val PREFEFERNCE_LATITUDE = "latitude"
-        private val PREFEFERNCE_LONGITUDE = "longitude"
-        private val PREFEFERNCE_NAME_FILTER = "nameFilter"
-        private val PREFEFERNCE_RANGE = "range"
-        private val PREFEFERNCE_FAVOURITE = "favourite"
-        private val PREFEFERNCE_CATEGORY = "category"
-        private val PREFEFERNCE_COLLECTION = "collection"
-        private val PREFEFERNCE_GPS = "gps"
-        private val PREFEFERNCE_ADDRESS = "address"
-        private val PREFEFERNCE_SHOW_MAP = "displayMap"
-        private val PERMISSION_GPS_ON = 1
-        private val PERMISSION_CREATE_BACKUP = 10
-        private val PERMISSION_RESTORE_BACKUP = 11
+        private const val LOCATION_RANGE_ACCURACY = 100
+        private const val LOCATION_TIME_ACCURACY = 2 * 60000
+        private const val PREFEFERNCE_LATITUDE = "latitude"
+        private const val PREFEFERNCE_LONGITUDE = "longitude"
+        private const val PREFEFERNCE_NAME_FILTER = "nameFilter"
+        private const val PREFEFERNCE_RANGE = "range"
+        private const val PREFEFERNCE_FAVOURITE = "favourite"
+        private const val PREFEFERNCE_CATEGORY = "category"
+        private const val PREFEFERNCE_COLLECTION = "collection"
+        private const val PREFEFERNCE_GPS = "gps"
+        private const val PREFEFERNCE_ADDRESS = "address"
+        private const val PREFEFERNCE_SHOW_MAP = "displayMap"
+        private const val PERMISSION_GPS_ON = 1
+        private const val PERMISSION_CREATE_BACKUP = 10
+        private const val PERMISSION_RESTORE_BACKUP = 11
         /**
          * Smallest searchable range
          */
-        private val RANGE_MIN = 5
+        private const val RANGE_MIN = 5
         /**
          * Greatest [.rangeSeek] value,
          * searchable range value is this plus [.RANGE_MIN]
          */
-        private val RANGE_MAX_SHIFT = 195
+        private const val RANGE_MAX_SHIFT = 195
     }
 }

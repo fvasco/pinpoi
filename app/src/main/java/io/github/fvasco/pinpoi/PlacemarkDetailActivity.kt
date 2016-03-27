@@ -25,7 +25,7 @@ import kotlinx.android.synthetic.main.activity_placemark_detail.*
 class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeTouchListener {
     private var placemarkId: Long = 0
     private lateinit var fragment: PlacemarkDetailFragment
-    private var placemarkDao: PlacemarkDao? = null
+    private lateinit var placemarkDao: PlacemarkDao
     private var preferences: SharedPreferences? = null
     /**
      * Placemark id for swipe
@@ -37,7 +37,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         setContentView(R.layout.activity_placemark_detail)
         Util.applicationContext = applicationContext
         placemarkDao = PlacemarkDao.instance
-        placemarkDao!!.open()
+        placemarkDao.open()
         val mapFab = findViewById(R.id.fabMap) as FloatingActionButton
         val toolbar = findViewById(R.id.detailToolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -51,8 +51,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         placemarkIdArray = intent.getLongArrayExtra(ARG_PLACEMARK_LIST_ID)
 
         // Show the Up button in the action bar.
-        val actionBar = supportActionBar
-        actionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -95,7 +94,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     }
 
     override fun onDestroy() {
-        placemarkDao!!.close()
+        placemarkDao.close()
         super.onDestroy()
     }
 
@@ -147,7 +146,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
             }
             if (i >= 0 && i < placemarkIdArray!!.size) {
                 placemarkId = placemarkIdArray!![i]
-                fragment.placemark = placemarkDao!!.getPlacemark(placemarkId)
+                fragment.placemark = placemarkDao.getPlacemark(placemarkId)
                 preferences!!.edit().putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId).apply()
                 resetStarFabIcon()
             }
@@ -155,7 +154,6 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     }
 
     companion object {
-        @JvmStatic
-        val ARG_PLACEMARK_LIST_ID = "placemarkListId"
+        const val ARG_PLACEMARK_LIST_ID = "placemarkListId"
     }
 }

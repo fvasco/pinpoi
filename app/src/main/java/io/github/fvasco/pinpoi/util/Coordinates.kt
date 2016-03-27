@@ -24,7 +24,6 @@ data class Coordinates(val latitude: Float, val longitude: Float) {
 
 
     companion object {
-        @JvmStatic
         val EMPTY = Coordinates(Float.NaN, Float.NaN)
         private val DECIMAL_FORMAT = DecimalFormat("###.######", DecimalFormatSymbols(Locale.ENGLISH))
     }

@@ -41,11 +41,9 @@ class OnSwipeTouchListener(private val swipeTouchListener: OnSwipeTouchListener.
     }
 
     companion object {
-        @JvmField
         val SWIPE_LEFT = false
-        @JvmField
         val SWIPE_RIGHT = true
-        private val SWIPE_DISTANCE_THRESHOLD = 100
-        private val SWIPE_VELOCITY_THRESHOLD = 100
+        private const val SWIPE_DISTANCE_THRESHOLD = 100
+        private const val SWIPE_VELOCITY_THRESHOLD = 100
     }
 }

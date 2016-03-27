@@ -35,8 +35,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         // Show the Up button in the action bar.
-        val actionBar = supportActionBar
-        actionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -94,7 +93,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     }
 
     fun updatePlacemarkCollection(view: View?) {
-        fragment ?.let {fragment->
+        fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
                 fragment.updatePlacemarkCollection()
@@ -114,7 +113,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     }
 
     private fun renameCollection() {
-        fragment ?.let {fragment->
+        fragment?.let { fragment ->
             val editText = EditText(baseContext)
             editText.setText(fragment.placemarkCollection!!.name)
             AlertDialog.Builder(this)
@@ -129,7 +128,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     }
 
     private fun deleteCollection() {
-        fragment ?.let {fragment->
+        fragment?.let { fragment ->
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)

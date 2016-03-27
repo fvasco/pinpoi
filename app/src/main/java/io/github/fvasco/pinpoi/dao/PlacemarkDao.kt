@@ -249,13 +249,12 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         /**
          * Max result for [.findAllPlacemarkNear]
          */
-        private val MAX_NEAR_RESULT = 250
+        private const val MAX_NEAR_RESULT = 250
         private val SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 
         // 2^20
-        private val COORDINATE_MULTIPLIER = 1048576f
+        private const val COORDINATE_MULTIPLIER = 1048576f
 
-        @JvmStatic
         val instance: PlacemarkDao by lazy { PlacemarkDao() }
 
         /**

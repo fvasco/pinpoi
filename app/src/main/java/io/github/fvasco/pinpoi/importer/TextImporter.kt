@@ -84,7 +84,6 @@ class TextImporter : AbstractImporter() {
         /**
          * Decode text, if UTF-8 fails then use ISO-8859-1
          */
-        @JvmStatic
         fun toString(byteBuffer: ByteArray, start: Int, len: Int): String {
             try {
                 return UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()

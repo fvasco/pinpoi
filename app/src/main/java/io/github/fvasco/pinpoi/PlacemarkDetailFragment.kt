@@ -185,8 +185,7 @@ class PlacemarkDetailFragment : Fragment() {
          * The fragment argument representing the item ID that this fragment
          * represents.
          */
-        @JvmStatic
-        val ARG_PLACEMARK_ID = "placemarkId"
+        const val ARG_PLACEMARK_ID = "placemarkId"
     }
 
 }

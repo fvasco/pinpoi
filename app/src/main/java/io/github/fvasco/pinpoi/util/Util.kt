@@ -10,7 +10,6 @@ import android.text.Html
 import android.util.Log
 import android.widget.Toast
 import io.github.fvasco.pinpoi.BuildConfig
-import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.net.HttpURLConnection
@@ -26,18 +25,15 @@ import java.util.regex.Pattern
 object Util {
     val MAIN_LOOPER_HANDLER = Handler(Looper.getMainLooper())
     val EXECUTOR = Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3))
-    val XML_PULL_PARSER_FACTORY: XmlPullParserFactory
+    val XML_PULL_PARSER_FACTORY: XmlPullParserFactory by lazy {
+        val res = XmlPullParserFactory.newInstance()
+        res.isNamespaceAware = true
+        res.isValidating = false
+        res
+    }
 
     init {
         HttpURLConnection.setFollowRedirects(true)
-        try {
-            XML_PULL_PARSER_FACTORY = XmlPullParserFactory.newInstance()
-            XML_PULL_PARSER_FACTORY.isNamespaceAware = true
-            XML_PULL_PARSER_FACTORY.isValidating = false
-        } catch (e: XmlPullParserException) {
-            throw RuntimeException(e)
-        }
-
     }
 
     lateinit var applicationContext: Context

@@ -133,7 +133,6 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
     }
 
     companion object {
-        @JvmStatic
         val instance: PlacemarkCollectionDao by lazy { PlacemarkCollectionDao() }
     }
 

@@ -42,6 +42,6 @@ internal class PlacemarkDatabase(context: Context) : SQLiteOpenHelper(context, "
     }
 
     companion object {
-        val VERSION = 2
+        private const val VERSION = 2
     }
 }

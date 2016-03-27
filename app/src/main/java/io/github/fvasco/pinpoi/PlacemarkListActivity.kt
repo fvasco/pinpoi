@@ -110,8 +110,8 @@ class PlacemarkListActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         placemarkDao.close()
+        super.onDestroy()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -389,22 +389,18 @@ class PlacemarkListActivity : AppCompatActivity() {
             init {
                 this.view = view.findViewById(android.R.id.text1) as TextView
             }
-
-            override fun toString(): String {
-                return super.toString() + " '" + placemark + "'"
-            }
         }
     }
 
     companion object {
-        val ARG_LATITUDE = "latitude"
-        val ARG_LONGITUDE = "longitude"
-        val ARG_RANGE = "range"
-        val ARG_FAVOURITE = "favourite"
-        val ARG_COLLECTION_IDS = "collectionIds"
-        val ARG_NAME_FILTER = "nameFilter"
-        val ARG_SHOW_MAP = "showMap"
-        private val PERMISSION_SHOW_MAP = 1
+        const val ARG_LATITUDE = "latitude"
+        const val ARG_LONGITUDE = "longitude"
+        const val ARG_RANGE = "range"
+        const val ARG_FAVOURITE = "favourite"
+        const val ARG_COLLECTION_IDS = "collectionIds"
+        const val ARG_NAME_FILTER = "nameFilter"
+        const val ARG_SHOW_MAP = "showMap"
+        private const val PERMISSION_SHOW_MAP = 1
         // clockwise arrow
         private val ARROWS = charArrayOf(/*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198', /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196')
     }

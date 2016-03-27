@@ -84,9 +84,9 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         super.onPause()
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        if (placemarkCollection != null) {
-            outState!!.putLong(ARG_PLACEMARK_COLLECTION_ID, placemarkCollection!!.id)
+    override fun onSaveInstanceState(outState: Bundle) {
+        placemarkCollection ?.let {
+            outState.putLong(ARG_PLACEMARK_COLLECTION_ID, it.id)
         }
         super.onSaveInstanceState(outState)
     }
@@ -127,14 +127,14 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             appBarLayout.title = placemarkCollection!!.name
         }
         val poiCount = placemarkCollection!!.poiCount
-        poiCountText!!.text = getString(R.string.poi_count, poiCount)
-        lastUpdateText!!.text = getString(R.string.last_update, placemarkCollection!!.lastUpdate)
-        lastUpdateText!!.visibility = if (poiCount == 0) View.GONE else View.VISIBLE
+        poiCountText.text = getString(R.string.poi_count, poiCount)
+        lastUpdateText.text = getString(R.string.last_update, placemarkCollection!!.lastUpdate)
+        lastUpdateText.visibility = if (poiCount == 0) View.GONE else View.VISIBLE
     }
 
     val requiredPermissionToUpdatePlacemarkCollection: String
         get() {
-            val url = sourceText!!.text.toString()
+            val url = sourceText.text.toString()
             return if (url.startsWith("/") || url.startsWith("file:/"))
                 Manifest.permission.READ_EXTERNAL_STORAGE
             else
@@ -202,6 +202,6 @@ class PlacemarkCollectionDetailFragment : Fragment() {
          * The fragment argument representing the item ID that this fragment
          * represents.
          */
-        val ARG_PLACEMARK_COLLECTION_ID = "placemarkCollectionId"
+        const val ARG_PLACEMARK_COLLECTION_ID = "placemarkCollectionId"
     }
 }
