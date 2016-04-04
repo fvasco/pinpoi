@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Address
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -21,6 +22,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
+import android.widget.Toast
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
@@ -244,34 +246,29 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 .setMessage(R.string.insert_address)
                 .setView(editText)
                 .setPositiveButton(R.string.search) { dialog, which ->
-                    try {
-                        switchGps.isChecked = false;
-                        // clear old coordinates
-                        onLocationChanged(null)
-                        // search new location;
-                        val address = editText.text.toString()
-                        preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                        searchAddress(address, view.context)
-                    } finally {
-                        dialog.dismiss()
+                    dialog.dismiss()
+                    switchGps.isChecked = false;
+                    // clear old coordinates
+                    onLocationChanged(null)
+                    // search new location;
+                    val address = editText.text.toString()
+                    preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                    showProgressDialog(address, null, view.context) {
+                        val addresses =
+                                LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
+                        Util.MAIN_LOOPER_HANDLER.post {
+                            chooseAddress(addresses, view.context)
+                        }
                     }
                 }
                 .setNegativeButton(R.string.close, DismissOnClickListener)
                 .show()
     }
 
-    private fun searchAddress(searchAddress: String, context: Context) {
+    private fun chooseAddress(addresses: List<Address>, context: Context) {
         try {
-            val addresses = LocationUtil.geocoder?.getFromLocationName(searchAddress, 15) ?: listOf()
-            val iterator = addresses.iterator()
-            while (iterator.hasNext()) {
-                val a = iterator.next()
-                if (!a.hasLatitude() || !a.hasLongitude()) {
-                    iterator.remove()
-                }
-            }
             if (addresses.isEmpty()) {
-                toast(R.string.error_no_address_found)
+                showToast(getString(R.string.error_no_address_found), Toast.LENGTH_SHORT)
             } else {
                 val options = addresses.map { LocationUtil.toString(it) }.toTypedArray()
                 AlertDialog.Builder(context).setItems(options) { dialog, which ->
@@ -282,9 +279,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         } catch (e: IOException) {
             error("searchAddress", e)
-            toast(R.string.error_network)
+            showToast(getString(R.string.error_network), Toast.LENGTH_SHORT)
         }
-
     }
 
     fun onSearchPoi(view: View) {
@@ -349,16 +345,15 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             showProgressDialog(
                     getString(R.string.action_create_backup),
-                    getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath),
-                    {
-                        try {
-                            val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
-                            backupManager.create(BackupManager.DEFAULT_BACKUP_FILE)
-                        } catch (e: Exception) {
-                            Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
-                            showToast(e)
-                        }
-                    }, this)
+                    getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), this) {
+                try {
+                    val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
+                    backupManager.create(BackupManager.DEFAULT_BACKUP_FILE)
+                } catch (e: Exception) {
+                    Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
+                    showToast(e)
+                }
+            }
         } else {
             // request permission
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), PERMISSION_CREATE_BACKUP)
@@ -386,7 +381,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     private fun restoreBackup(file: File) {
         showProgressDialog(getString(R.string.action_restore_backup),
-                getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), {
+                getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), this) {
             try {
                 val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
                 backupManager.restore(file)
@@ -395,7 +390,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 Log.w(MainActivity::class.java.simpleName, "restore backup failed", e)
                 showToast(e)
             }
-        }, this)
+        }
     }
 
     private fun debugImportCollection() {

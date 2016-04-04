@@ -41,8 +41,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         val mapFab = findViewById(R.id.fabMap) as FloatingActionButton
         val toolbar = findViewById(R.id.detailToolbar) as Toolbar
         setSupportActionBar(toolbar)
-        val detailContainer = findViewById(R.id.placemarkDetailContainer)
-        detailContainer.setOnTouchListener(OnSwipeTouchListener(this, detailContainer.context))
+        placemarkDetailContainer.setOnTouchListener(OnSwipeTouchListener(this, placemarkDetailContainer.context))
 
         preferences = getPreferences(Context.MODE_PRIVATE)
         placemarkId = intent.getLongExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID,

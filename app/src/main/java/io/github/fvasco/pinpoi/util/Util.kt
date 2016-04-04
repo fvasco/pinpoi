@@ -70,7 +70,7 @@ fun CharSequence?.isHtml(): Boolean {
 /**
  * Check if text is a uri
  */
-inline fun CharSequence?.isUri(): Boolean {
+fun CharSequence?.isUri(): Boolean {
     return this?.matches("\\w{3,5}:/{1,3}\\w.+".toRegex()) ?: false
 }
 
@@ -148,17 +148,13 @@ fun openFileChooser(dir: File, context: Context, fileConsumer: (File) -> Unit) {
 
 /**
  * Show indeterminate progress dialog and execute runnable in background
-
  * @param title    progress dialog title
- * *
  * @param message  progress dialog message
- * *
- * @param runnable task to execute in background
- * *
  * @param context  dialog context
+ * @param runnable task to execute in background
  */
-fun showProgressDialog(title: CharSequence, message: CharSequence?,
-                       runnable: () -> Unit, context: Context) {
+fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Context,
+                       runnable: () -> Unit) {
     val progressDialog = ProgressDialog(context)
     progressDialog.setTitle(title)
     progressDialog.setMessage(message)
@@ -169,10 +165,14 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?,
     progressDialog.show()
     Util.EXECUTOR.submit {
         try {
-            Log.i(Util::class.java.simpleName, "showProgressDialog begin: " + title)
+            Log.i(Util::class.java.simpleName, "showProgressDialog begin: $title")
             runnable()
+        } catch(e: Exception) {
+            progressDialog.dismiss()
+            Log.e(Util::class.java.simpleName, "showProgressDialog error $title", e)
+            showToast(e)
         } finally {
-            Log.i(Util::class.java.simpleName, "showProgressDialog end: " + title)
+            Log.i(Util::class.java.simpleName, "showProgressDialog end: $title")
             progressDialog.dismiss()
         }
     }

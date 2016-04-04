@@ -183,22 +183,21 @@ class PlacemarkListActivity : AppCompatActivity() {
         // save parameters in preferences
         preferences.edit().putFloat(ARG_LATITUDE, latitude).putFloat(ARG_LONGITUDE, longitude).putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite).putString(ARG_NAME_FILTER, nameFilter).putStringSet(ARG_COLLECTION_IDS, collectionIdSet).apply()
 
-        showProgressDialog(getString(R.string.title_placemark_list), null,
-                {
-                    try {
-                        val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate!!,
-                                range.toDouble(), nameFilterFinal, favourite, collectionIdList)
-                        Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=" + placemarks.size)
-                        showToast(getString(R.string.n_placemarks_found, placemarks.size), Toast.LENGTH_SHORT)
-                        placemarksConsumer(placemarks)
+        showProgressDialog(getString(R.string.title_placemark_list), null, this) {
+            try {
+                val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate!!,
+                        range.toDouble(), nameFilterFinal, favourite, collectionIdList)
+                Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=" + placemarks.size)
+                showToast(getString(R.string.n_placemarks_found, placemarks.size), Toast.LENGTH_SHORT)
+                placemarksConsumer(placemarks)
 
-                        // set up placemark id list for left/right swipe in placemark detail
-                        placemarkIdArray = placemarks.map { it.id }.toLongArray()
-                    } catch (e: Exception) {
-                        Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                        showToast(getString(R.string.error_search, e.message), Toast.LENGTH_LONG)
-                    }
-                }, this)
+                // set up placemark id list for left/right swipe in placemark detail
+                placemarkIdArray = placemarks.map { it.id }.toLongArray()
+            } catch (e: Exception) {
+                Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
+                showToast(getString(R.string.error_search, e.message), Toast.LENGTH_LONG)
+            }
+        }
     }
 
     @JavascriptInterface
