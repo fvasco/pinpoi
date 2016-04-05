@@ -9,14 +9,16 @@ android {
         applicationId "io.github.fvasco.pinpoi"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 17
-        versionName "0.4.3"
+        versionCode 18
+        versionName "0.4.4"
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+			shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+//          proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     productFlavors {

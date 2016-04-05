@@ -73,39 +73,44 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
     @Throws(IOException::class)
     fun importPlacemarks(placemarkCollection: PlacemarkCollection): Int {
         val resource = placemarkCollection.source
+        val importer = createImporter(resource) ?: throw IOException("Cannot import $resource")
         placemarkCollectionDao.open()
         try {
-            val importer = createImporter(resource) ?: throw IOException("Cannot import $resource")
-
+            progressDialog?.apply {
+                setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+                Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.show() }
+            }
             // insert new placemark
             val importFuture = Util.EXECUTOR.submit({
-                val max: Int
-                var inputStream: InputStream = if (resource.startsWith("/")) {
-                    val file = File(resource)
-                    max = file.length().toInt()
-                    BufferedInputStream(FileInputStream(file))
-                } else {
-                    val urlConnection = URL(resource).openConnection()
-                    max = urlConnection.contentLength
-                    urlConnection.inputStream
-                }
-                progressDialog?.apply {
-                    isIndeterminate = max <= 0
-                    setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                    if (max > 0) {
-                        this.max = max
-                        inputStream = ProgressDialogInputStream(inputStream, this)
-                    }
-                    Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.show() }
-                }
-
                 try {
-                    importer.collectionId = placemarkCollection.id
-                    importer.consumer = { placemarkQueue.put(it) }
-                    importer.importPlacemarks(inputStream)
+                    val max: Int
+                    var inputStream: InputStream = if (resource.startsWith("/")) {
+                        val file = File(resource)
+                        max = file.length().toInt()
+                        BufferedInputStream(FileInputStream(file))
+                    } else {
+                        val urlConnection = URL(resource).openConnection()
+                        max = urlConnection.contentLength
+                        urlConnection.inputStream
+                    }
+                    try {
+                        progressDialog?.apply {
+                            if (max > 0) {
+                                this.max = max
+                                inputStream = ProgressDialogInputStream(inputStream, this)
+                            } else {
+                                isIndeterminate = true
+                            }
+                        }
+
+                        importer.collectionId = placemarkCollection.id
+                        importer.consumer = { placemarkQueue.put(it) }
+                        importer.importPlacemarks(inputStream)
+                    } finally {
+                        inputStream.close()
+                    }
                 } finally {
                     placemarkQueue.put(STOP_PLACEMARK)
-                    inputStream.close()
                 }
             })
             var placemarkCount = 0
