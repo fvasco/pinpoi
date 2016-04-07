@@ -95,14 +95,14 @@ class PlacemarkDetailFragment : Fragment() {
     var placemarkAnnotation: PlacemarkAnnotation? = null
         private set
     private lateinit var preferences: SharedPreferences
-    private var searchAddressFuture: Future<String>? = null
+    private var searchAddressFuture: Future<Unit>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         preferences = activity.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
         placemarkDao = PlacemarkDao.instance
-        placemarkDao.open()
         placemarkCollectionDao = PlacemarkCollectionDao.instance
+        placemarkDao.open()
         placemarkCollectionDao.open()
 
         val id = if (savedInstanceState == null)

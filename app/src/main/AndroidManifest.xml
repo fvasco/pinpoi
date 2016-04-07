@@ -1,108 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.fvasco.pinpoi"
-    android:installLocation="auto">
+          package="io.github.fvasco.pinpoi"
+          android:installLocation="auto">
 
     <!-- import placemark -->
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- use gps to find location -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <!-- backup and restore -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat">
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppCompat">
         <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main">
+                android:name=".MainActivity"
+                android:label="@string/title_activity_main">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <intent-filter android:priority="0">
-                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.VIEW"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
 
-                <data android:scheme="geo" />
+                <data android:scheme="geo"/>
             </intent-filter>
         </activity>
         <activity
-            android:name=".PlacemarkListActivity"
-            android:label="@string/title_placemark_list"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+                android:name=".PlacemarkListActivity"
+                android:label="@string/title_placemark_list"
+                android:parentActivityName=".MainActivity"
+                android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="io.github.fvasco.pinpoi.MainActivity" />
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="io.github.fvasco.pinpoi.MainActivity"/>
         </activity>
         <activity
-            android:name=".PlacemarkDetailActivity"
-            android:label="@string/title_placemark_detail"
-            android:parentActivityName=".PlacemarkListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+                android:name=".PlacemarkDetailActivity"
+                android:label="@string/title_placemark_detail"
+                android:parentActivityName=".PlacemarkListActivity"
+                android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="io.github.fvasco.pinpoi.PlacemarkListActivity" />
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="io.github.fvasco.pinpoi.PlacemarkListActivity"/>
         </activity>
         <activity
-            android:name=".PlacemarkCollectionListActivity"
-            android:label="@string/title_placemarkcollection_list"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+                android:name=".PlacemarkCollectionListActivity"
+                android:label="@string/title_placemarkcollection_list"
+                android:parentActivityName=".MainActivity"
+                android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="io.github.fvasco.pinpoi.MainActivity" />
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="io.github.fvasco.pinpoi.MainActivity"/>
 
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
 
-                <data android:scheme="file" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:host="*" />
-                <data android:pathPattern="/.*\\.kml" />
-                <data android:pathPattern="/.*\\.zip" />
-                <data android:pathPattern="/.*\\.kmz" />
-                <data android:pathPattern="/.*\\.rss" />
-                <data android:pathPattern="/.*\\.gpx" />
-                <data android:pathPattern="/.*\\.ov2" />
-                <data android:pathPattern="/.*\\.asc" />
-                <data android:pathPattern="/.*\\.csv" />
+                <data android:scheme="file"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:host="*"/>
+                <data android:pathPattern="/.*\\.kml"/>
+                <data android:pathPattern="/.*\\.zip"/>
+                <data android:pathPattern="/.*\\.kmz"/>
+                <data android:pathPattern="/.*\\.rss"/>
+                <data android:pathPattern="/.*\\.gpx"/>
+                <data android:pathPattern="/.*\\.ov2"/>
+                <data android:pathPattern="/.*\\.asc"/>
+                <data android:pathPattern="/.*\\.csv"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
 
-                <data android:scheme="file" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:host="*" />
-                <data android:mimeType="application/vnd.google-earth.kml+xml" />
-                <data android:mimeType="application/zip" />
-                <data android:mimeType="application/vnd.google-earth.kmz" />
-                <data android:mimeType="application/rss+xml" />
-                <data android:mimeType="application/gpx" />
-                <data android:mimeType="application/gpx+xml" />
-                <data android:mimeType="application/csv" />
-                <data android:mimeType="text/csv" />
-                <data android:mimeType="text/plain" />
+                <data android:scheme="file"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:host="*"/>
+                <data android:mimeType="application/vnd.google-earth.kml+xml"/>
+                <data android:mimeType="application/zip"/>
+                <data android:mimeType="application/vnd.google-earth.kmz"/>
+                <data android:mimeType="application/rss+xml"/>
+                <data android:mimeType="application/gpx"/>
+                <data android:mimeType="application/gpx+xml"/>
+                <data android:mimeType="application/csv"/>
+                <data android:mimeType="text/csv"/>
+                <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
         <activity
-            android:name=".PlacemarkCollectionDetailActivity"
-            android:label="@string/title_placemarkcollection_detail"
-            android:parentActivityName=".PlacemarkCollectionListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+                android:name=".PlacemarkCollectionDetailActivity"
+                android:label="@string/title_placemarkcollection_detail"
+                android:parentActivityName=".PlacemarkCollectionListActivity"
+                android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity" />
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity"/>
         </activity>
     </application>
 

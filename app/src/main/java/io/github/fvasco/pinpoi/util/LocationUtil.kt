@@ -9,10 +9,11 @@ import android.net.Uri
 import android.util.Log
 import io.github.fvasco.pinpoi.PlacemarkDetailActivity
 import io.github.fvasco.pinpoi.model.PlacemarkBase
+import org.jetbrains.anko.async
+import org.jetbrains.anko.asyncResult
+import org.jetbrains.anko.uiThread
 import java.io.*
 import java.util.*
-import java.util.concurrent.Callable
-import java.util.concurrent.Future
 
 /**
  * Location related utility
@@ -40,39 +41,36 @@ object LocationUtil {
      */
     fun getAddressStringAsync(
             coordinates: Coordinates,
-            addressConsumer: ((String?) -> Unit)?): Future<String> {
-        return Util.EXECUTOR.submit(Callable<kotlin.String> {
-            var addressString: String? = synchronized (ADDRESS_CACHE) {
-                if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
-                ADDRESS_CACHE[coordinates]
+            addressConsumer: ((String?) -> Unit)?) = coordinates.async() {
+        var addressString: String? = synchronized (ADDRESS_CACHE) {
+            if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
+            ADDRESS_CACHE[coordinates]
+        }
+        if (addressString == null) {
+            val addresses = try {
+                LocationUtil.geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1) ?: listOf()
+            } catch (e: Exception) {
+                listOf<Address>()
             }
-            if (addressString == null) {
-                val addresses = try {
-                    LocationUtil.geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1) ?: listOf()
-                } catch (e: Exception) {
-                    listOf<Address>()
-                }
 
-                if (addresses.isNotEmpty()) {
-                    addressString = LocationUtil.toString(addresses.first())
-                    // save result in cache
-                    synchronized (ADDRESS_CACHE) {
-                        ADDRESS_CACHE.put(coordinates, addressString!!)
-                        if (Thread.interrupted()) {
-                            throw InterruptedException()
-                        }
-                        saveAddressCache()
+            if (addresses.isNotEmpty()) {
+                addressString = LocationUtil.toString(addresses.first())
+                // save result in cache
+                synchronized (ADDRESS_CACHE) {
+                    ADDRESS_CACHE.put(coordinates, addressString!!)
+                    if (Thread.interrupted()) {
+                        throw InterruptedException()
                     }
+                    saveAddressCache()
                 }
             }
-            if (addressConsumer != null) {
-                if (Thread.interrupted()) {
-                    throw InterruptedException()
-                }
-                Util.MAIN_LOOPER_HANDLER.post { addressConsumer(addressString) }
+        }
+        if (addressConsumer != null) {
+            if (Thread.interrupted()) {
+                throw InterruptedException()
             }
-            addressString
-        })
+            uiThread { addressConsumer(addressString) }
+        }
     }
 
     fun newLocation(latitude: Double, longitude: Double): Location {

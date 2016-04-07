@@ -25,7 +25,7 @@ abstract class AbstractDao(private val context: Context) {
 
     @Synchronized @Throws(SQLException::class)
     fun open() {
-        if (openCount < 0) error("Database locked")
+        check(openCount >= 0) { "Database locked" }
 
         if (openCount == 0) {
             assertDebug(database == null)
@@ -36,7 +36,7 @@ abstract class AbstractDao(private val context: Context) {
     }
 
     @Synchronized fun close() {
-        if (openCount <= 0) error(openCount)
+        check(openCount > 0)
 
         --openCount
         if (openCount == 0) {
@@ -51,7 +51,7 @@ abstract class AbstractDao(private val context: Context) {
      * Lock database, use [.reset] to unlock
      */
     @Synchronized fun lock() {
-        if (openCount > 0) error("Database is open")
+        check(openCount == 0) { "Database is open" }
 
         sqLiteOpenHelper.close()
         assertDebug(database == null)
@@ -65,7 +65,7 @@ abstract class AbstractDao(private val context: Context) {
      */
     @Synchronized
     fun reset() {
-        if (openCount > 0) error("Dao in use")
+        check(openCount == -1) { "Dao not locked" }
         sqLiteOpenHelper.close()
         sqLiteOpenHelper = createSqLiteOpenHelper(context)
         openCount = 0

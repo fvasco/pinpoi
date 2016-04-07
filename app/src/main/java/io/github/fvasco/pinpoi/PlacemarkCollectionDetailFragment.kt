@@ -16,11 +16,12 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.openFileChooser
 import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
+import org.jetbrains.anko.async
 import org.jetbrains.anko.onClick
+import org.jetbrains.anko.uiThread
 
 /**
  * A fragment representing a single Placemark Collection detail screen.
@@ -85,7 +86,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        placemarkCollection ?.let {
+        placemarkCollection?.let {
             outState.putLong(ARG_PLACEMARK_COLLECTION_ID, it.id)
         }
         super.onSaveInstanceState(outState)
@@ -145,7 +146,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         val progressDialog = ProgressDialog(activity)
         progressDialog.setTitle(getString(R.string.update, placemarkCollection!!.name))
         progressDialog.setMessage(sourceText!!.text)
-        Util.EXECUTOR.submit {
+        async() {
             try {
                 savePlacemarkCollection()
                 val importerFacade = ImporterFacade()
@@ -162,7 +163,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 showToast(getString(R.string.error_update, placemarkCollection!!.name, e.message), Toast.LENGTH_LONG)
             } finally {
                 // update placemark collection info
-                Util.MAIN_LOOPER_HANDLER.post { showUpdatedCollectionInfo() }
+                uiThread { showUpdatedCollectionInfo() }
             }
         }
     }

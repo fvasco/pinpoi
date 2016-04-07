@@ -1,15 +1,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    android:baselineAligned="false"
-    android:divider="?android:attr/dividerHorizontal"
-    android:orientation="horizontal"
-    android:showDividers="middle"
-    tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_marginLeft="16dp"
+              android:layout_marginRight="16dp"
+              android:baselineAligned="false"
+              android:divider="?android:attr/dividerHorizontal"
+              android:orientation="horizontal"
+              android:showDividers="middle"
+              tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity">
 
     <!--
     This layout is a two-pane layout for the Placemark Collections
@@ -18,20 +18,20 @@
     -->
 
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/placemarkcollectionList"
-        android:name="io.github.fvasco.pinpoi.PlacemarkCollectionListFragment"
-        android:layout_width="@dimen/item_width"
-        android:layout_height="match_parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        app:layoutManager="LinearLayoutManager"
-        tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity" />
+                                            xmlns:tools="http://schemas.android.com/tools"
+                                            android:id="@+id/placemarkcollectionList"
+                                            android:name="io.github.fvasco.pinpoi.PlacemarkCollectionListFragment"
+                                            android:layout_width="@dimen/item_width"
+                                            android:layout_height="match_parent"
+                                            android:layout_marginLeft="16dp"
+                                            android:layout_marginRight="16dp"
+                                            app:layoutManager="LinearLayoutManager"
+                                            tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity"/>
 
     <FrameLayout
-        android:id="@+id/placemarkcollectionDetailContainer"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="3" />
+            android:id="@+id/placemarkcollectionDetailContainer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"/>
 
 </LinearLayout>

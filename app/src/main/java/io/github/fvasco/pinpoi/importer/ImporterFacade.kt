@@ -12,6 +12,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
 import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.isUri
+import org.jetbrains.anko.async
 import java.io.*
 import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
@@ -81,7 +82,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                 Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.show() }
             }
             // insert new placemark
-            val importFuture = Util.EXECUTOR.submit({
+            val importFuture = async() {
                 try {
                     val max: Int
                     var inputStream: InputStream = if (resource.startsWith("/")) {
@@ -112,7 +113,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                 } finally {
                     placemarkQueue.put(STOP_PLACEMARK)
                 }
-            })
+            }
             var placemarkCount = 0
             placemarkDao.open()
             val placemarkDaoDatabase = placemarkDao.database!!

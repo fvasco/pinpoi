@@ -31,7 +31,6 @@ import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
 
 /**
  * An activity representing a list of Placemarks. This activity
@@ -47,7 +46,6 @@ class PlacemarkListActivity : AppCompatActivity() {
      * device.
      */
     private var mTwoPane: Boolean = false
-    private lateinit var placemarkDao: PlacemarkDao
     private var placemarkIdArray: LongArray? = null
     private var fragment: PlacemarkDetailFragment? = null
     private var searchCoordinate: Coordinates? = null
@@ -57,8 +55,6 @@ class PlacemarkListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_placemark_list)
         Util.applicationContext = applicationContext
-        placemarkDao = PlacemarkDao.instance
-        placemarkDao.open()
 
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -90,10 +86,6 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == PERMISSION_SHOW_MAP && grantResults.size > 0
@@ -107,11 +99,6 @@ class PlacemarkListActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(ARG_SHOW_MAP, mapWebView.visibility == View.VISIBLE)
-    }
-
-    override fun onDestroy() {
-        placemarkDao.close()
-        super.onDestroy()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -151,43 +138,29 @@ class PlacemarkListActivity : AppCompatActivity() {
         val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, java.lang.Float.NaN))
         searchCoordinate = Coordinates(latitude, longitude)
         range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
-        var nameFilter: String? = intent.getStringExtra(ARG_NAME_FILTER)
-        if (nameFilter == null) {
-            nameFilter = preferences.getString(ARG_NAME_FILTER, null)
-        }
+        var nameFilter: String? = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null)
         val favourite = intent.getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false))
-        val nameFilterFinal = nameFilter
 
         // read collections id or parse from preference
-        var collectionIds: LongArray? = intent.getLongArrayExtra(ARG_COLLECTION_IDS)
-        if (collectionIds == null) {
-            val stringIds = preferences.getStringSet(ARG_COLLECTION_IDS, setOf())
-            collectionIds = LongArray(stringIds.size)
-            var i = 0
-            for (id in stringIds) {
-                collectionIds[i] = java.lang.Long.parseLong(id)
-                ++i
-            }
-        }
-
-        // create string set of collection id
-        // for preference
-        // and deferred job
-        val collectionIdSet = TreeSet<String>()
-        val collectionIdList = ArrayList<Long>(collectionIds.size)
-        for (id in collectionIds) {
-            collectionIdList.add(id)
-            collectionIdSet.add(id.toString())
-        }
+        val collectionIds = intent.getLongArrayExtra(ARG_COLLECTION_IDS)?.toSet()
+                ?: preferences.getStringSet(ARG_COLLECTION_IDS, setOf()).map { it.toLong() }
 
         // save parameters in preferences
-        preferences.edit().putFloat(ARG_LATITUDE, latitude).putFloat(ARG_LONGITUDE, longitude).putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite).putString(ARG_NAME_FILTER, nameFilter).putStringSet(ARG_COLLECTION_IDS, collectionIdSet).apply()
+        preferences.edit()
+                .putFloat(ARG_LATITUDE, latitude)
+                .putFloat(ARG_LONGITUDE, longitude)
+                .putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite)
+                .putString(ARG_NAME_FILTER, nameFilter)
+                .putStringSet(ARG_COLLECTION_IDS, collectionIds.map { it.toString() }.toSet())
+                .apply()
 
         showProgressDialog(getString(R.string.title_placemark_list), null, this) {
+            val placemarkDao = PlacemarkDao.instance
+            placemarkDao.open()
             try {
                 val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate!!,
-                        range.toDouble(), nameFilterFinal, favourite, collectionIdList)
-                Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=" + placemarks.size)
+                        range.toDouble(), nameFilter, favourite, collectionIds)
+                Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=${placemarks.size}")
                 showToast(getString(R.string.n_placemarks_found, placemarks.size), Toast.LENGTH_SHORT)
                 placemarksConsumer(placemarks)
 
@@ -196,6 +169,8 @@ class PlacemarkListActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
                 showToast(getString(R.string.error_search, e.message), Toast.LENGTH_LONG)
+            } finally {
+                placemarkDao.close()
             }
         }
     }

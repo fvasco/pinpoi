@@ -9,8 +9,8 @@ android {
         applicationId "io.github.fvasco.pinpoi"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 18
-        versionName "0.4.4"
+        versionCode 19
+        versionName "0.4.5"
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {

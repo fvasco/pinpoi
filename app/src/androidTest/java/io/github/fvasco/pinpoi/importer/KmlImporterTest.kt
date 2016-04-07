@@ -1,10 +1,7 @@
 package io.github.fvasco.pinpoi.importer
 
 import org.junit.Test
-
 import java.io.ByteArrayInputStream
-
-import io.github.fvasco.pinpoi.model.Placemark
 
 /**
  * @author Francesco Vasco

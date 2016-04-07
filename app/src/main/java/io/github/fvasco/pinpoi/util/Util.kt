@@ -10,11 +10,11 @@ import android.text.Html
 import android.util.Log
 import android.widget.Toast
 import io.github.fvasco.pinpoi.BuildConfig
+import org.jetbrains.anko.async
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.net.HttpURLConnection
 import java.util.*
-import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
 /**
@@ -24,7 +24,6 @@ import java.util.regex.Pattern
  */
 object Util {
     val MAIN_LOOPER_HANDLER = Handler(Looper.getMainLooper())
-    val EXECUTOR = Executors.unconfigurableExecutorService(Executors.newScheduledThreadPool(3))
     val XML_PULL_PARSER_FACTORY: XmlPullParserFactory by lazy {
         val res = XmlPullParserFactory.newInstance()
         res.isNamespaceAware = true
@@ -163,7 +162,7 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
     progressDialog.setCancelable(false)
     progressDialog.setCanceledOnTouchOutside(false)
     progressDialog.show()
-    Util.EXECUTOR.submit {
+    context.async() {
         try {
             Log.i(Util::class.java.simpleName, "showProgressDialog begin: $title")
             runnable()

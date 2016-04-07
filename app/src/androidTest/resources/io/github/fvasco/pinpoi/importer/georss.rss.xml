@@ -1,6 +1,6 @@
 <?xml version="1.0"?><?xml-stylesheet href="/eqcenter/catalogs/rssxsl.php?feed=eqs7day-M5.xml" type="text/xsl"media="screen"?>
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" version="2.0">
+     xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" version="2.0">
     <channel>
         <title>USGS M5+ Earthquakes</title>
         <description>Real-time, worldwide earthquake list for the past 7 days</description>
