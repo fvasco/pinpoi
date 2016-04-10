@@ -23,12 +23,13 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.TextView
-import android.widget.Toast
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
+import org.jetbrains.anko.onUiThread
+import org.jetbrains.anko.toast
 import java.text.DecimalFormat
 import java.text.NumberFormat
 
@@ -55,6 +56,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_placemark_list)
         Util.applicationContext = applicationContext
+        val preference = getPreferences(Context.MODE_PRIVATE)
 
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -64,10 +66,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         val actionBar = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        if (if (savedInstanceState == null)
-            intent.getBooleanExtra(ARG_SHOW_MAP, false)
-        else
-            savedInstanceState.getBoolean(ARG_SHOW_MAP)) {
+        val showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP) ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false))
+        if (showMap) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
                 setupWebView(mapWebView)
             } else {
@@ -76,6 +76,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         } else {
             setupRecyclerView(placemarkList)
         }
+        preference.edit().putBoolean(PREFEFERNCE_SHOW_MAP, showMap)
 
         if (findViewById(R.id.placemarkDetailContainer) != null) {
             // The detail container view will be present only in the
@@ -126,7 +127,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             searchPoi({ placemarks ->
                 // create array in background thread
                 val placemarksArray = placemarks.toTypedArray()
-                Util.MAIN_LOOPER_HANDLER.post { adapter.setPlacemarks(placemarksArray) }
+                onUiThread { adapter.setPlacemarks(placemarksArray) }
             })
         }
     }
@@ -159,16 +160,16 @@ class PlacemarkListActivity : AppCompatActivity() {
             placemarkDao.open()
             try {
                 val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate!!,
-                        range.toDouble(), nameFilter, favourite, collectionIds)
+                        range.toDouble(), collectionIds, nameFilter, favourite)
                 Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=${placemarks.size}")
-                showToast(getString(R.string.n_placemarks_found, placemarks.size), Toast.LENGTH_SHORT)
+                onUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size)) }
                 placemarksConsumer(placemarks)
 
                 // set up placemark id list for left/right swipe in placemark detail
                 placemarkIdArray = placemarks.map { it.id }.toLongArray()
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                showToast(getString(R.string.error_search, e.message), Toast.LENGTH_LONG)
+                onUiThread { toast(getString(R.string.error_search, e.message)) }
             } finally {
                 placemarkDao.close()
             }
@@ -224,7 +225,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         webSettings.javaScriptCanOpenWindowsAutomatically = false
         webSettings.setSupportMultipleWindows(false)
 
-        searchPoi({ placemarksSearchResult ->
+        searchPoi { placemarksSearchResult ->
             // this list helps to divide placemarks in category
             val html = StringBuilder(1024 + placemarksSearchResult.size * 256)
             val leafletVersion = "0.7.7"
@@ -282,7 +283,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG)
                 Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML " + html)
             val htmlText = html.toString()
-            Util.MAIN_LOOPER_HANDLER.post {
+            onUiThread {
                 try {
                     mapWebView.loadData(htmlText, "text/html; charset=UTF-8", null)
                 } catch (e: Throwable) {
@@ -290,7 +291,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                     showToast(e)
                 }
             }
-        })
+        }
     }
 
     inner class SimpleItemRecyclerViewAdapter : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
@@ -374,6 +375,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         const val ARG_COLLECTION_IDS = "collectionIds"
         const val ARG_NAME_FILTER = "nameFilter"
         const val ARG_SHOW_MAP = "showMap"
+        private const val PREFEFERNCE_SHOW_MAP = "showMap"
         private const val PERMISSION_SHOW_MAP = 1
         // clockwise arrow
         private val ARROWS = charArrayOf(/*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198', /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196')

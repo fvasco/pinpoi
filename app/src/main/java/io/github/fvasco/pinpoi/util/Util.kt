@@ -4,13 +4,12 @@ import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.text.Html
 import android.util.Log
-import android.widget.Toast
 import io.github.fvasco.pinpoi.BuildConfig
 import org.jetbrains.anko.async
+import org.jetbrains.anko.onUiThread
+import org.jetbrains.anko.toast
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.net.HttpURLConnection
@@ -23,12 +22,11 @@ import java.util.regex.Pattern
  * @author Francesco Vasco
  */
 object Util {
-    val MAIN_LOOPER_HANDLER = Handler(Looper.getMainLooper())
     val XML_PULL_PARSER_FACTORY: XmlPullParserFactory by lazy {
-        val res = XmlPullParserFactory.newInstance()
-        res.isNamespaceAware = true
-        res.isValidating = false
-        res
+        XmlPullParserFactory.newInstance().apply {
+            isNamespaceAware = true
+            isValidating = false
+        }
     }
 
     init {
@@ -43,20 +41,13 @@ private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+
 /**
  * Check value and thorow assertion errror if false
  */
-inline fun assertDebug(check: Boolean, value: Any? = null) =
-        if (BuildConfig.DEBUG && !check)
-            throw AssertionError(value?.toString())
-        else Unit;
-
-fun showToast(throwable: Throwable) {
-    showToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}", Toast.LENGTH_LONG)
+inline fun assertDebug(check: Boolean, value: Any? = null) {
+    if (BuildConfig.DEBUG && !check)
+        throw AssertionError(value?.toString())
 }
 
-fun showToast(message: CharSequence, duration: Int) {
-    if (io.github.fvasco.pinpoi.BuildConfig.DEBUG) {
-        Log.i(Util::class.java.simpleName, message.toString())
-    }
-    Util.MAIN_LOOPER_HANDLER.post { Toast.makeText(Util.applicationContext, message, duration).show() }
+fun showToast(throwable: Throwable) {
+    Util.applicationContext.onUiThread { Util.applicationContext.toast(throwable.message ?: "Error ${throwable.javaClass.simpleName}") }
 }
 
 /**

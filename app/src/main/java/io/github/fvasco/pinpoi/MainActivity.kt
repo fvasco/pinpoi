@@ -22,16 +22,12 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
-import android.widget.Toast
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.debug
-import org.jetbrains.anko.error
-import org.jetbrains.anko.toast
+import org.jetbrains.anko.*
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -256,7 +252,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     showProgressDialog(address, null, view.context) {
                         val addresses =
                                 LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
-                        Util.MAIN_LOOPER_HANDLER.post {
+                        onUiThread {
                             chooseAddress(addresses, view.context)
                         }
                     }
@@ -268,7 +264,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun chooseAddress(addresses: List<Address>, context: Context) {
         try {
             if (addresses.isEmpty()) {
-                showToast(getString(R.string.error_no_address_found), Toast.LENGTH_SHORT)
+                toast(getString(R.string.error_no_address_found))
             } else {
                 val options = addresses.map { LocationUtil.toString(it) }.toTypedArray()
                 AlertDialog.Builder(context).setItems(options) { dialog, which ->
@@ -279,7 +275,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         } catch (e: IOException) {
             error("searchAddress", e)
-            showToast(getString(R.string.error_network), Toast.LENGTH_SHORT)
+            toast(getString(R.string.error_network))
         }
     }
 
@@ -385,7 +381,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             try {
                 val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
                 backupManager.restore(file)
-                Util.MAIN_LOOPER_HANDLER.post { setPlacemarkCollection(null) }
+                onUiThread { setPlacemarkCollection(null) }
             } catch (e: Exception) {
                 Log.w(MainActivity::class.java.simpleName, "restore backup failed", e)
                 showToast(e)
@@ -507,7 +503,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         private const val PREFEFERNCE_COLLECTION = "collection"
         private const val PREFEFERNCE_GPS = "gps"
         private const val PREFEFERNCE_ADDRESS = "address"
-        private const val PREFEFERNCE_SHOW_MAP = "displayMap"
+        private const val PREFEFERNCE_SHOW_MAP = "showMap"
         private const val PERMISSION_GPS_ON = 1
         private const val PERMISSION_CREATE_BACKUP = 10
         private const val PERMISSION_RESTORE_BACKUP = 11

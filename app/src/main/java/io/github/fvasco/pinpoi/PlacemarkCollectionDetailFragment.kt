@@ -21,6 +21,8 @@ import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
 import org.jetbrains.anko.async
 import org.jetbrains.anko.onClick
+import org.jetbrains.anko.support.v4.onUiThread
+import org.jetbrains.anko.support.v4.toast
 import org.jetbrains.anko.uiThread
 
 /**
@@ -74,7 +76,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             showUpdatedCollectionInfo()
 
             if (placemarkCollection.poiCount == 0) {
-                showToast(getString(R.string.poi_count, 0), Toast.LENGTH_SHORT)
+                toast(getString(R.string.poi_count, 0))
             }
         }
 
@@ -153,14 +155,16 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 importerFacade.setProgressDialog(progressDialog)
                 importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
                 val count = importerFacade.importPlacemarks(placemarkCollection!!)
-                if (count == 0) {
-                    showToast(getString(R.string.error_update, placemarkCollection!!.name, getString(R.string.n_placemarks_found, 0)), Toast.LENGTH_LONG)
-                } else {
-                    showToast(getString(R.string.update_collection_success, placemarkCollection!!.name, count), Toast.LENGTH_LONG)
+                onUiThread {
+                    if (count == 0) {
+                        toast(getString(R.string.error_update, placemarkCollection!!.name, getString(R.string.n_placemarks_found, 0)))
+                    } else {
+                        toast(getString(R.string.update_collection_success, placemarkCollection!!.name, count))
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "updatePlacemarkCollection", e)
-                showToast(getString(R.string.error_update, placemarkCollection!!.name, e.message), Toast.LENGTH_LONG)
+                onUiThread { toast(getString(R.string.error_update, placemarkCollection!!.name, e.message)) }
             } finally {
                 // update placemark collection info
                 uiThread { showUpdatedCollectionInfo() }

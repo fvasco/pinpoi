@@ -13,6 +13,7 @@ import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
 import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.isUri
 import org.jetbrains.anko.async
+import org.jetbrains.anko.onUiThread
 import java.io.*
 import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
@@ -79,7 +80,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
         try {
             progressDialog?.apply {
                 setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.show() }
+                Util.applicationContext.onUiThread { progressDialog!!.show() }
             }
             // insert new placemark
             val importFuture = async() {
@@ -127,7 +128,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                         ++placemarkCount
                         if (progressDialog != null && progressDialogMessageFormat != null) {
                             val message = String.format(progressDialogMessageFormat!!, placemarkCount)
-                            Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.setMessage(message) }
+                            Util.applicationContext.onUiThread { progressDialog!!.setMessage(message) }
                         }
                     } else {
                         // discard (duplicate?) placemark
@@ -138,7 +139,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                     placemark = placemarkQueue.take()
                 }
                 if (progressDialog != null) {
-                    Util.MAIN_LOOPER_HANDLER.post { progressDialog!!.isIndeterminate = true }
+                    Util.applicationContext.onUiThread { progressDialog!!.isIndeterminate = true }
                 }
                 // wait import and check exception
                 importFuture.get()
@@ -165,7 +166,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
         } finally {
             placemarkCollectionDao.close()
             progressDialog?.let { pd ->
-                Util.MAIN_LOOPER_HANDLER.post { pd.dismiss() }
+                Util.applicationContext.onUiThread { pd.dismiss() }
             }
         }
     }

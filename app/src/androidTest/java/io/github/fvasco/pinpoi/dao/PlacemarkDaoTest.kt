@@ -5,7 +5,6 @@ import android.test.RenamingDelegatingContext
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.Coordinates
 import org.junit.Test
-import java.util.*
 
 /**
  * @author Francesco Vasco
@@ -70,7 +69,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
         assertTrue(set.isEmpty())
 
         // only Pompei
-        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 12000.0, Arrays.asList(1L, 999L))
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 12000.0, listOf(1L, 999L))
         assertEquals(1, set.size)
         assertEquals("Pompei", set.iterator().next().name)
 
@@ -82,19 +81,19 @@ class PlacemarkDaoTest : AndroidTestCase() {
         assertEquals("Ercolano", iterator.next().name)
 
         // filter for Pompei
-        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, "pom", false, Arrays.asList(1L, 999L))
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, listOf(1L, 999L), "pom", false)
         assertEquals(1, set.size)
         assertEquals("Pompei", set.iterator().next().name)
 
         // filter favourite
-        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, "mpe", true, setOf(1L))
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, setOf(1L), "mpe", true)
         assertTrue(set.isEmpty())
 
         val placemarkAnnotation = dao.loadPlacemarkAnnotation(pompei)
         placemarkAnnotation.flagged = true
         dao.update(placemarkAnnotation)
 
-        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, "mpe", true, setOf(1L))
+        set = dao.findAllPlacemarkNear(POMPEI_LOCATION, 14000.0, setOf(1L), "mpe", true)
         assertEquals(1, set.size)
         assertEquals("Pompei", set.iterator().next().name)
     }

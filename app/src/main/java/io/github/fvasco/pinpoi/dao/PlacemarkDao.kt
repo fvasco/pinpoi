@@ -47,12 +47,6 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         }
     }
 
-    fun findAllPlacemarkNear(coordinates: Coordinates,
-                             range: Double,
-                             collectionIds: Collection<Long>): SortedSet<PlacemarkSearchResult> {
-        return findAllPlacemarkNear(coordinates, range, null, false, collectionIds)
-    }
-
     /**
      * Search [Placemark] near location
 
@@ -65,9 +59,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     fun findAllPlacemarkNear(
             coordinates: Coordinates,
             range: Double,
-            nameFilter: String?,
-            onlyFavourite: Boolean,
-            collectionIds: Collection<Long>): SortedSet<PlacemarkSearchResult> {
+            collectionIds: Collection<Long>,
+            nameFilter: String? = null,
+            onlyFavourite: Boolean = false
+    ): SortedSet<PlacemarkSearchResult> {
         var nameFilter = nameFilter
         if (collectionIds.isEmpty()) {
             throw IllegalArgumentException("collection empty")
