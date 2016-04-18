@@ -32,9 +32,8 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun findAllPlacemarkByCollectionId(collectionId: Long): List<Placemark> {
-        val cursor = database!!.query("PLACEMARK", null,
-                "collection_id=" + collectionId, null, null, null, "_ID")
-        try {
+        database!!.query("PLACEMARK", null,
+                "collection_id=" + collectionId, null, null, null, "_ID").use { cursor ->
             val res = ArrayList<Placemark>()
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
@@ -42,8 +41,6 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
                 cursor.moveToNext()
             }
             return res
-        } finally {
-            cursor.close()
         }
     }
 
@@ -63,15 +60,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             nameFilter: String? = null,
             onlyFavourite: Boolean = false
     ): SortedSet<PlacemarkSearchResult> {
-        var nameFilter = nameFilter
-        if (collectionIds.isEmpty()) {
-            throw IllegalArgumentException("collection empty")
-        }
-        if (range <= 0) {
-            throw IllegalArgumentException("range not valid " + range)
-        }
-        // nameFilter null or UPPERCASE
-        nameFilter = nameFilter?.trim { it <= ' ' }?.toUpperCase()
+        require(collectionIds.isNotEmpty()) { "collection empty" }
+        require(range > 0) { "range not valid " + range }
+
 
         // sql clause
         // collection ids
@@ -91,20 +82,19 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             sql.append(" AND pa.flag=1")
         }
 
-        if (SQL_INSTR_PRESENT && nameFilter != null) {
+        if (SQL_INSTR_PRESENT && !nameFilter.isNullOrBlank()) {
             sql.append(" AND instr(upper(name),?)>0")
-            whereArgs.add(nameFilter)
+            whereArgs.add(nameFilter!!.toUpperCase())
         }
 
         val locationComparator = PlacemarkDistanceComparator(coordinates)
         val res = TreeSet(locationComparator)
-        val cursor = database!!.rawQuery(sql.toString(), whereArgs.toTypedArray())
-        try {
+        database!!.rawQuery(sql.toString(), whereArgs.toTypedArray()).use { cursor ->
             cursor.moveToFirst()
             var maxDistance = range
             while (!cursor.isAfterLast) {
                 val p = cursorToPlacemarkSearchResult(cursor)
-                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter == null || p.name.toUpperCase().contains(nameFilter))) {
+                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter.isNullOrBlank() || p.name.contains(nameFilter!!, true))) {
                     res.add(p)
                     // ensure size limit, discard farest
                     if (res.size > MAX_NEAR_RESULT) {
@@ -116,20 +106,15 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
                 }
                 cursor.moveToNext()
             }
-        } finally {
-            cursor.close()
         }
         return res
     }
 
     fun getPlacemark(id: Long): Placemark? {
-        val cursor = database!!.query("PLACEMARK", null,
-                "_ID=" + id, null, null, null, null)
-        try {
+        database!!.query("PLACEMARK", null,
+                "_ID=" + id, null, null, null, null).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) null else cursorToPlacemark(cursor)
-        } finally {
-            cursor.close()
         }
     }
 
@@ -141,10 +126,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     fun loadPlacemarkAnnotation(placemark: PlacemarkBase): PlacemarkAnnotation {
         val latitude = placemark.coordinates.latitude
         val longitude = placemark.coordinates.longitude
-        val cursor = database!!.query("PLACEMARK_ANNOTATION", null,
+        database!!.query("PLACEMARK_ANNOTATION", null,
                 "latitude=" + coordinateToInt(latitude) + " AND longitude=" + coordinateToInt(longitude), null,
-                null, null, null)
-        try {
+                null, null, null).use { cursor ->
             var res: PlacemarkAnnotation? = null
             cursor.moveToFirst()
             if (!cursor.isAfterLast) {
@@ -157,8 +141,6 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
                 res.coordinates = Coordinates(latitude, longitude)
             }
             return res
-        } finally {
-            cursor.close()
         }
     }
 
@@ -175,9 +157,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             }
             if (placemarkAnnotation.id == 0L) {
                 val id = database!!.insert("PLACEMARK_ANNOTATION", null, placemarkAnnotationToContentValues(placemarkAnnotation))
-                if (id == -1L) {
-                    throw IllegalArgumentException("Data not valid")
-                }
+                require(id != -1L) { "Data not valid" }
                 placemarkAnnotation.id = id
             }
         }

@@ -10,7 +10,6 @@ import android.util.Log
 import io.github.fvasco.pinpoi.PlacemarkDetailActivity
 import io.github.fvasco.pinpoi.model.PlacemarkBase
 import org.jetbrains.anko.async
-import org.jetbrains.anko.asyncResult
 import org.jetbrains.anko.uiThread
 import java.io.*
 import java.util.*

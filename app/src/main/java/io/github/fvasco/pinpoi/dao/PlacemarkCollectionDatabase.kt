@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper
 
  * @author Francesco Vasco
  */
-internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(context, "PlacemarkCollection", null, PlacemarkCollectionDatabase.VERSION) {
+internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(context, "PlacemarkCollection", null, /*version*/ 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE PLACEMARK_COLLECTION (" +
@@ -40,9 +40,5 @@ internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(
         if (oldVersion == 1) {
             db.execSQL("UPDATE PLACEMARK_COLLECTION SET category='' where category is null")
         }
-    }
-
-    companion object {
-        private const val VERSION = 2
     }
 }

@@ -491,7 +491,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     companion object {
-
         private const val LOCATION_RANGE_ACCURACY = 100
         private const val LOCATION_TIME_ACCURACY = 2 * 60000
         private const val PREFEFERNCE_LATITUDE = "latitude"

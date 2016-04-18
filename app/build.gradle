@@ -9,8 +9,8 @@ android {
         applicationId "io.github.fvasco.pinpoi"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 19
-        versionName "0.4.5"
+        versionCode 20
+        versionName "0.4.6"
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {
@@ -18,10 +18,7 @@ android {
             minifyEnabled true
 			shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-//          proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-    productFlavors {
     }
 }
 
@@ -38,7 +35,7 @@ buildscript {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    // compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.10.19'
     androidTestCompile 'junit:junit:4.12'

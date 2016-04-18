@@ -35,55 +35,50 @@ class PlacemarkDetailFragment : Fragment() {
     // show address
     // show placemark collection details
     var placemark: Placemark? = null
-        set(placemark) {
+        set(value) {
             saveData()
-            field = placemark
-            Log.i(PlacemarkDetailFragment::class.java.simpleName, "open placemark " + placemark?.id)
-            placemarkAnnotation = if (placemark == null) null else placemarkDao.loadPlacemarkAnnotation(placemark)
-            val placemarkCollection = if (placemark == null) null else placemarkCollectionDao.findPlacemarkCollectionById(placemark.collectionId)
-            if (placemark != null) {
-                preferences.edit().putLong(ARG_PLACEMARK_ID, placemark.id).apply()
+            field = value
+            Log.i(PlacemarkDetailFragment::class.java.simpleName, "open placemark " + value?.id)
+            placemarkAnnotation = if (value == null) null else placemarkDao.loadPlacemarkAnnotation(value)
+            val placemarkCollection = if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
+            if (value != null) {
+                preferences.edit().putLong(ARG_PLACEMARK_ID, value.id).apply()
             }
 
             val activity = this.activity
-            val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
-            if (appBarLayout != null) {
-                appBarLayout.title = placemark?.name
+            (activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout)?.title = value?.name
+            placemarkDetailText.text = when {
+                value == null -> null
+                value.description.isEmpty() -> value.name
+                value.description.isHtml() -> Html.fromHtml("<p>" + escapeHtml(value.name) + "</p>" + value.description)
+                else -> value.name + "\n\n" + value.description
             }
-            placemarkDetailText.text = if (placemark == null)
-                null
-            else if (placemark.description.isEmpty())
-                placemark.name
-            else if (placemark.description.isHtml())
-                Html.fromHtml("<p>" + escapeHtml(placemark.name) + "</p>" + placemark.description)
-            else
-                placemark.name + "\n\n" + placemark.description
             noteText.setText(if (placemarkAnnotation == null) null else placemarkAnnotation!!.note)
-            coordinatesText.text = if (placemark == null)
+            coordinatesText.text = if (value == null)
                 null
             else
                 getString(R.string.location,
-                        Location.convert(placemark.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
-                        Location.convert(placemark.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES))
+                        Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
+                        Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES))
             searchAddressFuture?.cancel(true)
             addressText.text = null
             addressText.visibility = View.GONE
-            if (placemark != null) {
-                searchAddressFuture = LocationUtil.getAddressStringAsync(placemark.coordinates) { address ->
+            if (value != null) {
+                searchAddressFuture = LocationUtil.getAddressStringAsync(value.coordinates) { address ->
                     if (!address.isNullOrEmpty()) {
                         addressText.visibility = View.VISIBLE
                         addressText.text = address
                     }
                 }
             }
-            if (placemarkCollection != null) {
+            if (placemarkCollection == null) {
+                collectionDescriptionTitle.visibility = View.GONE
+                collectionDescriptionText.visibility = View.GONE
+            } else {
                 collectionDescriptionTitle.visibility = View.VISIBLE
                 collectionDescriptionText.visibility = View.VISIBLE
                 collectionDescriptionTitle.text = placemarkCollection.name
                 collectionDescriptionText.text = placemarkCollection.description
-            } else {
-                collectionDescriptionTitle.visibility = View.GONE
-                collectionDescriptionText.visibility = View.GONE
             }
         }
     val longClickListener: View.OnLongClickListener = View.OnLongClickListener { view ->
