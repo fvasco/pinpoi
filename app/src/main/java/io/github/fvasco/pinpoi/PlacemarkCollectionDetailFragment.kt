@@ -33,7 +33,7 @@ import org.jetbrains.anko.uiThread
  */
 class PlacemarkCollectionDetailFragment : Fragment() {
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
-    var placemarkCollection: PlacemarkCollection? = null
+    lateinit var placemarkCollection: PlacemarkCollection
         private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,12 +47,15 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                         arguments.getLong(ARG_PLACEMARK_COLLECTION_ID)
                     else
                         savedInstanceState.getLong(ARG_PLACEMARK_COLLECTION_ID))
+                    ?: PlacemarkCollection()
 
             val activity = this.activity
             val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
-            if (appBarLayout != null && placemarkCollection != null) {
-                appBarLayout.title = placemarkCollection!!.name
+            if (appBarLayout != null ) {
+                appBarLayout.title = placemarkCollection.name
             }
+        } else {
+            placemarkCollection = PlacemarkCollection()
         }
     }
 
@@ -88,9 +91,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        placemarkCollection?.let {
-            outState.putLong(ARG_PLACEMARK_COLLECTION_ID, it.id)
-        }
+        outState.putLong(ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.id)
         super.onSaveInstanceState(outState)
     }
 
@@ -100,18 +101,15 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun savePlacemarkCollection() {
-        if (placemarkCollection == null) {
-            placemarkCollection = PlacemarkCollection()
-        }
-        placemarkCollection!!.description = descriptionText!!.text.toString()
-        placemarkCollection!!.source = sourceText!!.text.toString()
-        placemarkCollection!!.category = categoryText!!.text.toString()
+        placemarkCollection.description = descriptionText.text.toString()
+        placemarkCollection.source = sourceText.text.toString()
+        placemarkCollection.category = categoryText.text.toString()
 
         try {
-            if (placemarkCollection!!.id == 0L) {
-                placemarkCollectionDao.insert(placemarkCollection!!)
+            if (placemarkCollection.id == 0L) {
+                placemarkCollectionDao.insert(placemarkCollection)
             } else {
-                placemarkCollectionDao.update(placemarkCollection!!)
+                placemarkCollectionDao.update(placemarkCollection)
             }
         } catch (e: Exception) {
             Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "savePlacemarkCollection", e)
@@ -127,11 +125,11 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         val activity = this.activity
         val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
         if (appBarLayout != null) {
-            appBarLayout.title = placemarkCollection!!.name
+            appBarLayout.title = placemarkCollection.name
         }
-        val poiCount = placemarkCollection!!.poiCount
+        val poiCount = placemarkCollection.poiCount
         poiCountText.text = getString(R.string.poi_count, poiCount)
-        lastUpdateText.text = getString(R.string.last_update, placemarkCollection!!.lastUpdate)
+        lastUpdateText.text = getString(R.string.last_update, placemarkCollection.lastUpdate)
         lastUpdateText.visibility = if (poiCount == 0) View.GONE else View.VISIBLE
     }
 
@@ -146,7 +144,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     fun updatePlacemarkCollection() {
         val progressDialog = ProgressDialog(activity)
-        progressDialog.setTitle(getString(R.string.update, placemarkCollection!!.name))
+        progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
         progressDialog.setMessage(sourceText!!.text)
         async() {
             try {
@@ -154,17 +152,17 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 val importerFacade = ImporterFacade()
                 importerFacade.setProgressDialog(progressDialog)
                 importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
-                val count = importerFacade.importPlacemarks(placemarkCollection!!)
+                val count = importerFacade.importPlacemarks(placemarkCollection)
                 onUiThread {
                     if (count == 0) {
-                        toast(getString(R.string.error_update, placemarkCollection!!.name, getString(R.string.n_placemarks_found, 0)))
+                        toast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)))
                     } else {
-                        toast(getString(R.string.update_collection_success, placemarkCollection!!.name, count))
+                        toast(getString(R.string.update_collection_success, placemarkCollection.name, count))
                     }
                 }
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "updatePlacemarkCollection", e)
-                onUiThread { toast(getString(R.string.error_update, placemarkCollection!!.name, e.message)) }
+                onUiThread { toast(getString(R.string.error_update, placemarkCollection.name, e.message)) }
             } finally {
                 // update placemark collection info
                 uiThread { showUpdatedCollectionInfo() }
@@ -174,7 +172,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     fun renamePlacemarkCollection(newPlacemarkCollectionName: String) {
         if (newPlacemarkCollectionName.isNotEmpty() && placemarkCollectionDao.findPlacemarkCollectionByName(newPlacemarkCollectionName) == null) {
-            placemarkCollection!!.name = newPlacemarkCollectionName
+            placemarkCollection.name = newPlacemarkCollectionName
             try {
                 savePlacemarkCollection()
             } catch (e: Exception) {
@@ -189,11 +187,11 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         val placemarkDao = PlacemarkDao.instance
         placemarkDao.open()
         try {
-            placemarkDao.deleteByCollectionId(placemarkCollection!!.id)
+            placemarkDao.deleteByCollectionId(placemarkCollection.id)
         } finally {
             placemarkDao.close()
         }
-        placemarkCollectionDao.delete(placemarkCollection!!)
+        placemarkCollectionDao.delete(placemarkCollection)
     }
 
     fun showFileChooser(view: View?) {

@@ -38,7 +38,7 @@ class PlacemarkDetailFragment : Fragment() {
         set(value) {
             saveData()
             field = value
-            Log.i(PlacemarkDetailFragment::class.java.simpleName, "open placemark " + value?.id)
+            Log.i(PlacemarkDetailFragment::class.java.simpleName, "open placemark ${value?.id}")
             placemarkAnnotation = if (value == null) null else placemarkDao.loadPlacemarkAnnotation(value)
             val placemarkCollection = if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
             if (value != null) {
@@ -49,11 +49,11 @@ class PlacemarkDetailFragment : Fragment() {
             (activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout)?.title = value?.name
             placemarkDetailText.text = when {
                 value == null -> null
-                value.description.isEmpty() -> value.name
-                value.description.isHtml() -> Html.fromHtml("<p>" + escapeHtml(value.name) + "</p>" + value.description)
-                else -> value.name + "\n\n" + value.description
+                value.description.isBlank() -> value.name
+                value.description.isHtml() -> Html.fromHtml("<p>${escapeHtml(value.name)}</p>${value.description}")
+                else -> "${value.name}\n\n${value.description}"
             }
-            noteText.setText(if (placemarkAnnotation == null) null else placemarkAnnotation!!.note)
+            noteText.setText(placemarkAnnotation?.note)
             coordinatesText.text = if (value == null)
                 null
             else
@@ -135,9 +135,9 @@ class PlacemarkDetailFragment : Fragment() {
         resetStarFabIcon(activity.findViewById(R.id.fabStar) as FloatingActionButton)
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         placemark?.let { placemark ->
-            outState!!.putLong(ARG_PLACEMARK_ID, placemark.id)
+            outState.putLong(ARG_PLACEMARK_ID, placemark.id)
         }
         super.onSaveInstanceState(outState)
     }
