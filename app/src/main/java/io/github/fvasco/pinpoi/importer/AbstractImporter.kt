@@ -3,7 +3,6 @@ package io.github.fvasco.pinpoi.importer
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.model.Placemark
-import java.io.IOException
 import java.io.InputStream
 
 /**
@@ -22,7 +21,6 @@ abstract class AbstractImporter {
      * *
      * @throws IOException error during reading
      */
-    @Throws(IOException::class)
     fun importPlacemarks(inputStream: InputStream) {
         if (consumer == null) error("No consumer")
         if (collectionId <= 0) {
@@ -32,9 +30,9 @@ abstract class AbstractImporter {
         importImpl(inputStream)
     }
 
-    protected fun importPlacemark(placemark: Placemark) {
+    fun importPlacemark(placemark: Placemark) {
         val (latitude, longitude) = placemark.coordinates
-        if ( latitude >= -90f && latitude <= 90f
+        if (latitude >= -90f && latitude <= 90f
                 && longitude >= -180f && longitude <= 180f) {
             val name = placemark.name.trim()
             var description: String = placemark.description.trim()
@@ -43,18 +41,18 @@ abstract class AbstractImporter {
             placemark.description = description
             placemark.collectionId = collectionId
             if (BuildConfig.DEBUG) {
-                Log.d(AbstractImporter::class.java.simpleName, "importPlacemark " + placemark)
+                Log.d(AbstractImporter::class.java.simpleName, "importPlacemark $placemark")
             }
             consumer!!(placemark)
         } else if (BuildConfig.DEBUG) {
-            Log.d(AbstractImporter::class.java.simpleName, "importPlacemark skip " + placemark)
+            Log.d(AbstractImporter::class.java.simpleName, "importPlacemark skip $placemark")
         }
     }
 
     /**
      * Configure importer from another
      */
-    protected fun configureFrom(importer: AbstractImporter) {
+    fun configureFrom(importer: AbstractImporter) {
         collectionId = importer.collectionId
         consumer = importer.consumer
     }
@@ -66,6 +64,5 @@ abstract class AbstractImporter {
      * *
      * @throws IOException error during reading
      */
-    @Throws(IOException::class)
-    protected abstract fun importImpl(inputStream: InputStream)
+    abstract fun importImpl(inputStream: InputStream)
 }

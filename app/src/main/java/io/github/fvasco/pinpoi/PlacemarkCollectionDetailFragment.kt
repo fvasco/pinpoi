@@ -51,7 +51,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
             val activity = this.activity
             val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
-            if (appBarLayout != null ) {
+            if (appBarLayout != null) {
                 appBarLayout.title = placemarkCollection.name
             }
         } else {

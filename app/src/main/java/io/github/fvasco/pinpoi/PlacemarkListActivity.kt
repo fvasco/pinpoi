@@ -66,7 +66,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         // Show the Up button in the action bar.
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP, intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false))) ?: false
+        showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP, intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)))
+                ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false))
         if (showMap) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
                 setupWebView(mapWebView)
