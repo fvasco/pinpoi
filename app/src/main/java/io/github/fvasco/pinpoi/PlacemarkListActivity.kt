@@ -47,9 +47,10 @@ class PlacemarkListActivity : AppCompatActivity() {
      * device.
      */
     private var mTwoPane: Boolean = false
+    private var showMap: Boolean = false
     private var placemarkIdArray: LongArray? = null
     private var fragment: PlacemarkDetailFragment? = null
-    private var searchCoordinate: Coordinates? = null
+    private lateinit var searchCoordinate: Coordinates
     private var range: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,10 +64,9 @@ class PlacemarkListActivity : AppCompatActivity() {
         toolbar.title = title
 
         // Show the Up button in the action bar.
-        val actionBar = supportActionBar
-        actionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP) ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false))
+        showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP, intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false))) ?: false
         if (showMap) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
                 setupWebView(mapWebView)
@@ -76,7 +76,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         } else {
             setupRecyclerView(placemarkList)
         }
-        preference.edit().putBoolean(PREFEFERNCE_SHOW_MAP, showMap)
+        preference.edit().putBoolean(PREFEFERNCE_SHOW_MAP, showMap).apply()
 
         if (findViewById(R.id.placemarkDetailContainer) != null) {
             // The detail container view will be present only in the
@@ -99,7 +99,7 @@ class PlacemarkListActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(ARG_SHOW_MAP, mapWebView.visibility == View.VISIBLE)
+        outState.putBoolean(ARG_SHOW_MAP, showMap)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -132,6 +132,89 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupWebView(mapWebView: WebView) {
+        mapWebView.visibility = View.VISIBLE
+        mapWebView.addJavascriptInterface(this, "pinpoi")
+        mapWebView.settings.apply {
+            javaScriptEnabled = true
+            cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+            setGeolocationEnabled(true)
+            javaScriptCanOpenWindowsAutomatically = false
+            setSupportMultipleWindows(false)
+        }
+
+        searchPoi { placemarksSearchResult ->
+            // this list helps to divide placemarks in category
+            val leafletVersion = "0.7.7"
+            var zoom = (Math.log((40000000 / range).toDouble()) / Math.log(2.0)).toInt()
+            if (zoom < 0)
+                zoom = 0
+            else if (zoom > 18) zoom = 18
+
+            val htmlText = StringBuilder(1024 + placemarksSearchResult.size * 256).apply {
+                append("<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />").append("<style>\n"
+                        + "body {padding: 0; margin: 0;}\n"
+                        + "html, body, #map {height: 100%;}\n"
+                        + "</style>").append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css\" />")
+                append("<script src=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js\"></script>")
+                // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
+                append(
+                        "<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js\"></script>")
+                append("</html>")
+                append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>")
+                append("var map = L.map('map').setView([$searchCoordinate], $zoom);\n")
+                // limit min zoom
+                append("map.options.minZoom = ").append(Integer.toString(Math.max(0, zoom - 1))).append(";\n")
+                append("L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
+                        "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
+                        "}).addTo(map);\n")
+                // search center marker
+                append("L.circle([$searchCoordinate], 1, {color: 'red',fillOpacity: 1}).addTo(map);")
+                // search limit circle
+                append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
+                append("L.circle([" + searchCoordinate + "], " + range / 2 + "," +
+                        " {color: 'orange',fillOpacity: 0}).addTo(map);\n")
+                // mark placemark top ten :)
+                var placemarkPosition = 0
+                // distance to placemark
+                val floatArray = FloatArray(1)
+                val integerFormat = NumberFormat.getIntegerInstance()
+                for (psr in placemarksSearchResult) {
+                    ++placemarkPosition
+                    Location.distanceBetween(searchCoordinate.latitude.toDouble(), searchCoordinate.longitude.toDouble(),
+                            psr.coordinates.latitude.toDouble(), psr.coordinates.longitude.toDouble(),
+                            floatArray)
+                    val distance = floatArray[0].toInt()
+
+                    append("L.marker([").append(psr.coordinates.toString()).append("],{")
+                    if (psr.flagged) {
+                        append("icon:L.icon.glyph({glyph:'<b><tt>$placemarkPosition</tt></b>',glyphColor:'yellow'})")
+                    } else {
+                        append("icon:L.icon.glyph({glyph:'$placemarkPosition'})")
+                    }
+                    append("}).addTo(map)" + ".bindPopup(\"").append("<a href='javascript:pinpoi.openPlacemark(${psr.id})'>")
+                    if (psr.flagged) append("<b>")
+                    append(escapeJavascript(psr.name))
+                    if (psr.flagged) append("</b>")
+                    append("</a>").append("<br>${integerFormat.format(distance.toLong())}&nbsp;m").append("\");\n")
+                }
+                append("</script>" + "</body>" + "</html>")
+            }.toString()
+
+            if (BuildConfig.DEBUG)
+                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML " + htmlText)
+
+            onUiThread {
+                try {
+                    mapWebView.loadData(htmlText, "text/html; charset=UTF-8", null)
+                } catch (e: Throwable) {
+                    Log.e(PlacemarkListActivity::class.java.simpleName, "mapWebView.loadData", e)
+                    showToast(e)
+                }
+            }
+        }
+    }
+
     private fun searchPoi(placemarksConsumer: (Collection<PlacemarkSearchResult>) -> Unit) {
         // load parameters
         val preferences = getPreferences(Context.MODE_PRIVATE)
@@ -139,7 +222,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, java.lang.Float.NaN))
         searchCoordinate = Coordinates(latitude, longitude)
         range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
-        var nameFilter: String? = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null)
+        val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null) ?: ""
         val favourite = intent.getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false))
 
         // read collections id or parse from preference
@@ -159,7 +242,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             val placemarkDao = PlacemarkDao.instance
             placemarkDao.open()
             try {
-                val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate!!,
+                val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate,
                         range.toDouble(), collectionIds, nameFilter, favourite)
                 Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=${placemarks.size}")
                 onUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size)) }
@@ -215,85 +298,6 @@ class PlacemarkListActivity : AppCompatActivity() {
         fragment!!.onMapClick(view)
     }
 
-    private fun setupWebView(mapWebView: WebView) {
-        mapWebView.visibility = View.VISIBLE
-        mapWebView.addJavascriptInterface(this, "pinpoi")
-        val webSettings = mapWebView.settings
-        webSettings.javaScriptEnabled = true
-        webSettings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-        webSettings.setGeolocationEnabled(true)
-        webSettings.javaScriptCanOpenWindowsAutomatically = false
-        webSettings.setSupportMultipleWindows(false)
-
-        searchPoi { placemarksSearchResult ->
-            // this list helps to divide placemarks in category
-            val html = StringBuilder(1024 + placemarksSearchResult.size * 256)
-            val leafletVersion = "0.7.7"
-            var zoom = (Math.log((40000000 / range).toDouble()) / Math.log(2.0)).toInt()
-            if (zoom < 0)
-                zoom = 0
-            else if (zoom > 18) zoom = 18
-            html.append("<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />").append("<style>\n"
-                    + "body {padding: 0; margin: 0;}\n"
-                    + "html, body, #map {height: 100%;}\n"
-                    + "</style>").append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css\" />")
-                    .append("<script src=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js\"></script>")
-                    // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
-                    .append(
-                            "<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js\"></script>")
-                    .append("</html>")
-            html.append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>")
-            html.append("var map = L.map('map').setView([$searchCoordinate], $zoom);\n")
-            // limit min zoom
-            html.append("map.options.minZoom = ").append(Integer.toString(Math.max(0, zoom - 1))).append(";\n")
-            html.append("L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
-                    "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
-                    "}).addTo(map);\n")
-            // search center marker
-            html.append("L.circle([$searchCoordinate], 1, {color: 'red',fillOpacity: 1}).addTo(map);")
-            // search limit circle
-            html.append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
-            html.append("L.circle([" + searchCoordinate + "], " + range / 2 + "," +
-                    " {color: 'orange',fillOpacity: 0}).addTo(map);\n")
-            // mark placemark top ten :)
-            var placemarkPosition = 0
-            // distance to placemark
-            val floatArray = FloatArray(1)
-            val integerFormat = NumberFormat.getIntegerInstance()
-            for (psr in placemarksSearchResult) {
-                ++placemarkPosition
-                Location.distanceBetween(searchCoordinate!!.latitude.toDouble(), searchCoordinate!!.longitude.toDouble(),
-                        psr.coordinates.latitude.toDouble(), psr.coordinates.longitude.toDouble(),
-                        floatArray)
-                val distance = floatArray[0].toInt()
-
-                html.append("L.marker([").append(psr.coordinates.toString()).append("],{")
-                if (psr.flagged) {
-                    html.append("icon:L.icon.glyph({glyph:'<b><tt>").append(placemarkPosition).append("</tt></b>',glyphColor: 'yellow'})")
-                } else {
-                    html.append("icon:L.icon.glyph({glyph:'").append(placemarkPosition).append("'})")
-                }
-                html.append("}).addTo(map)" + ".bindPopup(\"").append("<a href='javascript:pinpoi.openPlacemark(").append(psr.id).append(")'>")
-                if (psr.flagged) html.append("<b>")
-                html.append(escapeJavascript(psr.name))
-                if (psr.flagged) html.append("</b>")
-                html.append("</a>").append("<br>").append(integerFormat.format(distance.toLong())).append("&nbsp;m").append("\");\n")
-            }
-            html.append("</script>" + "</body>" + "</html>")
-            if (BuildConfig.DEBUG)
-                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML " + html)
-            val htmlText = html.toString()
-            onUiThread {
-                try {
-                    mapWebView.loadData(htmlText, "text/html; charset=UTF-8", null)
-                } catch (e: Throwable) {
-                    Log.e(PlacemarkListActivity::class.java.simpleName, "mapWebView.loadData", e)
-                    showToast(e)
-                }
-            }
-        }
-    }
-
     inner class SimpleItemRecyclerViewAdapter : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
         private val decimalFormat = DecimalFormat()
@@ -319,7 +323,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val placemark = placemarks!![position]
             holder.placemark = placemark
-            Location.distanceBetween(searchCoordinate!!.latitude.toDouble(), searchCoordinate!!.longitude.toDouble(),
+            Location.distanceBetween(searchCoordinate.latitude.toDouble(), searchCoordinate.longitude.toDouble(),
                     placemark.coordinates.latitude.toDouble(), placemark.coordinates.longitude.toDouble(),
                     floatArray)
             val distance = floatArray[0]
@@ -353,9 +357,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             }
         }
 
-        override fun getItemCount(): Int {
-            return if (placemarks == null) 0 else placemarks!!.size
-        }
+        override fun getItemCount() = placemarks?.size ?: 0
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val view: TextView

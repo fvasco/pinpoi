@@ -23,7 +23,7 @@ class ZipImporter : AbstractImporter() {
             if (!zipEntry.isDirectory && !entryName.startsWith(".")) {
                 val importer = ImporterFacade.createImporter(entryName)
                 if (importer != null) {
-                    Log.d(ZipImporter::class.java.simpleName, "Import entry " + entryName)
+                    Log.d(ZipImporter::class.java.simpleName, "Import entry $entryName")
                     importer.configureFrom(this)
                     importer.importImpl(ZipGuardInputStream(zipInputStream))
                 }
