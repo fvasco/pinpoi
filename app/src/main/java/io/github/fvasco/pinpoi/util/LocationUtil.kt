@@ -21,7 +21,7 @@ import java.util.*
  */
 object LocationUtil {
 
-    private val ADDRESS_CACHE_SIZE = 512
+    private const val ADDRESS_CACHE_SIZE = 512
     /**
      * Store resolved address
      */

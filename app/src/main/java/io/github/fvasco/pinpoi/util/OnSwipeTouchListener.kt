@@ -9,12 +9,7 @@ import android.view.View
  * Detects left and right swipes across a view.
  */
 class OnSwipeTouchListener(private val swipeTouchListener: OnSwipeTouchListener.SwipeTouchListener, context: Context) : GestureDetector.SimpleOnGestureListener(), View.OnTouchListener {
-    private val gestureDetector: GestureDetector
-
-
-    init {
-        gestureDetector = GestureDetector(context, this)
-    }
+    private val gestureDetector = GestureDetector(context, this)
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         return gestureDetector.onTouchEvent(event)

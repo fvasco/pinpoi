@@ -80,7 +80,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
         try {
             progressDialog?.apply {
                 setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                Util.applicationContext.onUiThread { progressDialog!!.show() }
+                Util.applicationContext.onUiThread { this@apply.show() }
             }
             // insert new placemark
             val importFuture = async() {
@@ -138,8 +138,8 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                     }
                     placemark = placemarkQueue.take()
                 }
-                if (progressDialog != null) {
-                    Util.applicationContext.onUiThread { progressDialog!!.isIndeterminate = true }
+                progressDialog?.let {
+                    Util.applicationContext.onUiThread { it.isIndeterminate = true }
                 }
                 // wait import and check exception
                 importFuture.get()

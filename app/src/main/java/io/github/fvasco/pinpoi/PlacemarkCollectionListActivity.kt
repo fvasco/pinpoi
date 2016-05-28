@@ -165,10 +165,10 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     fun updatePlacemarkCollection(view: View?) {
-        if (fragment != null) {
-            val permission = fragment!!.requiredPermissionToUpdatePlacemarkCollection
+        fragment?.let { fragment ->
+            val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-                fragment!!.updatePlacemarkCollection()
+                fragment.updatePlacemarkCollection()
             } else {
                 // request permission
                 ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_UPDATE)
@@ -185,15 +185,15 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     private fun renameCollection() {
-        if (fragment != null) {
+        fragment?.let { fragment ->
             val editText = EditText(baseContext)
-            editText.setText(fragment!!.placemarkCollection?.name)
+            editText.setText(fragment.placemarkCollection.name)
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
                     .setView(editText)
                     .setPositiveButton(R.string.yes) { dialog, which ->
                         dialog.dismiss()
-                        fragment!!.renamePlacemarkCollection(editText.text.toString())
+                        fragment.renamePlacemarkCollection(editText.text.toString())
                         setupRecyclerView()
                     }
                     .setNegativeButton(R.string.no, DismissOnClickListener)
@@ -247,12 +247,13 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                 if (mTwoPane) {
                     val arguments = Bundle()
                     arguments.putLong(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, pc.id)
-                    fragment = PlacemarkCollectionDetailFragment()
-                    fragment!!.arguments = arguments
-                    supportFragmentManager.beginTransaction().replace(R.id.placemarkcollectionDetailContainer, fragment).commit()
+                    fragment = PlacemarkCollectionDetailFragment().apply {
+                        this.arguments = arguments
+                        supportFragmentManager.beginTransaction().replace(R.id.placemarkcollectionDetailContainer, this).commit()
+                        fabUpdate.setOnClickListener { this.updatePlacemarkCollection() }
+                    }
                     // show update button
-                    fabUpdate!!.setOnClickListener { fragment!!.updatePlacemarkCollection() }
-                    fabUpdate!!.visibility = View.VISIBLE
+                    fabUpdate.visibility = View.VISIBLE
                 } else {
                     val context = view.context
                     val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)

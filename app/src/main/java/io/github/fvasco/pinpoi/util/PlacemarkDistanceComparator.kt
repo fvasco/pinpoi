@@ -13,20 +13,12 @@ class PlacemarkDistanceComparator(private val center: Coordinates) : Comparator<
     override fun compare(plhs: PlacemarkSearchResult, prhs: PlacemarkSearchResult): Int {
         val lhs = plhs.coordinates
         val rhs = prhs.coordinates
-        var res = java.lang.Double.compare(calculateDistance(lhs), calculateDistance(rhs))
+        var res = java.lang.Float.compare(center.distanceTo(lhs), center.distanceTo(rhs))
         if (res == 0) {
             // equals <==> same coordinates
             res = java.lang.Float.compare(lhs.latitude, rhs.latitude)
             if (res == 0) res = java.lang.Float.compare(lhs.longitude, rhs.longitude)
         }
         return res
-    }
-
-    /**
-     * Calculate distance to placemark
-     * {@see Location@distanceTo}
-     */
-    fun calculateDistance(p: Coordinates): Double {
-        return center.distanceTo(p).toDouble()
     }
 }

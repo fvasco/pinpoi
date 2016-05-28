@@ -132,9 +132,9 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     }
 
     override fun onSwipe(direction: Boolean) {
-        if (placemarkIdArray != null) {
+        placemarkIdArray?.let { placemarkIdArray ->
             var i = 0
-            while (placemarkIdArray!![i] != placemarkId && i < placemarkIdArray!!.size) {
+            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.size) {
                 ++i
             }
             //noinspection PointlessBooleanExpression
@@ -143,8 +143,8 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
             } else {
                 --i
             }
-            if (i >= 0 && i < placemarkIdArray!!.size) {
-                placemarkId = placemarkIdArray!![i]
+            if (i >= 0 && i < placemarkIdArray.size) {
+                placemarkId = placemarkIdArray[i]
                 fragment.placemark = placemarkDao.getPlacemark(placemarkId)
                 preferences.edit().putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId).apply()
                 resetStarFabIcon()

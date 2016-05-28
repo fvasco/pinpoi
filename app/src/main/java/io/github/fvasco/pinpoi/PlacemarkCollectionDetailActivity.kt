@@ -52,8 +52,9 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             val arguments = Bundle()
             arguments.putLong(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
                     intent.getLongExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, 0))
-            fragment = PlacemarkCollectionDetailFragment()
-            fragment!!.arguments = arguments
+            fragment = PlacemarkCollectionDetailFragment().apply {
+                this.arguments = arguments
+            }
             supportFragmentManager.beginTransaction().add(R.id.placemarkcollectionDetailContainer, fragment).commit()
         }
     }
@@ -115,7 +116,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     private fun renameCollection() {
         fragment?.let { fragment ->
             val editText = EditText(baseContext)
-            editText.setText(fragment.placemarkCollection!!.name)
+            editText.setText(fragment.placemarkCollection.name)
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
                     .setView(editText).setPositiveButton(R.string.yes) { dialog, which ->
