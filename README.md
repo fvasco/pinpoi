@@ -1,7 +1,7 @@
 ![PinPoi](https://raw.githubusercontent.com/fvasco/pinpoi/master/app/src/main/res/mipmap-mdpi/ic_launcher.png)
 # PinPoi
 
-PinPoi imports thousand points of interest for your gps navigator.
+PinPoi imports thousand points of interest for your gps navigator in your Android phone.
 
 You can import Google KML and KMZ, TomTom OV2, simple GeoRSS, Garmin GPX, Navigon ASC, CSV and zipped collections directly into your phone and organize them in collections.
 
@@ -25,3 +25,6 @@ Do you like PinPoi or do you wish a better one?
 Offer me a fruit juice ;)
 
 [![Donate](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)](https://www.paypal.me/FrancescoVasco/1)
+
+
+Language: Kotlin

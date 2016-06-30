@@ -9,23 +9,22 @@ android {
         applicationId "io.github.fvasco.pinpoi"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 21
-        versionName "1.0.0"
+        versionCode 22
+        versionName "1.0.1"
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {
         release {
             minifyEnabled true
-            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 buildscript {
-    ext.android_support_version = '23.2.1'
-    ext.kotlin_version = '1.0.2'
-    ext.anko_version = '0.8.3'
+    ext.android_support_version = '23.2.+'
+    ext.kotlin_version = '1.0.+'
+    ext.anko_version = '0.8.+'
     repositories {
         mavenCentral()
     }
