@@ -22,5 +22,5 @@ hs_err_pid*
 
 # Gradle files
 build
-/gradle
-/gradlew*
+gradle
+gradlew*

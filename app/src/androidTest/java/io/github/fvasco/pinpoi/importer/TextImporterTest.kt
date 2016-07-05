@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer
 
+import io.github.fvasco.pinpoi.util.Coordinates
 import org.junit.Test
 
 /**
@@ -7,16 +8,16 @@ import org.junit.Test
  */
 class TextImporterTest : AbstractImporterTestCase() {
     @Test
-    @Throws(Exception::class)
     fun testImportImplAsc() {
         val list = importPlacemark(TextImporter(), "asc.txt")
         assertEquals(3, list.size)
     }
 
     @Test
-    @Throws(Exception::class)
     fun testImportImplCsv() {
         val list = importPlacemark(TextImporter(), "csv.txt")
-        assertEquals(2, list.size)
+         assertEquals(3, list.size)
+         assertEquals(Coordinates(1.0F, 2.5F), list[0].coordinates)
+         assertEquals("location1 to import", list[0].name)
     }
 }

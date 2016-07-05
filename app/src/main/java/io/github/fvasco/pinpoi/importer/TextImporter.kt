@@ -55,7 +55,7 @@ class TextImporter : AbstractImporter() {
                 try {
                     val placemark = Placemark(
                             // remove double double-quotes
-                            name = matcher.group(5).replace("\"\"", "\""),
+                            name = matcher.group(6).replace("\"\"", "\""),
                             coordinates = Coordinates(java.lang.Float.parseFloat(matcher.group(2)), java.lang.Float.parseFloat(matcher.group(4)))
                     )
                     importPlacemark(placemark)
@@ -72,9 +72,9 @@ class TextImporter : AbstractImporter() {
 
     companion object {
 
-        private val LINE_PATTERN = Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\1[,;\\s]+(\"?)([+-]?\\d+\\.\\d+)\\3[,;\\s]+\"(.*)\"\\s*")
-        private val UTF_8_DECODER = Charset.forName("UTF-8").newDecoder()
-        private val LATIN1_DECODER = Charset.forName("ISO-8859-1").newDecoder()
+        private val LINE_PATTERN = Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\1[,;\\s+](\"?)([+-]?\\d+\\.\\d+)\\3[,;\\s+](\"?)(.*)\\5\\s*")
+        private val UTF_8_DECODER = Charsets.UTF_8.newDecoder()
+        private val LATIN1_DECODER = Charsets.ISO_8859_1.newDecoder()
 
         init {
             // fails on not mappable characters
@@ -84,12 +84,11 @@ class TextImporter : AbstractImporter() {
         /**
          * Decode text, if UTF-8 fails then use ISO-8859-1
          */
-        fun toString(byteBuffer: ByteArray, start: Int, len: Int): String {
+        fun toString(byteBuffer: ByteArray, start: Int, len: Int): String =
             try {
-                return UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
+                UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
             } catch (e: CharacterCodingException) {
-                return LATIN1_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
+                LATIN1_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
             }
-        }
     }
 }

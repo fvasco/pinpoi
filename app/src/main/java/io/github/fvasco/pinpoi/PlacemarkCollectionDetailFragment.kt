@@ -72,17 +72,14 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         browseButton.onClick { showFileChooser(it) }
 
 
-        placemarkCollection?.let { placemarkCollection ->
-            descriptionText.setText(placemarkCollection.description)
-            sourceText.setText(placemarkCollection.source)
-            categoryText.setText(placemarkCollection.category)
-            showUpdatedCollectionInfo()
+        descriptionText.setText(placemarkCollection.description)
+        sourceText.setText(placemarkCollection.source)
+        categoryText.setText(placemarkCollection.category)
+        showUpdatedCollectionInfo()
 
-            if (placemarkCollection.poiCount == 0) {
-                toast(getString(R.string.poi_count, 0))
-            }
+        if (placemarkCollection.poiCount == 0) {
+            toast(getString(R.string.poi_count, 0))
         }
-
     }
 
     override fun onPause() {

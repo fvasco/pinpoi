@@ -9,8 +9,8 @@ android {
         applicationId "io.github.fvasco.pinpoi"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 22
-        versionName "1.0.1"
+        versionCode 23
+        versionName "1.0.2"
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {
@@ -46,8 +46,4 @@ dependencies {
     compile "com.android.support:support-v4:$android_support_version"
     compile "com.android.support:recyclerview-v7:$android_support_version"
     compile "com.android.support:design:$android_support_version"
-}
-
-repositories {
-    mavenCentral()
 }
