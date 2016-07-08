@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi
 
 import android.Manifest
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.os.Bundle
 import android.os.Environment
@@ -14,6 +15,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.openFileChooser
@@ -70,11 +72,12 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()))
         browseButton.onClick { showFileChooser(it) }
-
+        fileFormatFilterButton.onClick { openFileFormatFilterChooser() }
 
         descriptionText.setText(placemarkCollection.description)
         sourceText.setText(placemarkCollection.source)
         categoryText.setText(placemarkCollection.category)
+        fileFormatFilterButton.text = placemarkCollection.fileFormatFilter.toString()
         showUpdatedCollectionInfo()
 
         if (placemarkCollection.poiCount == 0) {
@@ -121,9 +124,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     private fun showUpdatedCollectionInfo() {
         val activity = this.activity
         val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
-        if (appBarLayout != null) {
-            appBarLayout.title = placemarkCollection.name
-        }
+        appBarLayout?.title = placemarkCollection.name
         val poiCount = placemarkCollection.poiCount
         poiCountText.text = getString(R.string.poi_count, poiCount)
         lastUpdateText.text = getString(R.string.last_update, placemarkCollection.lastUpdate)
@@ -142,13 +143,14 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     fun updatePlacemarkCollection() {
         val progressDialog = ProgressDialog(activity)
         progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
-        progressDialog.setMessage(sourceText!!.text)
+        progressDialog.setMessage(sourceText?.text)
         async() {
             try {
                 savePlacemarkCollection()
                 val importerFacade = ImporterFacade()
                 importerFacade.setProgressDialog(progressDialog)
                 importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
+                importerFacade.fileFormatFilter = placemarkCollection.fileFormatFilter
                 val count = importerFacade.importPlacemarks(placemarkCollection)
                 onUiThread {
                     if (count == 0) {
@@ -189,6 +191,21 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             placemarkDao.close()
         }
         placemarkCollectionDao.delete(placemarkCollection)
+    }
+
+    fun openFileFormatFilterChooser() {
+        AlertDialog.Builder(context)
+                .setTitle(getString(R.string.collection))
+                .setItems(FileFormatFilter.values().map { it.toString() }.toTypedArray(), { dialog, which ->
+                    setFileFormatFilter(FileFormatFilter.values()[which])
+                    dialog.dismiss()
+                })
+                .show()
+    }
+
+    fun setFileFormatFilter(fileFormatFilter: FileFormatFilter) {
+        placemarkCollection.fileFormatFilter = fileFormatFilter
+        fileFormatFilterButton.text = fileFormatFilter.toString()
     }
 
     fun showFileChooser(view: View?) {

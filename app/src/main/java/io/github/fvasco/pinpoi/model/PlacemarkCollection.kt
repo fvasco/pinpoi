@@ -1,5 +1,7 @@
 package io.github.fvasco.pinpoi.model
 
+import io.github.fvasco.pinpoi.importer.FileFormatFilter
+
 /**
  * A collection, aggregator for [Placemark]
 
@@ -11,6 +13,7 @@ data class PlacemarkCollection(
         var description: String = "",
         var category: String = "",
         var source: String = "",
+        var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE,
         /**
          * Last collection update, unix time
          */

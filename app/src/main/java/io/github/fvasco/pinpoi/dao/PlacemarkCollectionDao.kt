@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteOpenHelper
+import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.Util
 import java.util.*
@@ -97,6 +98,7 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
         cv.put("description", pc.description.trim())
         cv.put("source", pc.source.trim())
         cv.put("category", pc.category.trim().toUpperCase())
+        cv.put("fileFormatFilter", pc.fileFormatFilter.toString())
         cv.put("last_update", pc.lastUpdate)
         cv.put("poi_count", pc.poiCount)
         return cv
@@ -111,6 +113,7 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
         pc.category = cursor.getString(4)
         pc.lastUpdate = cursor.getLong(5)
         pc.poiCount = cursor.getInt(6)
+        pc.fileFormatFilter = FileFormatFilter.valueOf(cursor.getString(7) ?: FileFormatFilter.NONE.toString())
         return pc
     }
 

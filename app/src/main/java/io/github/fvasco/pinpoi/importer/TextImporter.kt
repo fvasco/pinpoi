@@ -7,7 +7,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
-import java.nio.charset.Charset
 import java.nio.charset.CodingErrorAction
 import java.util.regex.Pattern
 
@@ -55,8 +54,10 @@ class TextImporter : AbstractImporter() {
                 try {
                     val placemark = Placemark(
                             // remove double double-quotes
-                            name = matcher.group(6).replace("\"\"", "\""),
-                            coordinates = Coordinates(java.lang.Float.parseFloat(matcher.group(2)), java.lang.Float.parseFloat(matcher.group(4)))
+                            name = matcher.group(7).replace("\"\"", "\""),
+                            coordinates = Coordinates(
+                                    matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 5 else 2).toFloat(),
+                                    matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 2 else 5).toFloat())
                     )
                     importPlacemark(placemark)
                 } catch (nfe: NumberFormatException) {
@@ -72,7 +73,7 @@ class TextImporter : AbstractImporter() {
 
     companion object {
 
-        private val LINE_PATTERN = Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\1[,;\\s+](\"?)([+-]?\\d+\\.\\d+)\\3[,;\\s+](\"?)(.*)\\5\\s*")
+        private val LINE_PATTERN = Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\s*\\1([,;\\s])\\s*(\"?)([+-]?\\d+\\.\\d+)\\4\\s*\\3\\s*(\"?)(.*)\\6\\s*")
         private val UTF_8_DECODER = Charsets.UTF_8.newDecoder()
         private val LATIN1_DECODER = Charsets.ISO_8859_1.newDecoder()
 
@@ -85,10 +86,10 @@ class TextImporter : AbstractImporter() {
          * Decode text, if UTF-8 fails then use ISO-8859-1
          */
         fun toString(byteBuffer: ByteArray, start: Int, len: Int): String =
-            try {
-                UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
-            } catch (e: CharacterCodingException) {
-                LATIN1_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
-            }
+                try {
+                    UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
+                } catch (e: CharacterCodingException) {
+                    LATIN1_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
+                }
     }
 }

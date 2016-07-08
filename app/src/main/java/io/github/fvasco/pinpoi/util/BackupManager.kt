@@ -24,7 +24,7 @@ class BackupManager(private vararg val daos: AbstractDao) {
         val zipOutputStream = ZipOutputStream(FileOutputStream(file))
         try {
             for (dao in daos) {
-                synchronized (dao) {
+                synchronized(dao) {
                     val databaseFile: File
                     dao.open()
                     val database = dao.database!!
@@ -62,7 +62,7 @@ class BackupManager(private vararg val daos: AbstractDao) {
         val zipFile = ZipFile(file)
         try {
             for (dao in daos) {
-                synchronized (dao) {
+                synchronized(dao) {
                     val databasePath: File
                     dao.open()
                     val database = dao.database!!

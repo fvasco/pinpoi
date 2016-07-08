@@ -20,9 +20,9 @@ abstract class AbstractImporterTestCase : AndroidTestCase() {
      * @return list of imported placemark
      */
     @Throws(Exception::class)
-    fun importPlacemark(importer: AbstractImporter, resource: String): List<Placemark> {
+    fun importPlacemark(importer: AbstractImporter, resource: String, fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE): List<Placemark> {
         javaClass.getResourceAsStream(resource).use {
-            return importPlacemark(importer, it)
+            return importPlacemark(importer, it, fileFormatFilter)
         }
     }
 
@@ -30,10 +30,11 @@ abstract class AbstractImporterTestCase : AndroidTestCase() {
      * Execute import
      */
     @Throws(Exception::class)
-    fun importPlacemark(importer: AbstractImporter, input: InputStream): List<Placemark> {
+    fun importPlacemark(importer: AbstractImporter, input: InputStream, fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE): List<Placemark> {
         val list = ArrayList<Placemark>()
         importer.collectionId = 1
         importer.consumer = { list.add(it) }
+        importer.fileFormatFilter = fileFormatFilter
         importer.importPlacemarks(input)
         for (p in list) {
             assertEquals(0, p.id)

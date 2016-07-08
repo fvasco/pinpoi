@@ -41,7 +41,7 @@ object LocationUtil {
     fun getAddressStringAsync(
             coordinates: Coordinates,
             addressConsumer: ((String?) -> Unit)?) = coordinates.async() {
-        var addressString: String? = synchronized (ADDRESS_CACHE) {
+        var addressString: String? = synchronized(ADDRESS_CACHE) {
             if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
             ADDRESS_CACHE[coordinates]
         }
@@ -55,7 +55,7 @@ object LocationUtil {
             if (addresses.isNotEmpty()) {
                 addressString = LocationUtil.toString(addresses.first())
                 // save result in cache
-                synchronized (ADDRESS_CACHE) {
+                synchronized(ADDRESS_CACHE) {
                     ADDRESS_CACHE.put(coordinates, addressString!!)
                     if (Thread.interrupted()) {
                         throw InterruptedException()

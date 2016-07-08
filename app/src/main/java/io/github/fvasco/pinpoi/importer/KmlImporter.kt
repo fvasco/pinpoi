@@ -33,7 +33,7 @@ class KmlImporter : AbstractXmlImporter(), AnkoLogger {
         if (placemark == null) {
             if ("href" == tag && checkCurrentPath("kml", "Document", "NetworkLink", "Url")) {
                 val href = text
-                val delegateImporter = ImporterFacade.createImporter(href)
+                val delegateImporter = ImporterFacade.createImporter(href, fileFormatFilter)
                 info("NetworkLink href $href importer $delegateImporter")
                 delegateImporter?.let { delegateImporter ->
                     URL(href).openStream().use { inputStream ->

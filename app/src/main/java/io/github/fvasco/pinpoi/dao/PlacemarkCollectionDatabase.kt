@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper
 
  * @author Francesco Vasco
  */
-internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(context, "PlacemarkCollection", null, /*version*/ 2) {
+internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(context, "PlacemarkCollection", null, /*version*/ 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE PLACEMARK_COLLECTION (" +
@@ -19,7 +19,8 @@ internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(
                 "source TEXT NOT NULL," +
                 "category TEXT NOT NULL," +
                 "last_update INTEGER NOT NULL," +
-                "poi_count INTEGER NOT NULL" +
+                "poi_count INTEGER NOT NULL," +
+                "fileFormatFilter TEXT NOT NULL" +
                 ")")
         db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_NAME ON PLACEMARK_COLLECTION (name)")
         db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_CAT_NAME ON PLACEMARK_COLLECTION (category,name)")
@@ -28,17 +29,24 @@ internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(
         db.execSQL("INSERT INTO PLACEMARK_COLLECTION (name," +
                 "description," +
                 "source," +
-                "category, last_update, poi_count)" +
+                "category," +
+                "last_update, poi_count," +
+                "fileFormatFilter)" +
                 "VALUES" +
                 "('World Heritage List'," +
                 "'Terms and Conditions of Use: http://whc.unesco.org/en/syndication/'," +
                 "'http://whc.unesco.org/en/list/kml/'," +
-                "'', 0, 0)")
+                "''," +
+                "0, 0," +
+                "'KML')")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion == 1) {
+        if (oldVersion < 2) {
             db.execSQL("UPDATE PLACEMARK_COLLECTION SET category='' where category is null")
+        }
+        if (oldVersion < 3) {
+            db.execSQL("alter table PLACEMARK_COLLECTION add column fileFormatFilter TEXT")
         }
     }
 }

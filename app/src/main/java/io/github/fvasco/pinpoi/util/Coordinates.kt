@@ -18,7 +18,7 @@ data class Coordinates(val latitude: Float, val longitude: Float) {
         return result[0]
     }
 
-    override fun toString(): String = synchronized (DECIMAL_FORMAT) {
+    override fun toString(): String = synchronized(DECIMAL_FORMAT) {
         return DECIMAL_FORMAT.format(latitude) + ',' + DECIMAL_FORMAT.format(longitude)
     }
 

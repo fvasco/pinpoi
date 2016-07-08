@@ -44,4 +44,5 @@
     <string name="any_filter">(qualsiasi)</string>
     <string name="show_map">Visualizza la mappa</string>
     <string name="web_site">Sito web</string>
+    <string name="fileFormatFilter">Filtro formato file</string>
 </resources>

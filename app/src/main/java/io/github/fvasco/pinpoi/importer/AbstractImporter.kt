@@ -13,7 +13,7 @@ import java.io.InputStream
 abstract class AbstractImporter {
     var consumer: ((Placemark) -> Unit)? = null
     var collectionId: Long = 0
-
+    var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
     /**
      * Import data
 
@@ -55,6 +55,7 @@ abstract class AbstractImporter {
     fun configureFrom(importer: AbstractImporter) {
         collectionId = importer.collectionId
         consumer = importer.consumer
+        fileFormatFilter = importer.fileFormatFilter
     }
 
     /**

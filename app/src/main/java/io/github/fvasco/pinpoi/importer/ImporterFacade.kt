@@ -46,6 +46,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
     private val placemarkQueue = ArrayBlockingQueue<Placemark>(256)
     private var progressDialog: ProgressDialog? = null
     private var progressDialogMessageFormat: String? = null
+    var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
 
     init {
         this.placemarkDao = PlacemarkDao(context)
@@ -75,7 +76,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
     @Throws(IOException::class)
     fun importPlacemarks(placemarkCollection: PlacemarkCollection): Int {
         val resource = placemarkCollection.source
-        val importer = createImporter(resource) ?: throw IOException("Cannot import $resource")
+        val importer = createImporter(resource, fileFormatFilter) ?: throw IOException("Cannot import $resource")
         placemarkCollectionDao.open()
         try {
             progressDialog?.apply {
@@ -173,7 +174,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
 
     companion object {
 
-        internal fun createImporter(resource: String): AbstractImporter? {
+        internal fun createImporter(resource: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
             var path: String?
             try {
                 if (resource.isUri()) {
@@ -190,22 +191,25 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
             } catch (e: Exception) {
                 path = resource
             }
+            if (path == null) return null
 
-            val res: AbstractImporter?
-            if (path == null || path.length < 3) {
-                res = null
-            } else {
+            var res: AbstractImporter? = null
+            if (path.length >= 3) {
                 val end = path.substring(path.length - 3)
                 when (end.toLowerCase()) {
-                    "kml" -> res = KmlImporter()
+                    "kml" -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
-                    "xml", "rss" -> res = GeoRssImporter()
-                    "gpx" -> res = GpxImporter()
-                    "ov2" -> res = Ov2Importer()
-                    "asc", "csv", "txt" -> res = TextImporter()
-                    else -> res = null
+                    "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res = GeoRssImporter()
+                    "gpx" -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res = GpxImporter()
+                    "ov2" -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res = Ov2Importer()
+                    "asc", "csv", "txt" -> if (fileFormatFilter == FileFormatFilter.NONE
+                            || fileFormatFilter == FileFormatFilter.CSV_LAT_LON
+                            || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) {
+                        res = TextImporter()
+                    }
                 }
             }
+            res?.fileFormatFilter = fileFormatFilter
             Log.d(ImporterFacade::class.java.simpleName,
                     "Importer for " + resource + " is " + if (res == null) null else res.javaClass.simpleName)
             return res
