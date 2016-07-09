@@ -71,7 +71,6 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         categoryText.setAdapter(ArrayAdapter(getContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()))
-        browseButton.onClick { showFileChooser(it) }
         fileFormatFilterButton.onClick { openFileFormatFilterChooser() }
 
         descriptionText.setText(placemarkCollection.description)
@@ -96,8 +95,11 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        placemarkCollectionDao.close()
-        super.onDestroy()
+        try {
+            placemarkCollectionDao.close()
+        } finally {
+            super.onDestroy()
+        }
     }
 
     fun savePlacemarkCollection() {
@@ -208,7 +210,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         fileFormatFilterButton.text = fileFormatFilter.toString()
     }
 
-    fun showFileChooser(view: View?) {
+    fun openFileChooser(view: View?) {
         openFileChooser(Environment.getExternalStorageDirectory(), view?.getContext() ?: getContext()) {
             sourceText.setText(it.absolutePath)
         }

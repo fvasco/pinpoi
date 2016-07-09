@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi
 
+import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -25,6 +26,7 @@ import io.github.fvasco.pinpoi.util.Util
 class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     private var fragment: PlacemarkCollectionDetailFragment? = null
     private val PERMISSION_UPDATE = 1
+    private val PERMISSION_CHOOSE_FILE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,6 +95,18 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    fun openFileChooser(view: View?) {
+        fragment?.let { fragment ->
+            val permission = Manifest.permission.READ_EXTERNAL_STORAGE
+            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
+                fragment.openFileChooser(view)
+            } else {
+                // request permission
+                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_CHOOSE_FILE)
+            }
+        }
+    }
+
     fun updatePlacemarkCollection(view: View?) {
         fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
@@ -107,9 +121,11 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        if (requestCode == PERMISSION_UPDATE && grantResults.size > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            updatePlacemarkCollection(null)
+        if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            when (requestCode) {
+                PERMISSION_UPDATE -> updatePlacemarkCollection(null)
+                PERMISSION_CHOOSE_FILE -> openFileChooser(null)
+            }
         }
     }
 
