@@ -1,7 +1,7 @@
 ; this is a comment line
-100.0 0.0 "location to discard: latitude"
-0.0 200.0 "location to discard: longitude"
 1.0 2.5 "location1 to import"
 1.0 2.5 "location1 duplicate"
 -1.2345 -6.7890 "location2 to import"
 12.56789,	41.56721,	"00040 DEMO LOCATION [A/Va/X]"
+91.0 0.0 "location to discard: latitude"
+0.0 181.0 "location to discard: longitude"
