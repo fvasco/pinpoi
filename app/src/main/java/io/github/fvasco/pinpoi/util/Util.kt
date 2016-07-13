@@ -8,8 +8,8 @@ import android.text.Html
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
 import org.jetbrains.anko.async
+import org.jetbrains.anko.longToast
 import org.jetbrains.anko.onUiThread
-import org.jetbrains.anko.toast
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.net.HttpURLConnection
@@ -41,13 +41,13 @@ private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+
 /**
  * Check value and thorow assertion errror if false
  */
-inline fun assertDebug(check: Boolean, value: Any? = null) {
+fun assertDebug(check: Boolean, value: Any? = null) {
     if (BuildConfig.DEBUG && !check)
         throw AssertionError(value?.toString())
 }
 
 fun showToast(throwable: Throwable) {
-    Util.applicationContext.onUiThread { Util.applicationContext.toast(throwable.message ?: "Error ${throwable.javaClass.simpleName}") }
+    Util.applicationContext.onUiThread { Util.applicationContext.longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}") }
 }
 
 /**

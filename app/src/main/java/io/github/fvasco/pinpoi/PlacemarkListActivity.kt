@@ -28,6 +28,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
+import org.jetbrains.anko.longToast
 import org.jetbrains.anko.onUiThread
 import org.jetbrains.anko.toast
 import java.text.DecimalFormat
@@ -253,7 +254,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                 placemarkIdArray = placemarks.map { it.id }.toLongArray()
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                onUiThread { toast(getString(R.string.error_search, e.message)) }
+                onUiThread { longToast(getString(R.string.error_search, e.message)) }
             } finally {
                 placemarkDao.close()
             }

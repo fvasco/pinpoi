@@ -14,7 +14,7 @@
     <string name="source">URL sorgente (o percorso di un file locale)</string>
     <string name="description">Descrizione</string>
     <string name="update">Aggiornamento %1$s</string>
-    <string name="update_collection_success">Aggiornamento riuscito %1$s, importati %2$,d PdI</string>
+    <string name="update_collection_success">Aggiornamento riuscito %1$s, importati %2$,d PdI (%3$s)</string>
     <string name="error_update">Errore durante l\'aggiornamendo di %1$s: %2$s</string>
     <string name="error_search">Errore di ricerca: %1$s</string>
     <string name="n_placemarks_found">%1$,d PdI trovati</string>

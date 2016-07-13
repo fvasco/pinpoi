@@ -34,7 +34,6 @@ import java.util.*
 import java.util.concurrent.Future
 import java.util.regex.Pattern
 
-
 class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener, AnkoLogger {
     private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
@@ -69,13 +68,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         favouriteCheck.isChecked = preference.getBoolean(PREFEFERNCE_FAVOURITE, false)
         showMapCheck.isChecked = preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)
         rangeSeek.progress = Math.min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
-        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null) ?: "")
+        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null))
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
 
         // load intent parameters for geo scheme (if present)
         intent.data?.let { intentUri ->
             val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-            var matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q") ?: "")
+            var matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"))
             if (!matcher.matches()) {
                 matcher = coordinatePattern.matcher(intentUri.authority)
             }
@@ -243,7 +242,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 .setView(editText)
                 .setPositiveButton(R.string.search) { dialog, which ->
                     dialog.dismiss()
-                    switchGps.isChecked = false;
+                    switchGps.isChecked = false
                     // clear old coordinates
                     onLocationChanged(null)
                     // search new location;
@@ -264,7 +263,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun chooseAddress(addresses: List<Address>, context: Context) {
         try {
             if (addresses.isEmpty()) {
-                toast(getString(R.string.error_no_address_found))
+                longToast(getString(R.string.error_no_address_found))
             } else {
                 val options = addresses.map { LocationUtil.toString(it) }.toTypedArray()
                 AlertDialog.Builder(context).setItems(options) { dialog, which ->
@@ -275,7 +274,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         } catch (e: IOException) {
             error("searchAddress", e)
-            toast(getString(R.string.error_network))
+            longToast(getString(R.string.error_network))
         }
     }
 
@@ -299,7 +298,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
             debug { "onSearchPoi selectedPlacemarkCategory=${selectedPlacemarkCategory}, collectionsIds=${collectionsIds}" }
             if (collectionsIds.isEmpty()) {
-                toast(getString(R.string.n_placemarks_found, 0))
+                longToast(getString(R.string.n_placemarks_found, 0))
                 onManagePlacemarkCollections(view)
             } else {
                 val context = view.context
@@ -315,8 +314,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 context.startActivity(intent)
             }
         } catch (e: Exception) {
+            longToast(R.string.validation_error)
             error("onSearchPoi", e)
-            toast(R.string.validation_error)
         }
 
     }
@@ -481,14 +480,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         }
     }
 
-    override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
-    }
+    override fun onStatusChanged(provider: String, status: Int, extras: Bundle) = Unit
 
-    override fun onProviderEnabled(provider: String) {
-    }
+    override fun onProviderEnabled(provider: String) = Unit
 
-    override fun onProviderDisabled(provider: String) {
-    }
+    override fun onProviderDisabled(provider: String) = Unit
 
     companion object {
         private const val LOCATION_RANGE_ACCURACY = 100

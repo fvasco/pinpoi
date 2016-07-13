@@ -17,7 +17,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
 
     override fun setUp() {
         super.setUp()
-        context = RenamingDelegatingContext(getContext(), "test_")
+        context = RenamingDelegatingContext(context, "test_")
         placemarkCollectionDao = PlacemarkCollectionDao(context)
         placemarkDao = PlacemarkDao(context)
         placemarkCollectionDao.open()

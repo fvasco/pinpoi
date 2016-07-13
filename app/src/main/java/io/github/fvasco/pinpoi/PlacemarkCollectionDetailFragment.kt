@@ -23,9 +23,10 @@ import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
 import org.jetbrains.anko.async
 import org.jetbrains.anko.onClick
+import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
-import org.jetbrains.anko.support.v4.toast
 import org.jetbrains.anko.uiThread
+import java.text.DecimalFormat
 
 /**
  * A fragment representing a single Placemark Collection detail screen.
@@ -68,7 +69,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        categoryText.setAdapter(ArrayAdapter(getContext(),
+        categoryText.setAdapter(ArrayAdapter(context,
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()))
         fileFormatFilterButton.onClick { openFileFormatFilterChooser() }
@@ -80,7 +81,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         showUpdatedCollectionInfo()
 
         if (placemarkCollection.poiCount == 0) {
-            toast(getString(R.string.poi_count, 0))
+            longToast(getString(R.string.poi_count, 0))
         }
     }
 
@@ -145,10 +146,11 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     fun updatePlacemarkCollection() {
         val progressDialog = ProgressDialog(activity)
         progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
-        progressDialog.setMessage(sourceText?.text)
+        progressDialog.setMessage(sourceText.text)
         async() {
             try {
                 savePlacemarkCollection()
+                val oldCount = placemarkCollection.poiCount
                 val importerFacade = ImporterFacade()
                 importerFacade.setProgressDialog(progressDialog)
                 importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
@@ -156,14 +158,14 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 val count = importerFacade.importPlacemarks(placemarkCollection)
                 onUiThread {
                     if (count == 0) {
-                        toast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)))
+                        longToast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)))
                     } else {
-                        toast(getString(R.string.update_collection_success, placemarkCollection.name, count))
+                        longToast(getString(R.string.update_collection_success, placemarkCollection.name, count, DecimalFormat("+0;-0").format(count - oldCount)))
                     }
                 }
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "updatePlacemarkCollection", e)
-                onUiThread { toast(getString(R.string.error_update, placemarkCollection.name, e.message)) }
+                onUiThread { longToast(getString(R.string.error_update, placemarkCollection.name, e.message)) }
             } finally {
                 // update placemark collection info
                 uiThread { showUpdatedCollectionInfo() }
@@ -211,7 +213,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun openFileChooser(view: View?) {
-        openFileChooser(Environment.getExternalStorageDirectory(), view?.getContext() ?: getContext()) {
+        openFileChooser(Environment.getExternalStorageDirectory(), view?.context ?: context) {
             sourceText.setText(it.absolutePath)
         }
     }
