@@ -10,7 +10,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 26
-        versionName '1.1.2'
+        versionName '1.2.0'
         testApplicationId 'io.github.fvasco.pinpoi_test'
     }
     buildTypes {
@@ -38,6 +38,7 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
     androidTestCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'com.mapcode:mapcode:2.+'
     compile "org.jetbrains.anko:anko-sdk23:$anko_version"
     compile "org.jetbrains.anko:anko-support-v4:$anko_version"
     compile "org.jetbrains.anko:anko-appcompat-v7:$anko_version"

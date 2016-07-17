@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.mapcode.MapcodeCodec
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
@@ -45,7 +46,6 @@ class PlacemarkDetailFragment : Fragment() {
                 preferences.edit().putLong(ARG_PLACEMARK_ID, value.id).apply()
             }
 
-            val activity = this.activity
             (activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout)?.title = value?.name
             placemarkDetailText.text = when {
                 value == null -> null
@@ -60,6 +60,14 @@ class PlacemarkDetailFragment : Fragment() {
                 getString(R.string.location,
                         Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
                         Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES))
+            mapcodeText.visibility = View.GONE
+            if (value != null) {
+                MapcodeCodec.encode(value.coordinates.latitude.toDouble(), value.coordinates.longitude.toDouble()).firstOrNull()?.let { mapcode ->
+                    mapcodeText.text = "MapCode: $mapcode"
+                    mapcodeText.visibility = View.VISIBLE
+
+                }
+            }
             searchAddressFuture?.cancel(true)
             addressText.text = null
             addressText.visibility = View.GONE

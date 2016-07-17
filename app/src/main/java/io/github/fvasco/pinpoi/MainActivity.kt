@@ -22,6 +22,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
+import com.mapcode.MapcodeCodec
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
@@ -240,6 +241,36 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         AlertDialog.Builder(context)
                 .setMessage(R.string.insert_address)
                 .setView(editText)
+                .setNeutralButton("MapCode") { dialog, which ->
+                    dialog.dismiss()
+                    switchGps.isChecked = false
+                    try {
+                        // try to guess territory from edited location
+                        val territory = try {
+                            MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
+                                    .first()
+                                    .territory
+                        } catch(e: Exception) {
+                            // try to guess territory from last gps location
+                            lastLocation?.let {
+                                try {
+                                    MapcodeCodec.encode(it.latitude, it.longitude)
+                                            .first()
+                                            .territory
+                                } catch(e: Exception) {
+                                    null
+                                }
+                            }
+                        }
+                        val address = editText.text.toString()
+                        preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                        val point = MapcodeCodec.decode(address, territory)
+                        onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
+                    } catch(e: Exception) {
+                        error("onSearchAddress", e)
+                        showToast(e)
+                    }
+                }
                 .setPositiveButton(R.string.search) { dialog, which ->
                     dialog.dismiss()
                     switchGps.isChecked = false
@@ -458,8 +489,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     /**
-     * Manage location update
-
+     * Update current location
+     *
      * @param location new location
      */
     @SuppressLint("SetTextI18n")
