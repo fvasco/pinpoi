@@ -23,6 +23,7 @@ import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
 import com.mapcode.MapcodeCodec
+import com.mapcode.Territory
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
@@ -243,7 +244,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 .setView(editText)
                 .setNeutralButton("MapCode") { dialog, which ->
                     dialog.dismiss()
-                    switchGps.isChecked = false
                     try {
                         // try to guess territory from edited location
                         val territory = try {
@@ -258,17 +258,19 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                             .first()
                                             .territory
                                 } catch(e: Exception) {
-                                    null
+                                    Territory.AAA
                                 }
                             }
                         }
                         val address = editText.text.toString()
                         preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
                         val point = MapcodeCodec.decode(address, territory)
+                        switchGps.isChecked = false
                         onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
                     } catch(e: Exception) {
                         error("onSearchAddress", e)
-                        showToast(e)
+                        longToast(R.string.error_no_address_found)
+                        onSearchAddress(view)
                     }
                 }
                 .setPositiveButton(R.string.search) { dialog, which ->
