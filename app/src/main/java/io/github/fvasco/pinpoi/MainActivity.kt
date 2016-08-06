@@ -280,12 +280,22 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     onLocationChanged(null)
                     // search new location;
                     val address = editText.text.toString()
-                    preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                    showProgressDialog(address, null, view.context) {
-                        val addresses =
-                                LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
-                        onUiThread {
-                            chooseAddress(addresses, view.context)
+                    if (address.isNotBlank()) {
+                        preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                        // check if is a coordinate text, WGS84 or geo uri
+                        val coordinateMatcherResult = """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex().matchEntire(address)
+                        if (coordinateMatcherResult == null) {
+                            showProgressDialog(address, null, view.context) {
+                                val addresses =
+                                        LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
+                                onUiThread {
+                                    chooseAddress(addresses, view.context)
+                                }
+                            }
+                        } else {
+                            // parse coordinate
+                            latitudeText.setText(coordinateMatcherResult.groupValues[1])
+                            longitudeText.setText(coordinateMatcherResult.groupValues[2])
                         }
                     }
                 }
