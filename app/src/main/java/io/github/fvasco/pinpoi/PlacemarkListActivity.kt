@@ -190,7 +190,7 @@ class PlacemarkListActivity : AppCompatActivity() {
 
                     append("L.marker([").append(psr.coordinates.toString()).append("],{")
                     if (psr.flagged) {
-                        append("icon:L.icon.glyph({glyph:'<b><tt>$placemarkPosition</tt></b>',glyphColor:'yellow'})")
+                        append("icon:L.icon.glyph({glyph:'<b style=\"color:yellow\">$placemarkPosition</b>'})")
                     } else {
                         append("icon:L.icon.glyph({glyph:'$placemarkPosition'})")
                     }
