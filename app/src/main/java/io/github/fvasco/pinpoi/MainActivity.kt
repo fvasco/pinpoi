@@ -242,37 +242,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         AlertDialog.Builder(context)
                 .setMessage(R.string.insert_address)
                 .setView(editText)
-                .setNeutralButton("MapCode") { dialog, which ->
-                    dialog.dismiss()
-                    try {
-                        // try to guess territory from edited location
-                        val territory = try {
-                            MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                    .first()
-                                    .territory
-                        } catch(e: Exception) {
-                            // try to guess territory from last gps location
-                            lastLocation?.let {
-                                try {
-                                    MapcodeCodec.encode(it.latitude, it.longitude)
-                                            .first()
-                                            .territory
-                                } catch(e: Exception) {
-                                    Territory.AAA
-                                }
-                            }
-                        }
-                        val address = editText.text.toString()
-                        preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                        val point = MapcodeCodec.decode(address, territory)
-                        switchGps.isChecked = false
-                        onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
-                    } catch(e: Exception) {
-                        error("onSearchAddress", e)
-                        longToast(R.string.error_no_address_found)
-                        onSearchAddress(view)
-                    }
-                }
                 .setPositiveButton(R.string.search) { dialog, which ->
                     dialog.dismiss()
                     switchGps.isChecked = false
@@ -285,11 +254,36 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                         // check if is a coordinate text, WGS84 or geo uri
                         val coordinateMatcherResult = """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex().matchEntire(address)
                         if (coordinateMatcherResult == null) {
-                            showProgressDialog(address, null, view.context) {
-                                val addresses =
-                                        LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
-                                onUiThread {
-                                    chooseAddress(addresses, view.context)
+                            try {
+                                // try to guess territory from edited location
+                                val territory = try {
+                                    MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
+                                            .first()
+                                            .territory
+                                } catch(e: Exception) {
+                                    // try to guess territory from last gps location
+                                    lastLocation?.let {
+                                        try {
+                                            MapcodeCodec.encode(it.latitude, it.longitude)
+                                                    .first()
+                                                    .territory
+                                        } catch(e: Exception) {
+                                            Territory.AAA
+                                        }
+                                    }
+                                }
+                                val address = editText.text.toString()
+                                preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                                val point = MapcodeCodec.decode(address, territory)
+                                switchGps.isChecked = false
+                                onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
+                            } catch(e: Exception) {
+                                showProgressDialog(address, null, view.context) {
+                                    val addresses =
+                                            LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
+                                    onUiThread {
+                                        chooseAddress(addresses, view.context)
+                                    }
                                 }
                             }
                         } else {
