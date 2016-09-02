@@ -20,6 +20,7 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.LocationUtil
+import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.escapeHtml
 import io.github.fvasco.pinpoi.util.isHtml
 import kotlinx.android.synthetic.main.placemark_detail.*
@@ -100,7 +101,7 @@ class PlacemarkDetailFragment : Fragment() {
     private lateinit var preferences: SharedPreferences
     private var searchAddressFuture: Future<Unit>? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         preferences = activity.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
         placemarkDao = PlacemarkDao.instance

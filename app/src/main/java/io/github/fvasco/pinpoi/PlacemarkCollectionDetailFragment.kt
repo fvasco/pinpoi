@@ -18,6 +18,7 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
+import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.openFileChooser
 import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
@@ -39,7 +40,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     lateinit var placemarkCollection: PlacemarkCollection
         private set
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         placemarkCollectionDao = PlacemarkCollectionDao.instance
         placemarkCollectionDao.open()
