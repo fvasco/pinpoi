@@ -139,13 +139,13 @@
                     android:id="@+id/rangeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="16dp"
+                    android:paddingTop="8dp"
                     android:text="@string/search_range"/>
 
             <SeekBar
                     android:id="@+id/rangeSeek"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" android:paddingBottom="2dp" android:paddingTop="2dp"/>
 
             <CheckBox
                     android:id="@+id/favouriteCheck"

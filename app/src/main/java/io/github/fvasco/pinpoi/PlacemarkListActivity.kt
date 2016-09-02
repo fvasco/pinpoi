@@ -146,9 +146,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
 
         searchPoi { placemarksSearchResult ->
-            // this list helps to divide placemarks in category
             val leafletVersion = "0.7.7"
-            var zoom = (Math.log((40000000 / range).toDouble()) / Math.log(2.0)).toInt()
+            var zoom: Int = (Math.log((40000000.0 / range)) / Math.log(2.0)).toInt()
             if (zoom < 0)
                 zoom = 0
             else if (zoom > 18) zoom = 18
@@ -204,7 +203,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             }.toString()
 
             if (BuildConfig.DEBUG)
-                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML " + htmlText)
+                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML $htmlText")
 
             onUiThread {
                 try {
@@ -348,7 +347,10 @@ class PlacemarkListActivity : AppCompatActivity() {
                 else
                     Integer.toString(distance.toInt() / 1000)).append(" ㎞")
             }
-            stringBuilder.append(' ').append(ARROWS[arrowIndex]).append("  ").append(placemark.name)
+            stringBuilder.append(' ')
+                    .append(if (distance <= 1F) CENTER else ARROWS[arrowIndex])
+                    .append("  ")
+                    .append(placemark.name)
             holder.view.text = stringBuilder.toString()
             holder.view.typeface = if (placemark.flagged) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
 
@@ -383,6 +385,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         private const val PERMISSION_SHOW_MAP = 1
         // clockwise arrow
         private val ARROWS = charArrayOf(/*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198', /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196')
+        // white flag
+        private val CENTER = '\u2690'
     }
 
 }
