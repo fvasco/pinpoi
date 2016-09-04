@@ -20,7 +20,6 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.LocationUtil
-import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.escapeHtml
 import io.github.fvasco.pinpoi.util.isHtml
 import kotlinx.android.synthetic.main.placemark_detail.*

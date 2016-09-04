@@ -158,23 +158,23 @@ class PlacemarkListActivity : AppCompatActivity() {
                         + "html, body, #map {height: 100%;}\n"
                         + "</style>").append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css\" />")
                 append("<script src=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js\"></script>")
+                // add tiles fallback https://github.com/ghybs/Leaflet.TileLayer.Fallback
+                append("<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.TileLayer.Fallback.js\"></script>")
                 // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
-                append(
-                        "<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js\"></script>")
+                append("<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js\"></script>")
                 append("</html>")
                 append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>")
                 append("var map = L.map('map').setView([$searchCoordinate], $zoom);\n")
                 // limit min zoom
-                append("map.options.minZoom = ").append(Integer.toString(Math.max(0, zoom - 1))).append(";\n")
-                append("L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
+                append("map.options.minZoom = ${Integer.toString(Math.max(0, zoom - 1))};\n")
+                append("L.tileLayer.fallback('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
                         "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
                         "}).addTo(map);\n")
                 // search center marker
                 append("L.circle([$searchCoordinate], 1, {color: 'red',fillOpacity: 1}).addTo(map);")
                 // search limit circle
                 append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
-                append("L.circle([" + searchCoordinate + "], " + range / 2 + "," +
-                        " {color: 'orange',fillOpacity: 0}).addTo(map);\n")
+                append("L.circle([$searchCoordinate], ${range / 2}, {color: 'orange',fillOpacity: 0}).addTo(map);\n")
                 // mark placemark top ten :)
                 var placemarkPosition = 0
                 // distance to placemark
@@ -187,7 +187,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                             floatArray)
                     val distance = floatArray[0].toInt()
 
-                    append("L.marker([").append(psr.coordinates.toString()).append("],{")
+                    append("L.marker([${psr.coordinates}],{")
                     if (psr.flagged) {
                         append("icon:L.icon.glyph({glyph:'<b style=\"color:yellow\">$placemarkPosition</b>'})")
                     } else {
