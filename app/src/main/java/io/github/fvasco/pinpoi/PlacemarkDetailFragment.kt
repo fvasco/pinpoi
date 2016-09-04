@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.location.Location
 import android.os.Build
@@ -22,7 +23,9 @@ import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.LocationUtil
 import io.github.fvasco.pinpoi.util.escapeHtml
 import io.github.fvasco.pinpoi.util.isHtml
+import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemark_detail.*
+import org.jetbrains.anko.onClick
 import java.util.concurrent.Future
 
 /**
@@ -101,7 +104,7 @@ class PlacemarkDetailFragment : Fragment() {
     private var searchAddressFuture: Future<Unit>? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onActivityCreated(savedInstanceState)
         preferences = activity.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
         placemarkDao = PlacemarkDao.instance
         placemarkCollectionDao = PlacemarkCollectionDao.instance
@@ -133,6 +136,7 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        shareButton.onClick { onShare() }
         // By default these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
         placemark = placemarkDao.getPlacemark(preferences.getLong(ARG_PLACEMARK_ID, 0))
@@ -156,6 +160,22 @@ class PlacemarkDetailFragment : Fragment() {
         }
     }
 
+    fun onShare() {
+        placemark?.apply {
+            try {
+                val text = name + '\n' + getString(R.string.location, coordinates.latitude, coordinates.longitude)
+                var intent = Intent(Intent.ACTION_SEND)
+                intent.type = "text/plain"
+                intent.putExtra(android.content.Intent.EXTRA_SUBJECT, name)
+                intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
+                intent = Intent.createChooser(intent, name)
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
+                showToast(e)
+            }
+        }
+    }
 
     fun resetStarFabIcon(starFab: FloatingActionButton) {
         val drawable = if (placemarkAnnotation?.flagged ?: false)

@@ -124,7 +124,6 @@ object LocationUtil {
             Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
             showToast(e)
         }
-
     }
 
     private fun restoreAddressCache() {

@@ -40,7 +40,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         private set
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onActivityCreated(savedInstanceState)
         placemarkCollectionDao = PlacemarkCollectionDao.instance
         placemarkCollectionDao.open()
 
