@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         favouriteCheck.isChecked = preference.getBoolean(PREFEFERNCE_FAVOURITE, false)
         showMapCheck.isChecked = preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)
         rangeSeek.progress = Math.min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
-        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, null))
+        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, ""))
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
 
         // load intent parameters for geo scheme (if present)

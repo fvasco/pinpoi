@@ -140,7 +140,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         mapWebView.settings.apply {
             javaScriptEnabled = true
             cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-            setGeolocationEnabled(true)
+            setGeolocationEnabled(false)
             javaScriptCanOpenWindowsAutomatically = false
             setSupportMultipleWindows(false)
         }
