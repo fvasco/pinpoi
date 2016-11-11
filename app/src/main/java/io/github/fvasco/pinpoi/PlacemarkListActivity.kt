@@ -339,6 +339,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             }
 
             stringBuilder.setLength(0)
+            stringBuilder.append(position + 1).append(") ")
             if (distance < 1000f) {
                 stringBuilder.append(Integer.toString(distance.toInt())).append(" m")
             } else {
