@@ -57,6 +57,7 @@
                 android:name=".PlacemarkCollectionListActivity"
                 android:label="@string/title_placemarkcollection_list"
                 android:parentActivityName=".MainActivity"
+                android:screenOrientation="locked"
                 android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -102,6 +103,7 @@
                 android:name=".PlacemarkCollectionDetailActivity"
                 android:label="@string/title_placemarkcollection_detail"
                 android:parentActivityName=".PlacemarkCollectionListActivity"
+                android:screenOrientation="locked"
                 android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
