@@ -172,5 +172,5 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="8dp"
             android:onClick="onSearchPoi"
-            android:src="@android:drawable/ic_menu_search"/>
+            android:src="@drawable/ic_search_white"/>
 </android.support.design.widget.CoordinatorLayout>

@@ -12,6 +12,7 @@ android {
         versionCode 32
         versionName '1.4.0'
         testApplicationId 'io.github.fvasco.pinpoi_test'
+        vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
         release {

@@ -111,10 +111,7 @@ class PlacemarkDetailFragment : Fragment() {
         placemarkDao.open()
         placemarkCollectionDao.open()
 
-        val id = if (savedInstanceState == null)
-            arguments.getLong(ARG_PLACEMARK_ID, preferences.getLong(ARG_PLACEMARK_ID, 0))
-        else
-            savedInstanceState.getLong(ARG_PLACEMARK_ID)
+        val id = savedInstanceState?.getLong(ARG_PLACEMARK_ID) ?: arguments.getLong(ARG_PLACEMARK_ID, preferences.getLong(ARG_PLACEMARK_ID, 0))
         preferences.edit().putLong(ARG_PLACEMARK_ID, id).apply()
     }
 
@@ -179,9 +176,9 @@ class PlacemarkDetailFragment : Fragment() {
 
     fun resetStarFabIcon(starFab: FloatingActionButton) {
         val drawable = if (placemarkAnnotation?.flagged ?: false)
-            R.drawable.abc_btn_rating_star_on_mtrl_alpha
+            R.drawable.ic_bookmark_white
         else
-            R.drawable.abc_btn_rating_star_off_mtrl_alpha
+            R.drawable.ic_bookmark_border_white
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             starFab.setImageDrawable(resources.getDrawable(drawable, activity.baseContext.theme))
         } else {

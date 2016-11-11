@@ -36,7 +36,7 @@
                 android:layout_gravity="end"
                 android:layout_margin="@dimen/fab_margin"
                 android:onClick="updatePlacemarkCollection"
-                android:src="@android:drawable/stat_notify_sync_noanim"
+                android:src="@drawable/ic_refresh_white"
                 android:visibility="gone"/>
     </FrameLayout>
 
@@ -47,6 +47,6 @@
             android:layout_margin="@dimen/fab_margin"
             android:onClick="createPlacemarkCollection"
 
-            android:src="@android:drawable/ic_input_add"/>
+            android:src="@drawable/ic_add_white"/>
 
 </android.support.design.widget.CoordinatorLayout>

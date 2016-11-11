@@ -47,7 +47,7 @@
             android:layout_gravity="center_vertical|start"
             android:layout_margin="@dimen/fab_margin"
             android:onClick="onStarClick"
-            android:src="@android:drawable/star_off"
+            android:src="@drawable/ic_bookmark_border_white"
             app:layout_anchor="@+id/placemarkDetailContainer"
             app:layout_anchorGravity="top|end"/>
 
@@ -58,7 +58,7 @@
             android:layout_gravity="center_vertical|start"
             android:layout_margin="@dimen/fab_margin"
             android:onClick="onMapClick"
-            android:src="@android:drawable/ic_dialog_map"
+            android:src="@drawable/ic_map_white"
             app:layout_anchor="@+id/placemarkDetailContainer"
             app:layout_anchorGravity="bottom|end"/>
 
