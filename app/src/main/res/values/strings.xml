@@ -15,6 +15,7 @@
     <string name="description">Description</string>
     <string name="update">Update %1$s</string>
     <string name="update_collection_success">Update success %1$s, %2$,d POIs imported (%3$s)</string>
+    <string name="fileFormatFilter">File format filter</string>
     <string name="error_update">Update error %1$s: %2$s</string>
     <string name="error_search">Search error: %1$s</string>
     <string name="n_placemarks_found">%1$,d POIs found</string>
@@ -44,5 +45,4 @@
     <string name="any_filter">(any)</string>
     <string name="show_map">Show map</string>
     <string name="web_site">Web site</string>
-    <string name="fileFormatFilter">File format filter</string>
 </resources>
