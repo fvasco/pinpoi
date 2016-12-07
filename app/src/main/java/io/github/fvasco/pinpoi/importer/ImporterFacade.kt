@@ -154,11 +154,11 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                 }
                 return placemarkCount
             } catch (e: InterruptedException) {
-                throw IOException("Error importing placemark", e)
+                throw IOException("Error importing placemarks", e)
             } catch (e: RuntimeException) {
-                throw IOException("Error importing placemark", e)
+                throw IOException("Error importing placemarks", e)
             } catch (e: ExecutionException) {
-                throw IOException("Error importing placemark", e.cause)
+                throw IOException("Error importing placemarks", e.cause)
             } finally {
                 importFuture.cancel(true)
                 placemarkDaoDatabase.endTransaction()
