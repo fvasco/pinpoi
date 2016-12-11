@@ -75,10 +75,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
         // load intent parameters for geo scheme (if present)
         intent.data?.let { intentUri ->
+            Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
             val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-            var matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"))
-            if (!matcher.matches()) {
-                matcher = coordinatePattern.matcher(intentUri.authority)
+            var matcher = coordinatePattern.matcher(intentUri.host ?: "")
+            if (!matcher.matches() && intentUri.isHierarchical) {
+                matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"))
             }
             if (matcher.matches()) {
                 switchGps.isChecked = false
