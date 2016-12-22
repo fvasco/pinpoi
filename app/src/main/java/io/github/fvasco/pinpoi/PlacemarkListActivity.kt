@@ -56,8 +56,8 @@ class PlacemarkListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_placemark_list)
         Util.applicationContext = applicationContext
+        setContentView(R.layout.activity_placemark_list)
         val preference = getPreferences(Context.MODE_PRIVATE)
 
         val toolbar = findViewById(R.id.toolbar) as Toolbar

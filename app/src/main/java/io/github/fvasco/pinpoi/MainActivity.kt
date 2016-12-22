@@ -45,8 +45,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         Util.applicationContext = applicationContext
+        setContentView(R.layout.activity_main)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         // widget

@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.os.Build
+import android.support.v7.app.AppCompatDelegate
 import android.text.Html
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
@@ -31,6 +32,10 @@ object Util {
 
     init {
         HttpURLConnection.setFollowRedirects(true)
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            // avoid "invalid drawable tag vector" on kitkat
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
+        }
     }
 
     lateinit var applicationContext: Context

@@ -50,8 +50,8 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_placemarkcollection_list)
         Util.applicationContext = applicationContext
+        setContentView(R.layout.activity_placemarkcollection_list)
         placemarkCollectionDao = PlacemarkCollectionDao.instance
         placemarkCollectionDao.open()
 
