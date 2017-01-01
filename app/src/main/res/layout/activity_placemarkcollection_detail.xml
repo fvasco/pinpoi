@@ -47,7 +47,7 @@
             android:layout_gravity="center_vertical|start"
             android:layout_margin="@dimen/fab_margin"
             android:onClick="updatePlacemarkCollection"
-            android:src="@drawable/ic_refresh_white"
+            app:srcCompat="@drawable/ic_refresh_white"
             app:layout_anchor="@+id/placemarkcollectionDetailContainer"
             app:layout_anchorGravity="top|end"/>
 
