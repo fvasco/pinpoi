@@ -39,8 +39,8 @@ abstract class AbstractImporterTestCase : AndroidTestCase() {
         for (p in list) {
             assertEquals(0, p.id)
             assertTrue(!p.name.isEmpty())
-            assertTrue(!java.lang.Float.isNaN(p.coordinates.latitude))
-            assertTrue(!java.lang.Float.isNaN(p.coordinates.longitude))
+            assertTrue(!p.coordinates.latitude.isNaN())
+            assertTrue(!p.coordinates.longitude.isNaN())
             assertEquals(1, p.collectionId)
         }
         return list

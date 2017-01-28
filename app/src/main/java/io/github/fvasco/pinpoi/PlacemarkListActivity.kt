@@ -219,8 +219,8 @@ class PlacemarkListActivity : AppCompatActivity() {
     private fun searchPoi(placemarksConsumer: (Collection<PlacemarkSearchResult>) -> Unit) {
         // load parameters
         val preferences = getPreferences(Context.MODE_PRIVATE)
-        val latitude = intent.getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, java.lang.Float.NaN))
-        val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, java.lang.Float.NaN))
+        val latitude = intent.getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN))
+        val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN))
         searchCoordinate = Coordinates(latitude, longitude)
         range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
         val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null) ?: ""

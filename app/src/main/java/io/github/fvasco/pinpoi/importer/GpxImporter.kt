@@ -12,8 +12,8 @@ class GpxImporter : AbstractXmlImporter() {
         when (tag) {
             "wpt" -> {
                 newPlacemark()
-                placemark!!.coordinates = Coordinates(java.lang.Float.parseFloat(parser.getAttributeValue(null, "lat")),
-                        java.lang.Float.parseFloat(parser.getAttributeValue(null, "lon")))
+                placemark!!.coordinates = Coordinates(parser.getAttributeValue(null, "lat").toFloat(),
+                        parser.getAttributeValue(null, "lon").toFloat())
             }
             "link" -> placemark?.let { placemark ->
                 if (placemark.description.isBlank()) {

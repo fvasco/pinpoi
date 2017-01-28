@@ -33,13 +33,13 @@ class GeoRssImporter : AbstractXmlImporter() {
             -> {
                 val parts = text.split("[ ,]+".toRegex(), 3).toTypedArray()
                 if (parts.size >= 2) {
-                    p.coordinates = Coordinates(java.lang.Float.parseFloat(parts[0]), java.lang.Float.parseFloat(parts[1]))
+                    p.coordinates = Coordinates(parts[0].toFloat(), parts[1].toFloat())
                 }
             }
 
         // RSS
-            "lat" -> p.coordinates = p.coordinates.copy(latitude = java.lang.Float.parseFloat(text))
-            "long" -> p.coordinates = p.coordinates.copy(longitude = java.lang.Float.parseFloat(text))
+            "lat" -> p.coordinates = p.coordinates.copy(latitude = text.toFloat())
+            "long" -> p.coordinates = p.coordinates.copy(longitude = text.toFloat())
         }
     }
 }

@@ -59,8 +59,8 @@ class KmlImporter : AbstractXmlImporter(), AnkoLogger {
                     for (line in text.trim { it <= ' ' }.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }) {
                         // format: longitude, latitute, altitude
                         val coordinates = line.split(",".toRegex(), 3)
-                        longitude += java.lang.Double.parseDouble(coordinates[0])
-                        latitude += java.lang.Double.parseDouble(coordinates[1])
+                        longitude += coordinates[0].toDouble()
+                        latitude += coordinates[1].toDouble()
                         ++coordinateCount
                     }
             }

@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
@@ -238,6 +239,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         val editText = EditText(context)
         editText.maxLines = 6
         editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""))
+        editText.isFocusableInTouchMode = true;
         editText.selectAll()
 
         AlertDialog.Builder(context)
@@ -273,7 +275,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                         }
                                     }
                                 }
-                                val address = editText.text.toString()
                                 preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
                                 val point = MapcodeCodec.decode(address, territory)
                                 switchGps.isChecked = false
@@ -296,6 +297,12 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 }
                 .setNegativeButton(R.string.close, DismissOnClickListener)
                 .show()
+        editText.post {
+            editText.requestFocusFromTouch()
+            with(this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager) {
+                showSoftInput(editText, 0)
+            }
+        }
     }
 
     private fun chooseAddress(addresses: List<Address>, context: Context) {
@@ -323,7 +330,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 val placemarkCollectionDao = PlacemarkCollectionDao.instance
                 placemarkCollectionDao.open()
                 try {
-                    val collections = if (selectedPlacemarkCategory == "")
+                    val collections = if (selectedPlacemarkCategory.isEmpty())
                         placemarkCollectionDao.findAllPlacemarkCollection()
                     else
                         placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)
@@ -341,8 +348,18 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             } else {
                 val context = view.context
                 val intent = Intent(context, PlacemarkListActivity::class.java).apply {
-                    putExtra(PlacemarkListActivity.ARG_LATITUDE, java.lang.Float.parseFloat(latitudeText.text.toString()))
-                    putExtra(PlacemarkListActivity.ARG_LONGITUDE, java.lang.Float.parseFloat(longitudeText.text.toString()))
+                    try {
+                        putExtra(PlacemarkListActivity.ARG_LATITUDE, latitudeText.text.toString().replace(',', '.').toFloat())
+                    } catch(e: Exception) {
+                        latitudeText.requestFocus()
+                        throw e
+                    }
+                    try {
+                        putExtra(PlacemarkListActivity.ARG_LONGITUDE, longitudeText.text.toString().replace(',', '.').toFloat())
+                    } catch(e: Exception) {
+                        longitudeText.requestFocus()
+                        throw e
+                    }
                     putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.text.toString())
                     putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked)
                     putExtra(PlacemarkListActivity.ARG_SHOW_MAP, showMapCheck.isChecked)
@@ -512,8 +529,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     || lastLocation == null || lastLocation!!.time <= minTime
                     || lastLocation!!.accuracy < location.accuracy)) {
                 lastLocation = location
-                latitudeText.setText(java.lang.Double.toString(location.latitude))
-                longitudeText.setText(java.lang.Double.toString(location.longitude))
+                latitudeText.setText(location.latitude.toString())
+                longitudeText.setText(location.longitude.toString())
             }
         }
     }
