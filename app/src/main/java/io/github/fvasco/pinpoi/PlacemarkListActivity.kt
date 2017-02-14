@@ -23,6 +23,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.TextView
+import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
@@ -151,6 +152,21 @@ class PlacemarkListActivity : AppCompatActivity() {
             if (zoom < 0)
                 zoom = 0
             else if (zoom > 18) zoom = 18
+            val collectionNameMap: Map<Long, String> =
+                    PlacemarkCollectionDao.instance.let { placemarkCollectionDao ->
+                        placemarkCollectionDao.open()
+                        try {
+                            placemarkCollectionDao
+                                    .findAllPlacemarkCollection()
+                                    .map { it.id to it.name }
+                                    .toMap()
+                        } catch(e: Exception) {
+                            Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
+                            mapOf()
+                        } finally {
+                            placemarkCollectionDao.close()
+                        }
+                    }
 
             val htmlText = StringBuilder(1024 + placemarksSearchResult.size * 256).apply {
                 append("<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />").append("<style>\n"
@@ -197,7 +213,10 @@ class PlacemarkListActivity : AppCompatActivity() {
                     if (psr.flagged) append("<b>")
                     append(escapeJavascript(psr.name))
                     if (psr.flagged) append("</b>")
-                    append("</a>").append("<br>${integerFormat.format(distance.toLong())}&nbsp;m").append("\");\n")
+                    append("</a>")
+                    append("<br>${integerFormat.format(distance.toLong())}&nbsp;m - ")
+                    append(escapeJavascript(collectionNameMap[psr.collectionId] ?: ""))
+                    append("\");\n")
                 }
                 append("</script>" + "</body>" + "</html>")
             }.toString()

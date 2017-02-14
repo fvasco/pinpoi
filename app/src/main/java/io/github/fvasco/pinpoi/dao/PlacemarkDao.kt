@@ -67,8 +67,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         // sql clause
         // collection ids
         val sql = StringBuilder(
-                "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag FROM PLACEMARK p").append(" LEFT OUTER JOIN PLACEMARK_ANNOTATION pa USING(latitude,longitude)")
-        sql.append(" WHERE p.collection_id in (")
+                "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag,collection_id FROM PLACEMARK p" +
+                        " LEFT OUTER JOIN PLACEMARK_ANNOTATION pa USING(latitude,longitude)" +
+                        " WHERE p.collection_id in (")
         val whereArgs = ArrayList<String>()
         val iterator = collectionIds.iterator()
         sql.append(iterator.next().toString())
@@ -193,31 +194,31 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         return cv
     }
 
-    private fun cursorToPlacemark(cursor: Cursor): Placemark {
-        val p = Placemark()
-        p.id = cursor.getLong(0)
-        p.coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2)))
-        p.name = cursor.getString(3)
-        p.description = cursor.getString(4)
-        p.collectionId = cursor.getLong(5)
-        return p
-    }
+    private fun cursorToPlacemark(cursor: Cursor) =
+            Placemark(
+                    id = cursor.getLong(0),
+                    coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+                    name = cursor.getString(3),
+                    description = cursor.getString(4),
+                    collectionId = cursor.getLong(5)
+            )
 
-    private fun cursorToPlacemarkSearchResult(cursor: Cursor): PlacemarkSearchResult {
-        return PlacemarkSearchResult(cursor.getLong(0),
-                Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
-                cursor.getString(3),
-                cursor.getInt(4) != 0)
-    }
+    private fun cursorToPlacemarkSearchResult(cursor: Cursor) =
+            PlacemarkSearchResult(
+                    id = cursor.getLong(0),
+                    coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+                    name = cursor.getString(3),
+                    flagged = cursor.getInt(4) != 0,
+                    collectionId = cursor.getLong(5)
+            )
 
-    private fun cursorToPlacemarkAnnotation(cursor: Cursor): PlacemarkAnnotation {
-        val pa = PlacemarkAnnotation()
-        pa.id = cursor.getLong(0)
-        pa.coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2)))
-        pa.note = cursor.getString(3)
-        pa.flagged = cursor.getInt(4) != 0
-        return pa
-    }
+    private fun cursorToPlacemarkAnnotation(cursor: Cursor) =
+            PlacemarkAnnotation(
+                    id = cursor.getLong(0),
+                    coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+                    note = cursor.getString(3),
+                    flagged = cursor.getInt(4) != 0
+            )
 
     companion object {
 

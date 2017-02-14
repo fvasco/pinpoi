@@ -77,8 +77,8 @@ class PlacemarkDetailFragment : Fragment() {
             if (value != null) {
                 searchAddressFuture = LocationUtil.getAddressStringAsync(value.coordinates) { address ->
                     if (!address.isNullOrEmpty()) {
-                        addressText.visibility = View.VISIBLE
-                        addressText.text = address
+                        addressText?.visibility = View.VISIBLE
+                        addressText?.text = address
                     }
                 }
             }
