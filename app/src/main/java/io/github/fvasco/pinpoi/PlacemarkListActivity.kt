@@ -34,6 +34,7 @@ import org.jetbrains.anko.onUiThread
 import org.jetbrains.anko.toast
 import java.text.DecimalFormat
 import java.text.NumberFormat
+import java.util.*
 
 /**
  * An activity representing a list of Placemarks. This activity
@@ -147,11 +148,13 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
 
         searchPoi { placemarksSearchResult ->
-            val leafletVersion = "0.7.7"
+            val leafletVersion = "1.0.3"
             var zoom: Int = (Math.log((40000000.0 / range)) / Math.log(2.0)).toInt()
             if (zoom < 0)
                 zoom = 0
             else if (zoom > 18) zoom = 18
+            // map each collection id to color name
+            val collectionColors = HashMap<Long, String>()
             val collectionNameMap: Map<Long, String> =
                     PlacemarkCollectionDao.instance.let { placemarkCollectionDao ->
                         placemarkCollectionDao.open()
@@ -169,23 +172,26 @@ class PlacemarkListActivity : AppCompatActivity() {
                     }
 
             val htmlText = StringBuilder(1024 + placemarksSearchResult.size * 256).apply {
-                append("<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />").append("<style>\n"
-                        + "body {padding: 0; margin: 0;}\n"
-                        + "html, body, #map {height: 100%;}\n"
-                        + "</style>").append("<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css\" />")
-                append("<script src=\"http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js\"></script>")
+                append("""<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />""")
+                append("""<style>
+body {padding: 0; margin: 0;}
+html, body, #map {height: 100%;}
+}
+</style>""")
+                append("""<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css" />""")
+                append("""<script src="http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js"></script>""")
                 // add tiles fallback https://github.com/ghybs/Leaflet.TileLayer.Fallback
-                append("<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.TileLayer.Fallback.js\"></script>")
+                append("""<script src="https://fvasco.github.io/pinpoi/app-lib/Leaflet.TileLayer.Fallback.js"></script>""")
                 // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
-                append("<script src=\"https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js\"></script>")
+                append("""<script src="https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js"></script>""")
                 append("</html>")
-                append("<body>\n" + "<div id=\"map\"></div>\n" + "<script>")
-                append("var map = L.map('map').setView([$searchCoordinate], $zoom);\n")
+                append("""<body> <div id="map"></div> <script>""")
+                append("""var map = L.map('map').setView([$searchCoordinate], $zoom);""")
                 // limit min zoom
-                append("map.options.minZoom = ${Integer.toString(Math.max(0, zoom - 1))};\n")
-                append("L.tileLayer.fallback('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {" +
-                        "attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'" +
-                        "}).addTo(map);\n")
+                append("""map.options.minZoom = ${Integer.toString(Math.max(0, zoom - 1))};""")
+                append("""L.tileLayer.fallback('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);""")
                 // search center marker
                 append("L.circle([$searchCoordinate], 1, {color: 'red',fillOpacity: 1}).addTo(map);")
                 // search limit circle
@@ -198,27 +204,32 @@ class PlacemarkListActivity : AppCompatActivity() {
                 val integerFormat = NumberFormat.getIntegerInstance()
                 for (psr in placemarksSearchResult) {
                     ++placemarkPosition
+                    val collectionName = collectionNameMap[psr.collectionId] ?: ""
+                    val markerColor = collectionColors.getOrPut(psr.collectionId) { colorFor(collectionColors.size) }
                     Location.distanceBetween(searchCoordinate.latitude.toDouble(), searchCoordinate.longitude.toDouble(),
                             psr.coordinates.latitude.toDouble(), psr.coordinates.longitude.toDouble(),
                             floatArray)
                     val distance = floatArray[0].toInt()
 
-                    append("L.marker([${psr.coordinates}],{")
-                    if (psr.flagged) {
-                        append("icon:L.icon.glyph({glyph:'<b style=\"color:yellow\">$placemarkPosition</b>'})")
-                    } else {
-                        append("icon:L.icon.glyph({glyph:'$placemarkPosition'})")
+                    val glyph = StringBuilder().apply {
+                        if (psr.flagged) append("<b>")
+                        append(placemarkPosition)
+                        if (psr.flagged) append("</b>")
                     }
-                    append("}).addTo(map)" + ".bindPopup(\"").append("<a href='javascript:pinpoi.openPlacemark(${psr.id})'>")
+
+                    append("L.marker([${psr.coordinates}],{")
+                    append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'})")
+                    append("""}).addTo(map).bindPopup("""")
+                    append("<a href='javascript:pinpoi.openPlacemark(${psr.id})'>")
                     if (psr.flagged) append("<b>")
                     append(escapeJavascript(psr.name))
                     if (psr.flagged) append("</b>")
                     append("</a>")
                     append("<br>${integerFormat.format(distance.toLong())}&nbsp;m - ")
-                    append(escapeJavascript(collectionNameMap[psr.collectionId] ?: ""))
-                    append("\");\n")
+                    append(escapeJavascript(collectionName))
+                    append("\");")
                 }
-                append("</script>" + "</body>" + "</html>")
+                append("</script> </body> </html>")
             }.toString()
 
             if (BuildConfig.DEBUG)
@@ -407,6 +418,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         private val ARROWS = charArrayOf(/*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198', /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196')
         // white flag
         private val CENTER = '\u2690'
-    }
+        private val markerColor = arrayOf("white", "orange", "cyan", "red", "yellow", "black", "magenta", "lime", "pink")
 
+        private fun colorFor(value: Int) = markerColor[Math.abs(value) % markerColor.size]
+    }
 }
