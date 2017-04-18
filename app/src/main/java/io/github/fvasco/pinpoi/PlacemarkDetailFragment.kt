@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -158,20 +159,39 @@ class PlacemarkDetailFragment : Fragment() {
     }
 
     fun onShare() {
-        placemark?.apply {
-            try {
-                val text = name + '\n' + getString(R.string.location, coordinates.latitude, coordinates.longitude)
-                var intent = Intent(Intent.ACTION_SEND)
-                intent.type = "text/plain"
-                intent.putExtra(android.content.Intent.EXTRA_SUBJECT, name)
-                intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
-                intent = Intent.createChooser(intent, name)
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
-                showToast(e)
-            }
+        val placemark = placemark ?: return
+        val view = view ?: return
+        val places = mutableListOf<String?>(placemark.name, placemark.description)
+        places.add(placemarkAnnotation?.note)
+        places.add(addressText.text?.toString())
+        places.add(mapcodeText.text?.toString())
+        with(placemark.coordinates) {
+            places.add(this.toString())
+            places.add(Location.convert(latitude.toDouble(), Location.FORMAT_DEGREES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES))
+            places.add(Location.convert(latitude.toDouble(), Location.FORMAT_MINUTES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES))
+            places.add(Location.convert(latitude.toDouble(), Location.FORMAT_SECONDS) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS))
         }
+        // remove empty lines
+        places.removeAll { it.isNullOrBlank() }
+
+        // open chooser and share
+        AlertDialog.Builder(view.context)
+                .setTitle(getString(R.string.share))
+                .setItems(places.toTypedArray()) { dialog, which ->
+                    dialog.dismiss()
+                    try {
+                        val text = places[which]
+                        var intent = Intent(Intent.ACTION_SEND)
+                        intent.type = "text/plain"
+                        intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
+                        intent = Intent.createChooser(intent, text)
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
+                        showToast(e)
+                    }
+                }
+                .show()
     }
 
     fun resetStarFabIcon(starFab: FloatingActionButton) {

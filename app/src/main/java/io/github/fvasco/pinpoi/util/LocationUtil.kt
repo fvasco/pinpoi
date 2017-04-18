@@ -114,7 +114,7 @@ object LocationUtil {
     fun openExternalMap(placemark: PlacemarkBase, forceAppChooser: Boolean, context: Context) {
         try {
             val coordinateFormatted = placemark.coordinates.toString()
-            val uri = Uri.Builder().scheme("geo").authority(coordinateFormatted).appendQueryParameter("q", coordinateFormatted + '(' + placemark.name + ')').build()
+            val uri = Uri.Builder().scheme("geo").authority(coordinateFormatted).build()
             var intent = Intent(Intent.ACTION_VIEW, uri)
             if (forceAppChooser) {
                 intent = Intent.createChooser(intent, placemark.name)

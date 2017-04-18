@@ -29,6 +29,7 @@
     <string name="search_address">Cerca indirizzo</string>
     <string name="insert_address">Inserisci l\'indirizzo da cercare</string>
     <string name="search">Cerca</string>
+    <string name="share">Condividi</string>
     <string name="error_network">Errore di comunicazione con il server</string>
     <string name="error_no_address_found">Errore: nessun indirizzo trovato</string>
     <string name="close">Chiudi</string>

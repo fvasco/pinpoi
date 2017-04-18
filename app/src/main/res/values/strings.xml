@@ -29,6 +29,7 @@
     <string name="search_address">Search address</string>
     <string name="insert_address">Insert address</string>
     <string name="search">Search</string>
+    <string name="share">Share</string>
     <string name="error_network">Network error</string>
     <string name="error_no_address_found">Error: no address found</string>
     <string name="close">Close</string>

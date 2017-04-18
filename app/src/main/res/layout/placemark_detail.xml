@@ -22,7 +22,6 @@
             android:id="@+id/placemarkDetailText"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:textIsSelectable="true"
             tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment"/>
 
     <TextView
@@ -36,7 +35,6 @@
             android:id="@+id/addressText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textIsSelectable="true"
             android:visibility="gone"/>
 
     <TextView
