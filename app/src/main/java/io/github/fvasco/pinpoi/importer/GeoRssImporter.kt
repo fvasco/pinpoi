@@ -4,7 +4,7 @@ import io.github.fvasco.pinpoi.util.Coordinates
 
 /**
  * Import simple geo RSS/Atom
-
+ *
  * @author Francesco Vasco
  */
 class GeoRssImporter : AbstractXmlImporter() {

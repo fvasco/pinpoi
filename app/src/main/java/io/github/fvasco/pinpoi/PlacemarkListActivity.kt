@@ -93,7 +93,7 @@ class PlacemarkListActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        if (requestCode == PERMISSION_SHOW_MAP && grantResults.size > 0
+        if (requestCode == PERMISSION_SHOW_MAP && grantResults.isNotEmpty()
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             setupWebView(mapWebView)
         } else {
@@ -128,11 +128,11 @@ class PlacemarkListActivity : AppCompatActivity() {
         if (oldAdapter == null || oldAdapter.itemCount == 0) {
             val adapter = SimpleItemRecyclerViewAdapter()
             recyclerView.adapter = adapter
-            searchPoi({ placemarks ->
+            searchPoi { placemarks ->
                 // create array in background thread
                 val placemarksArray = placemarks.toTypedArray()
                 onUiThread { adapter.setPlacemarks(placemarksArray) }
-            })
+            }
         }
     }
 
@@ -197,13 +197,10 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
                 // search limit circle
                 append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
                 append("L.circle([$searchCoordinate], ${range / 2}, {color: 'orange',fillOpacity: 0}).addTo(map);\n")
-                // mark placemark top ten :)
-                var placemarkPosition = 0
                 // distance to placemark
                 val floatArray = FloatArray(1)
                 val integerFormat = NumberFormat.getIntegerInstance()
-                for (psr in placemarksSearchResult) {
-                    ++placemarkPosition
+                for ((index, psr) in placemarksSearchResult.withIndex()) {
                     val collectionName = collectionNameMap[psr.collectionId] ?: ""
                     val markerColor = collectionColors.getOrPut(psr.collectionId) { colorFor(collectionColors.size) }
                     Location.distanceBetween(searchCoordinate.latitude.toDouble(), searchCoordinate.longitude.toDouble(),
@@ -213,7 +210,7 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
 
                     val glyph = StringBuilder().apply {
                         if (psr.flagged) append("<b>")
-                        append(placemarkPosition)
+                        append(index + 1)
                         if (psr.flagged) append("</b>")
                     }
 
@@ -258,7 +255,7 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
 
         // read collections id or parse from preference
         val collectionIds = intent.getLongArrayExtra(ARG_COLLECTION_IDS)?.toSet()
-                ?: preferences.getStringSet(ARG_COLLECTION_IDS, setOf()).map { it.toLong() }
+                ?: preferences.getStringSet(ARG_COLLECTION_IDS, setOf()).map(String::toLong)
 
         // save parameters in preferences
         preferences.edit()
@@ -266,7 +263,7 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
                 .putFloat(ARG_LONGITUDE, longitude)
                 .putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite)
                 .putString(ARG_NAME_FILTER, nameFilter)
-                .putStringSet(ARG_COLLECTION_IDS, collectionIds.map { it.toString() }.toSet())
+                .putStringSet(ARG_COLLECTION_IDS, collectionIds.map(Long::toString).toSet())
                 .apply()
 
         showProgressDialog(getString(R.string.title_placemark_list), null, this) {
@@ -363,7 +360,7 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
             if (arrowIndex < 0) {
                 arrowIndex += 360
             }
-            arrowIndex = arrowIndex / 45
+            arrowIndex /= 45
             if (arrowIndex < 0 || arrowIndex >= ARROWS.size) {
                 arrowIndex = 0
             }
@@ -395,12 +392,8 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
         override fun getItemCount() = placemarks?.size ?: 0
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val view: TextView
+            val view = view.findViewById(android.R.id.text1) as TextView
             var placemark: PlacemarkSearchResult? = null
-
-            init {
-                this.view = view.findViewById(android.R.id.text1) as TextView
-            }
         }
     }
 

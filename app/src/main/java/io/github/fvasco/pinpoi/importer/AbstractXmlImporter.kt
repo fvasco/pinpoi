@@ -10,21 +10,17 @@ import java.io.InputStream
 import java.util.*
 
 /**
- * Base XML impoter
-
+ * Base XML importer
+ *
  * @author Francesco Vasco
  */
 abstract class AbstractXmlImporter : AbstractImporter() {
     protected val DOCUMENT_TAG = "<XML>"
-    protected val parser: XmlPullParser
+    protected val parser = Util.XML_PULL_PARSER_FACTORY.newPullParser()
     protected var placemark: Placemark? = null
     protected var text: String = ""
     protected var tag: String = DOCUMENT_TAG
     private val tagStack = ArrayDeque<String>()
-
-    init {
-        parser = Util.XML_PULL_PARSER_FACTORY.newPullParser()
-    }
 
     @Throws(IOException::class)
     override fun importImpl(inputStream: InputStream) {
@@ -56,7 +52,6 @@ abstract class AbstractXmlImporter : AbstractImporter() {
         } catch (e: XmlPullParserException) {
             throw IOException("Error reading XML file", e)
         }
-
     }
 
     /**

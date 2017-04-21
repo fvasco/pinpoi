@@ -36,7 +36,7 @@ fun setUpDebugDatabase(context: Context) {
             val placemarkCollection = PlacemarkCollection()
             for (pci in 0..15) {
                 placemarkCollection.id = 0
-                placemarkCollection.name = "Placemark Collection '" + pci + '\''
+                placemarkCollection.name = "Placemark Collection '$pci'"
                 placemarkCollection.category = if (pci == 0) "" else "Category " + pci % 7
                 placemarkCollection.description = placemarkCollection.name + " long long long description"
                 placemarkCollection.source = "http://www.example.org/poi-collection-$pci.csv"

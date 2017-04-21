@@ -144,13 +144,13 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.title_placemarkcollection_detail))
                 .setMessage(getString(R.string.placemark_collection_name))
-                .setView(input).setPositiveButton("Ok") { dialog, whichButton ->
+                .setView(input).setPositiveButton("Ok") { dialog, _ ->
             try {
                 val placemarkCollectionName = input.text.toString()
                 val placemarkCollection = PlacemarkCollection()
                 placemarkCollection.name = placemarkCollectionName
-                placemarkCollection.source = if (sourceUri == null) "" else sourceUri.toString()
-                placemarkCollection.category = if (sourceUri == null) "" else sourceUri.host
+                placemarkCollection.source = sourceUri?.toString() ?: ""
+                placemarkCollection.category = sourceUri?.host ?: ""
                 placemarkCollectionDao.insert(placemarkCollection)
 
                 // edit placemark collection
@@ -179,7 +179,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         }
     }
 
-    fun updatePlacemarkCollection(view: View?) {
+    fun updatePlacemarkCollection() {
         fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
@@ -193,9 +193,9 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
-                PERMISSION_UPDATE -> updatePlacemarkCollection(null)
+                PERMISSION_UPDATE -> updatePlacemarkCollection()
                 PERMISSION_CHOOSE_FILE -> openFileChooser(null)
             }
         }
@@ -208,7 +208,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
                     .setView(editText)
-                    .setPositiveButton(R.string.yes) { dialog, which ->
+                    .setPositiveButton(R.string.yes) { dialog, _ ->
                         dialog.dismiss()
                         fragment.renamePlacemarkCollection(editText.text.toString())
                         setupRecyclerView()
@@ -223,7 +223,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
-                    .setPositiveButton(R.string.yes) { dialog, which ->
+                    .setPositiveButton(R.string.yes) { dialog, _ ->
                         dialog.dismiss()
                         fragment!!.deletePlacemarkCollection()
                         fabUpdate.visibility = View.GONE

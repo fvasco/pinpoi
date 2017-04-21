@@ -59,8 +59,7 @@ class BackupManager(private vararg val daos: AbstractDao) {
     @Throws(IOException::class)
     fun restore(file: File) {
         Log.i(BackupManager::class.java.simpleName, "Restore backup " + file.absolutePath + " size=" + file.length())
-        val zipFile = ZipFile(file)
-        try {
+        ZipFile(file).use { zipFile ->
             for (dao in daos) {
                 synchronized(dao) {
                     val databasePath: File
@@ -88,8 +87,6 @@ class BackupManager(private vararg val daos: AbstractDao) {
                     }
                 }
             }
-        } finally {
-            zipFile.close()
         }
         Log.i(BackupManager::class.java.simpleName, "Restored backup " + file.absolutePath)
     }

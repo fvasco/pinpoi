@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 
 /**
  * Placemark collection database
-
+ *
  * @author Francesco Vasco
  */
 internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(context, "PlacemarkCollection", null, /*version*/ 3) {

@@ -147,7 +147,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         val progressDialog = ProgressDialog(activity)
         progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
         progressDialog.setMessage(sourceText.text)
-        async() {
+        async {
             try {
                 savePlacemarkCollection()
                 val oldCount = placemarkCollection.poiCount

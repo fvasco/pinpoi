@@ -16,10 +16,8 @@ abstract class AbstractImporter {
     var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
     /**
      * Import data
-
+     *
      * @param inputStream data source
-     * *
-     * @throws IOException error during reading
      */
     fun importPlacemarks(inputStream: InputStream) {
         if (consumer == null) error("No consumer")

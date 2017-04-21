@@ -4,7 +4,7 @@ import io.github.fvasco.pinpoi.util.Coordinates
 
 /**
  * A user annotation on [Placemark]
-
+ *
  * @author Francesco Vasco
  */
 data class PlacemarkAnnotation(

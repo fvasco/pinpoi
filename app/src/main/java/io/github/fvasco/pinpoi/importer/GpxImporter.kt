@@ -4,6 +4,7 @@ import io.github.fvasco.pinpoi.util.Coordinates
 
 /**
  * GPX importer
+ *
  * @author Francesco Vasco
  */
 class GpxImporter : AbstractXmlImporter() {

@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         // as you specify restoreBackup parent activity in AndroidManifest.xml.
         when (item.itemId) {
             R.id.action_placemark_collections -> {
-                onManagePlacemarkCollections(null)
+                onManagePlacemarkCollections()
                 return true
             }
             R.id.create_backup -> {
@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 }
             }
             if (selectedPlacemarkCategory.isEmpty() && placemarkCollections.isEmpty()) {
-                onManagePlacemarkCollections(view)
+                onManagePlacemarkCollections()
             } else if (placemarkCollections.size == 1) {
                 setPlacemarkCollection(placemarkCollections[0])
             } else {
@@ -239,13 +239,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         val editText = EditText(context)
         editText.maxLines = 6
         editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""))
-        editText.isFocusableInTouchMode = true;
+        editText.isFocusableInTouchMode = true
         editText.selectAll()
 
         AlertDialog.Builder(context)
                 .setMessage(R.string.insert_address)
                 .setView(editText)
-                .setPositiveButton(R.string.search) { dialog, which ->
+                .setPositiveButton(R.string.search) { dialog, _ ->
                     dialog.dismiss()
                     switchGps.isChecked = false
                     // clear old coordinates
@@ -341,10 +341,10 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             } else {
                 collectionsIds = longArrayOf(selectedPlacemarkCollection!!.id)
             }
-            debug { "onSearchPoi selectedPlacemarkCategory=${selectedPlacemarkCategory}, collectionsIds=${collectionsIds}" }
+            debug { "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds" }
             if (collectionsIds.isEmpty()) {
                 longToast(getString(R.string.n_placemarks_found, 0))
-                onManagePlacemarkCollections(view)
+                onManagePlacemarkCollections()
             } else {
                 val context = view.context
                 val intent = Intent(context, PlacemarkListActivity::class.java).apply {
@@ -375,7 +375,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     }
 
-    fun onManagePlacemarkCollections(view: View?) {
+    fun onManagePlacemarkCollections() {
         startActivity(Intent(this, PlacemarkCollectionListActivity::class.java))
     }
 
@@ -383,7 +383,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.action_create_backup))
                 .setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath))
-                .setPositiveButton(R.string.yes) { dialogInterface, i ->
+                .setPositiveButton(R.string.yes) { dialogInterface, _ ->
                     dialogInterface.dismiss()
                     createBackup()
                 }
@@ -416,7 +416,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 AlertDialog.Builder(this@MainActivity)
                         .setTitle(getString(R.string.action_restore_backup))
                         .setMessage(getString(R.string.backup_file, file.absolutePath))
-                        .setPositiveButton(R.string.yes) { dialogInterface, i ->
+                        .setPositiveButton(R.string.yes) { dialogInterface, _ ->
                             dialogInterface.dismiss()
                             restoreBackup(file)
                         }
@@ -501,7 +501,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        val granted = grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
         when (requestCode) {
             PERMISSION_GPS_ON -> {
                 switchGps.isChecked = granted

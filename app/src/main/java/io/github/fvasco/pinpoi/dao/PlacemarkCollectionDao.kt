@@ -11,7 +11,7 @@ import java.util.*
 
 /**
  * Dao for [io.github.fvasco.pinpoi.model.PlacemarkCollection]
-
+ *
  * @author Francesco Vasco
  */
 class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {

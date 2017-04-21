@@ -4,7 +4,7 @@ import io.github.fvasco.pinpoi.util.Coordinates
 
 /**
  * Placemark base information
-
+ *
  * @author Francesco Vasco
  */
 interface PlacemarkBase {

@@ -121,7 +121,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
                 PERMISSION_UPDATE -> updatePlacemarkCollection(null)
                 PERMISSION_CHOOSE_FILE -> openFileChooser(null)
@@ -135,7 +135,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             editText.setText(fragment.placemarkCollection.name)
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
-                    .setView(editText).setPositiveButton(R.string.yes) { dialog, which ->
+                    .setView(editText).setPositiveButton(R.string.yes) { dialog, _ ->
                 dialog.dismiss()
                 fragment.renamePlacemarkCollection(editText.text.toString())
             }
@@ -149,7 +149,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
-                    .setPositiveButton(R.string.yes) { dialog, which ->
+                    .setPositiveButton(R.string.yes) { dialog, _ ->
                         dialog.dismiss()
                         fragment.deletePlacemarkCollection()
                         onBackPressed()

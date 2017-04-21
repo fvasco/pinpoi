@@ -16,7 +16,7 @@ import java.util.*
 
 /**
  * Dao for [io.github.fvasco.pinpoi.model.Placemark]
-
+ *
  * @author Francesco Vasco
  */
 /*

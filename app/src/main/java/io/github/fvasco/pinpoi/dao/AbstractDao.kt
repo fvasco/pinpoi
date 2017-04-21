@@ -8,18 +8,14 @@ import io.github.fvasco.pinpoi.util.assertDebug
 
 /**
  * Generic Dao.
-
+ *
  * @author Francesco Vasco
  */
 abstract class AbstractDao(private val context: Context) {
     var database: SQLiteDatabase? = null
         protected set
-    protected var sqLiteOpenHelper: SQLiteOpenHelper
     @Volatile private var openCount: Int = 0
-
-    init {
-        sqLiteOpenHelper = createSqLiteOpenHelper(context)
-    }
+    protected var sqLiteOpenHelper: SQLiteOpenHelper = createSqLiteOpenHelper(context)
 
     protected abstract fun createSqLiteOpenHelper(context: Context): SQLiteOpenHelper
 
@@ -70,5 +66,4 @@ abstract class AbstractDao(private val context: Context) {
         sqLiteOpenHelper = createSqLiteOpenHelper(context)
         openCount = 0
     }
-
 }
