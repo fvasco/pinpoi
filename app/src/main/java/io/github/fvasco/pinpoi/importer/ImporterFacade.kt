@@ -14,6 +14,7 @@ import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.isUri
 import org.jetbrains.anko.async
 import org.jetbrains.anko.onUiThread
+import org.jetbrains.anko.uiThread
 import java.io.*
 import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
@@ -102,7 +103,9 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                                 this.max = max
                                 inputStream = ProgressDialogInputStream(inputStream, this)
                             } else {
-                                isIndeterminate = true
+                                uiThread {
+                                    isIndeterminate = true
+                                }
                             }
                         }
 

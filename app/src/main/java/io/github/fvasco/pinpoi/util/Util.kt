@@ -44,7 +44,7 @@ object Util {
 private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
 
 /**
- * Check value and thorow assertion errror if false
+ * Check value and throw assertion error if false
  */
 fun assertDebug(check: Boolean, value: Any? = null) {
     if (BuildConfig.DEBUG && !check)
