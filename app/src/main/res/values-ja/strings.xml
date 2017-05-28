@@ -29,6 +29,7 @@
     <string name="search_address">住所を検索</string>
     <string name="insert_address">住所を入力</string>
     <string name="search">検索</string>
+    <string name="share">共有する</string>
     <string name="error_network">ネットワークエラー</string>
     <string name="error_no_address_found">エラー: 住所が見つかりません</string>
     <string name="close">閉じる</string>

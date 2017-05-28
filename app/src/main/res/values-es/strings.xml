@@ -28,7 +28,7 @@
     <string name="use_gps">Usar GPS</string>
     <string name="search_address">Búsqueda de dirección</string>
     <string name="insert_address">Introduzca la dirección</string>
-    <string name="search">Búsqueda</string>
+    <string name="search">Buscar</string>
     <string name="share">Compartir</string>
     <string name="error_network">Error de red</string>
     <string name="error_no_address_found">Error: no address found</string>
@@ -42,7 +42,7 @@
     <string name="backup_file">El archivo de copia de seguridad es %s</string>
     <string name="menu_backup">Copia de seguridad</string>
     <string name="action_delete">Eliminar</string>
-    <string name="action_rename">Renombrar</string>
+    <string name="action_rename">Cambiar nombre</string>
     <string name="any_filter">(cualquier)</string>
     <string name="show_map">Ver mapa</string>
     <string name="web_site">Sitio web</string>
