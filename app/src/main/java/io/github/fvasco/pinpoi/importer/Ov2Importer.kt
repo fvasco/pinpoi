@@ -83,15 +83,12 @@ class Ov2Importer : AbstractImporter() {
                     dataInputStream.skipBytes(20)
                 }
 
-                0, 100, // deleted
-                9, 25// other type
-                -> {
+                else -> {
                     val total = readIntLE(dataInputStream)
-                    Log.i(Ov2Importer::class.java.simpleName, "Skip record type $rectype total $total")
+                    Log.w(Ov2Importer::class.java.simpleName, "Skip record type $rectype total $total")
+                    require(total > 4)
                     dataInputStream.skipBytes(total - 4)
                 }
-
-                else -> throw IOException("Unknown record " + rectype)
             }
             rectype = dataInputStream.read()
         }

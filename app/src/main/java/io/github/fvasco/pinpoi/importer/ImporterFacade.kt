@@ -212,6 +212,15 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                     }
                 }
             }
+            if (res == null) {
+                res = when (fileFormatFilter) {
+                    FileFormatFilter.NONE -> null
+                    FileFormatFilter.CSV_LAT_LON, FileFormatFilter.CSV_LON_LAT -> TextImporter()
+                    FileFormatFilter.GPX -> GpxImporter()
+                    FileFormatFilter.KML -> KmlImporter()
+                    FileFormatFilter.OV2 -> Ov2Importer()
+                }
+            }
             res?.fileFormatFilter = fileFormatFilter
             Log.d(ImporterFacade::class.java.simpleName,
                     "Importer for " + resource + " is " + if (res == null) null else res.javaClass.simpleName)

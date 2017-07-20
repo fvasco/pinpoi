@@ -165,7 +165,11 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "updatePlacemarkCollection", e)
-                onUiThread { longToast(getString(R.string.error_update, placemarkCollection.name, e.message)) }
+                onUiThread {
+                    AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
+                            .setMessage(getString(R.string.error_update, placemarkCollection.name, e.message))
+                            .show()
+                }
             } finally {
                 // update placemark collection info
                 uiThread { showUpdatedCollectionInfo() }
