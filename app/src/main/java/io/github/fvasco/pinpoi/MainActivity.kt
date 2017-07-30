@@ -23,6 +23,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
+import com.google.openlocationcode.OpenLocationCode
 import com.mapcode.MapcodeCodec
 import com.mapcode.Territory
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
@@ -258,27 +259,41 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                         val coordinateMatcherResult = """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex().matchEntire(address)
                         if (coordinateMatcherResult == null) {
                             try {
-                                // try to guess territory from edited location
-                                val territory = try {
-                                    MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                            .first()
-                                            .territory
+                                try {
+                                    // check OLC
+                                    var olc = OpenLocationCode(address)
+                                    // if required try to recover location
+                                    try {
+                                        olc = olc.recover(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
+                                    } catch(e: Exception) {
+                                        // ignore error
+                                    }
+                                    val codeArea = olc.decode()
+                                    onLocationChanged(LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude))
                                 } catch(e: Exception) {
-                                    // try to guess territory from last gps location
-                                    lastLocation?.let {
-                                        try {
-                                            MapcodeCodec.encode(it.latitude, it.longitude)
-                                                    .first()
-                                                    .territory
-                                        } catch(e: Exception) {
-                                            Territory.AAA
+                                    // check MapCode
+                                    // try to guess territory from edited location
+                                    val territory = try {
+                                        MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
+                                                .first()
+                                                .territory
+                                    } catch(e: Exception) {
+                                        // try to guess territory from last gps location
+                                        lastLocation?.let {
+                                            try {
+                                                MapcodeCodec.encode(it.latitude, it.longitude)
+                                                        .first()
+                                                        .territory
+                                            } catch(e: Exception) {
+                                                Territory.AAA
+                                            }
                                         }
                                     }
+                                    preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                                    val point = MapcodeCodec.decode(address, territory)
+                                    switchGps.isChecked = false
+                                    onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
                                 }
-                                preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                                val point = MapcodeCodec.decode(address, territory)
-                                switchGps.isChecked = false
-                                onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
                             } catch(e: Exception) {
                                 showProgressDialog(address, null, view.context) {
                                     val addresses =
