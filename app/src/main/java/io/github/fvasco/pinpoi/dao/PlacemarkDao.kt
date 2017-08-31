@@ -12,6 +12,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.PlacemarkDistanceComparator
 import io.github.fvasco.pinpoi.util.Util
+import java.text.Collator
 import java.util.*
 
 /**
@@ -24,8 +25,7 @@ import java.util.*
  */
 class PlacemarkDao(context: Context) : AbstractDao(context) {
 
-    internal constructor() : this(Util.applicationContext) {
-    }
+    internal constructor() : this(Util.applicationContext)
 
     override fun createSqLiteOpenHelper(context: Context): SQLiteOpenHelper {
         return PlacemarkDatabase(context)
