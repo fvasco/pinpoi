@@ -16,6 +16,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.google.openlocationcode.OpenLocationCode
 import com.mapcode.MapcodeCodec
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
@@ -26,7 +27,6 @@ import io.github.fvasco.pinpoi.util.escapeHtml
 import io.github.fvasco.pinpoi.util.isHtml
 import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemark_detail.*
-import org.jetbrains.anko.onClick
 import java.util.concurrent.Future
 
 /**
@@ -134,7 +134,7 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        shareButton.onClick { onShare() }
+        shareButton.setOnClickListener { onShare() }
         // By default these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
         placemark = placemarkDao.getPlacemark(preferences.getLong(ARG_PLACEMARK_ID, 0))
@@ -170,6 +170,7 @@ class PlacemarkDetailFragment : Fragment() {
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_DEGREES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES))
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_MINUTES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES))
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_SECONDS) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS))
+            places.add(OpenLocationCode.encode(latitude.toDouble(),longitude.toDouble()))
         }
         // remove empty lines
         places.removeAll { it.isNullOrBlank() }

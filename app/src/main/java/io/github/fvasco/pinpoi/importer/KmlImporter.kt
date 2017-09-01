@@ -1,8 +1,7 @@
 package io.github.fvasco.pinpoi.importer
 
+import android.util.Log
 import io.github.fvasco.pinpoi.util.Coordinates
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.info
 import java.io.IOException
 import java.net.URL
 
@@ -11,7 +10,7 @@ import java.net.URL
 
  * @author Francesco Vasco
  */
-class KmlImporter : AbstractXmlImporter(), AnkoLogger {
+class KmlImporter : AbstractXmlImporter() {
 
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
@@ -34,7 +33,7 @@ class KmlImporter : AbstractXmlImporter(), AnkoLogger {
             if ("href" == tag && checkCurrentPath("kml", "Document", "NetworkLink", "Url")) {
                 val href = text
                 val delegateImporter = ImporterFacade.createImporter(href, fileFormatFilter)
-                info("NetworkLink href $href importer $delegateImporter")
+                Log.e(KmlImporter::class.java.simpleName, "NetworkLink href $href importer $delegateImporter")
                 delegateImporter?.let { delegateImporter ->
                     URL(href).openStream().use { inputStream ->
                         delegateImporter.configureFrom(this)

@@ -209,9 +209,9 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
                     val distance = floatArray[0].toInt()
 
                     val glyph = StringBuilder().apply {
-                        if (psr.flagged) append("<b>")
+                        if (psr.flagged) append("<i><b>")
                         append(index + 1)
-                        if (psr.flagged) append("</b>")
+                        if (psr.flagged) append("</b></i>")
                     }
 
                     append("L.marker([${psr.coordinates}],{")

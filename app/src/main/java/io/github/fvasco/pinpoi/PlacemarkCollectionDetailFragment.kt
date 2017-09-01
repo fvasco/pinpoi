@@ -22,7 +22,6 @@ import io.github.fvasco.pinpoi.util.openFileChooser
 import io.github.fvasco.pinpoi.util.showToast
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
 import org.jetbrains.anko.async
-import org.jetbrains.anko.onClick
 import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
 import org.jetbrains.anko.uiThread
@@ -72,7 +71,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         categoryText.setAdapter(ArrayAdapter(context,
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()))
-        fileFormatFilterButton.onClick { openFileFormatFilterChooser() }
+        fileFormatFilterButton.setOnClickListener { openFileFormatFilterChooser() }
 
         descriptionText.setText(placemarkCollection.description)
         sourceText.setText(placemarkCollection.source)

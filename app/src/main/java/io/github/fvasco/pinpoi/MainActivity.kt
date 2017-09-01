@@ -31,14 +31,15 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.*
+import org.jetbrains.anko.longToast
+import org.jetbrains.anko.onUiThread
 import java.io.File
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Future
 import java.util.regex.Pattern
 
-class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener, AnkoLogger {
+class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
     private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
     private lateinit var locationManager: LocationManager
@@ -265,26 +266,26 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                     // if required try to recover location
                                     try {
                                         olc = olc.recover(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                    } catch(e: Exception) {
+                                    } catch (e: Exception) {
                                         // ignore error
                                     }
                                     val codeArea = olc.decode()
                                     onLocationChanged(LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude))
-                                } catch(e: Exception) {
+                                } catch (e: Exception) {
                                     // check MapCode
                                     // try to guess territory from edited location
                                     val territory = try {
                                         MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
                                                 .first()
                                                 .territory
-                                    } catch(e: Exception) {
+                                    } catch (e: Exception) {
                                         // try to guess territory from last gps location
                                         lastLocation?.let {
                                             try {
                                                 MapcodeCodec.encode(it.latitude, it.longitude)
                                                         .first()
                                                         .territory
-                                            } catch(e: Exception) {
+                                            } catch (e: Exception) {
                                                 Territory.AAA
                                             }
                                         }
@@ -294,7 +295,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                     switchGps.isChecked = false
                                     onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
                                 }
-                            } catch(e: Exception) {
+                            } catch (e: Exception) {
                                 showProgressDialog(address, null, view.context) {
                                     val addresses =
                                             LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
@@ -333,7 +334,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 }.show()
             }
         } catch (e: IOException) {
-            error("searchAddress", e)
+            Log.e(MainActivity::class.java.simpleName, "searchAddress", e)
             longToast(getString(R.string.error_network))
         }
     }
@@ -356,7 +357,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             } else {
                 collectionsIds = longArrayOf(selectedPlacemarkCollection!!.id)
             }
-            debug { "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds" }
+            Log.d(MainActivity::class.java.simpleName, "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds")
             if (collectionsIds.isEmpty()) {
                 longToast(getString(R.string.n_placemarks_found, 0))
                 onManagePlacemarkCollections()
@@ -365,13 +366,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 val intent = Intent(context, PlacemarkListActivity::class.java).apply {
                     try {
                         putExtra(PlacemarkListActivity.ARG_LATITUDE, latitudeText.text.toString().replace(',', '.').toFloat())
-                    } catch(e: Exception) {
+                    } catch (e: Exception) {
                         latitudeText.requestFocus()
                         throw e
                     }
                     try {
                         putExtra(PlacemarkListActivity.ARG_LONGITUDE, longitudeText.text.toString().replace(',', '.').toFloat())
-                    } catch(e: Exception) {
+                    } catch (e: Exception) {
                         longitudeText.requestFocus()
                         throw e
                     }
@@ -385,7 +386,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         } catch (e: Exception) {
             longToast(R.string.validation_error)
-            error("onSearchPoi", e)
+            Log.e(MainActivity::class.java.simpleName, "onSearchPoi", e)
         }
 
     }
