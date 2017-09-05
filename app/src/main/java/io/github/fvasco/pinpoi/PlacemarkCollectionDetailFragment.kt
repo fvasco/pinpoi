@@ -202,8 +202,10 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     fun openFileFormatFilterChooser() {
         AlertDialog.Builder(context)
-                .setTitle(getString(R.string.collection))
-                .setItems(FileFormatFilter.values().map { it.toString() }.toTypedArray(), { dialog, which ->
+                .setTitle(getString(R.string.fileFormatFilter))
+                .setItems(FileFormatFilter.values().map {
+                    "${it.name} ${if (it == FileFormatFilter.NONE) getString(R.string.any_filter) else it.validExtension.joinToString(prefix = "(", postfix = ")") { ".$it" }}"
+                }.toTypedArray(), { dialog, which ->
                     setFileFormatFilter(FileFormatFilter.values()[which])
                     dialog.dismiss()
                 })

@@ -198,18 +198,15 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
 
             var res: AbstractImporter? = null
             if (path.length >= 3) {
-                val end = path.substring(path.length - 3)
-                when (end.toLowerCase()) {
-                    "kml" -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
+                val end = path.substringAfterLast('.').toLowerCase()
+                when (end) {
+                    in FileFormatFilter.KML.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
                     "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res = GeoRssImporter()
-                    "gpx" -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res = GpxImporter()
-                    "ov2" -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res = Ov2Importer()
-                    "asc", "csv", "txt" -> if (fileFormatFilter == FileFormatFilter.NONE
-                            || fileFormatFilter == FileFormatFilter.CSV_LAT_LON
-                            || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) {
-                        res = TextImporter()
-                    }
+                    in FileFormatFilter.GPX.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res = GpxImporter()
+                    in FileFormatFilter.OV2.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res = Ov2Importer()
+                    in FileFormatFilter.CSV_LAT_LON.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LAT_LON) res = TextImporter()
+                    in FileFormatFilter.CSV_LON_LAT.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) res = TextImporter()
                 }
             }
             if (res == null) {

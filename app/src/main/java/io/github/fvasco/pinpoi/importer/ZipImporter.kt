@@ -20,8 +20,10 @@ class ZipImporter : AbstractImporter() {
         var zipEntry: ZipEntry? = zipInputStream.nextEntry
         while (zipEntry != null) {
             val entryName = zipEntry.name
-            val filename = entryName.substringAfter('/')
-            if (!zipEntry.isDirectory && !filename.startsWith(".")) {
+            val filename = entryName.substringAfterLast('/')
+            val extension = filename.substringAfterLast('.').toLowerCase()
+            if (!zipEntry.isDirectory && !filename.startsWith(".")
+                    && (fileFormatFilter == FileFormatFilter.NONE || extension in fileFormatFilter.validExtension)) {
                 val importer = ImporterFacade.createImporter(entryName, fileFormatFilter)
                 if (importer != null) {
                     Log.d(ZipImporter::class.java.simpleName, "Import entry $entryName")
