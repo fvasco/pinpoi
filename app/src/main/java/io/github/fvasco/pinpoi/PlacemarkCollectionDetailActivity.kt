@@ -95,6 +95,9 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /**
+     * @param view required for view binding
+     */
     fun openFileChooser(view: View?) {
         fragment?.let { fragment ->
             val permission = Manifest.permission.READ_EXTERNAL_STORAGE
@@ -107,7 +110,12 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         }
     }
 
-    fun updatePlacemarkCollection() {
+    /**
+     * Update placemark collection
+     *
+     * @param view required for view binding
+     */
+    fun updatePlacemarkCollection(view: View?) {
         fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
@@ -123,7 +131,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                                             permissions: Array<String>, grantResults: IntArray) {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
-                PERMISSION_UPDATE -> updatePlacemarkCollection()
+                PERMISSION_UPDATE -> updatePlacemarkCollection(null)
                 PERMISSION_CHOOSE_FILE -> openFileChooser(null)
             }
         }
