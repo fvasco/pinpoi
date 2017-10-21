@@ -19,7 +19,8 @@ abstract class AbstractDao(private val context: Context) {
 
     protected abstract fun createSqLiteOpenHelper(context: Context): SQLiteOpenHelper
 
-    @Synchronized @Throws(SQLException::class)
+    @Synchronized
+    @Throws(SQLException::class)
     fun open() {
         check(openCount >= 0) { "Database locked" }
 
@@ -31,7 +32,8 @@ abstract class AbstractDao(private val context: Context) {
         ++openCount
     }
 
-    @Synchronized fun close() {
+    @Synchronized
+    fun close() {
         check(openCount > 0)
 
         --openCount
@@ -46,7 +48,8 @@ abstract class AbstractDao(private val context: Context) {
     /**
      * Lock database, use [.reset] to unlock
      */
-    @Synchronized fun lock() {
+    @Synchronized
+    fun lock() {
         check(openCount == 0) { "Database is open" }
 
         sqLiteOpenHelper.close()

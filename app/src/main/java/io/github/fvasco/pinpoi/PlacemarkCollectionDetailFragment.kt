@@ -124,7 +124,6 @@ class PlacemarkCollectionDetailFragment : Fragment() {
      * Update screen with poi count and last update
      */
     private fun showUpdatedCollectionInfo() {
-        val activity = this.activity
         val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
         appBarLayout?.title = placemarkCollection.name
         val poiCount = placemarkCollection.poiCount

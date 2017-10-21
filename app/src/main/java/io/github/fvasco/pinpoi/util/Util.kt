@@ -162,7 +162,7 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
         try {
             Log.i(Util::class.java.simpleName, "showProgressDialog begin: $title")
             runnable()
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             progressDialog.dismiss()
             Log.e(Util::class.java.simpleName, "showProgressDialog error $title", e)
             showToast(e)

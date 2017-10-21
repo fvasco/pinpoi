@@ -4,13 +4,13 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.0'
+    buildToolsVersion '25.0.3'
     defaultConfig {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 48
-        versionName '1.4.16'
+        versionCode 49
+        versionName '1.4.17'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         vectorDrawables {
             useSupportLibrary = true
@@ -27,8 +27,8 @@ android {
 }
 
 buildscript {
-    ext.android_support_version = '25.1.0'
-    ext.kotlin_version = '1.1.4-3'
+    ext.android_support_version = '25.3.1'
+    ext.kotlin_version = '1.1.51'
     repositories {
         mavenCentral()
     }
@@ -43,10 +43,7 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
     androidTestCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile ('com.mapcode:mapcode:2.4.4'){
-        exclude module: 'log4j'
-        exclude module: 'slf4j-log4j12'
-    }
+    compile 'com.mapcode:mapcode:2.4.5'
     compile 'org.jetbrains.anko:anko-support-v4:0.8.3'
     compile "com.android.support:appcompat-v7:$android_support_version"
     compile "com.android.support:support-v4:$android_support_version"

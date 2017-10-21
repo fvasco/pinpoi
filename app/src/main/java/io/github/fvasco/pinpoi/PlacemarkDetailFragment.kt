@@ -170,7 +170,7 @@ class PlacemarkDetailFragment : Fragment() {
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_DEGREES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES))
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_MINUTES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES))
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_SECONDS) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS))
-            places.add(OpenLocationCode.encode(latitude.toDouble(),longitude.toDouble()))
+            places.add(OpenLocationCode.encode(latitude.toDouble(), longitude.toDouble()))
         }
         // remove empty lines
         places.removeAll { it.isNullOrBlank() }

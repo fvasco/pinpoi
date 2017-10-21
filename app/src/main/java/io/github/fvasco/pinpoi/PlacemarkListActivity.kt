@@ -163,7 +163,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                                     .findAllPlacemarkCollection()
                                     .map { it.id to it.name }
                                     .toMap()
-                        } catch(e: Exception) {
+                        } catch (e: Exception) {
                             Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
                             mapOf()
                         } finally {
@@ -293,8 +293,9 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
             val arguments = Bundle()
             arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
             arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray)
-            fragment = PlacemarkDetailFragment()
-            fragment!!.arguments = arguments
+            fragment = PlacemarkDetailFragment().apply {
+                this.arguments = arguments
+            }
             supportFragmentManager.beginTransaction().replace(R.id.placemarkDetailContainer, fragment).commit()
 
             // show fab

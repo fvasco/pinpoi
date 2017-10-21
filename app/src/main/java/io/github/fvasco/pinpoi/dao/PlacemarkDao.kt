@@ -12,7 +12,6 @@ import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.PlacemarkDistanceComparator
 import io.github.fvasco.pinpoi.util.Util
-import java.text.Collator
 import java.util.*
 
 /**
