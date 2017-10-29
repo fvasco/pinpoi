@@ -12,6 +12,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
 import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.isUri
+import io.github.fvasco.pinpoi.util.tryDimsiss
 import org.jetbrains.anko.async
 import org.jetbrains.anko.onUiThread
 import org.jetbrains.anko.uiThread
@@ -170,7 +171,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
         } finally {
             placemarkCollectionDao.close()
             progressDialog?.let { pd ->
-                Util.applicationContext.onUiThread { pd.dismiss() }
+                Util.applicationContext.onUiThread { pd.tryDimsiss() }
             }
         }
     }
