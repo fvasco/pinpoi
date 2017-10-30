@@ -161,7 +161,9 @@ class PlacemarkDetailFragment : Fragment() {
     fun onShare() {
         val placemark = placemark ?: return
         val view = view ?: return
-        val places = mutableListOf<String?>(placemark.name, placemark.description)
+        val places = mutableListOf<String?>(placemark.name)
+        if (placemark.description.length in 1..100)
+            places.add(placemark.description)
         places.add(placemarkAnnotation?.note)
         places.add(addressText.text?.toString())
         places.add(mapcodeText.text?.toString())
