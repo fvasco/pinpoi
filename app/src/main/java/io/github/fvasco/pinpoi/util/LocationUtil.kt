@@ -26,21 +26,20 @@ object LocationUtil {
      * Store resolved address
      */
     private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
-    private val addressCacheFile by lazy(LazyThreadSafetyMode.NONE) { File(Util.applicationContext.cacheDir, "addressCache") }
+    private val addressCacheFile by lazy { File(Util.applicationContext.cacheDir, "addressCache") }
 
-    val geocoder: Geocoder? by lazy(LazyThreadSafetyMode.NONE) {
-        val applicationContext = Util.applicationContext
-        if (Geocoder.isPresent())
-            Geocoder(applicationContext)
-        else null
-    }
+    val geocoder: Geocoder?
+        get() =
+            if (Geocoder.isPresent())
+                Geocoder(Util.applicationContext)
+            else null
 
     /**
      * Get address and call optional addressConsumer in main looper
      */
     fun getAddressStringAsync(
             coordinates: Coordinates,
-            addressConsumer: ((String?) -> Unit)?) = coordinates.async() {
+            addressConsumer: ((String?) -> Unit)?) = coordinates.async {
         var addressString: String? = synchronized(ADDRESS_CACHE) {
             if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
             ADDRESS_CACHE[coordinates]
