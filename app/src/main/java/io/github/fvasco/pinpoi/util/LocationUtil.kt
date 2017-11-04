@@ -28,6 +28,7 @@ object LocationUtil {
     private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
     private val addressCacheFile by lazy { File(Util.applicationContext.cacheDir, "addressCache") }
 
+    // avoid geocoder cache to reset it on initialization error
     val geocoder: Geocoder?
         get() =
             if (Geocoder.isPresent())
@@ -85,21 +86,26 @@ object LocationUtil {
      */
     fun toString(address: Address): String {
         val separator = ", "
-        if (address.maxAddressLineIndex == 0) {
-            return address.getAddressLine(0)
-        } else if (address.maxAddressLineIndex > 0) {
-            val stringBuilder = StringBuilder(address.getAddressLine(0))
-            for (i in 1..address.maxAddressLineIndex) {
-                stringBuilder.append(separator).append(address.getAddressLine(i))
+        return when {
+            address.maxAddressLineIndex == 0 -> address.getAddressLine(0)
+            address.maxAddressLineIndex > 0 -> {
+                val stringBuilder = StringBuilder(address.getAddressLine(0))
+                for (i in 1..address.maxAddressLineIndex) {
+                    stringBuilder.append(separator).append(address.getAddressLine(i))
+                }
+                stringBuilder.toString()
             }
-            return stringBuilder.toString()
-        } else {
-            val stringBuilder = StringBuilder()
-            append(address.featureName, separator, stringBuilder)
-            append(address.locality, separator, stringBuilder)
-            append(address.adminArea, separator, stringBuilder)
-            append(address.countryCode, separator, stringBuilder)
-            return if (stringBuilder.isEmpty()) address.toString() else stringBuilder.toString()
+            else -> {
+                val stringBuilder = StringBuilder()
+                append(address.featureName, separator, stringBuilder)
+                append(address.locality, separator, stringBuilder)
+                append(address.adminArea, separator, stringBuilder)
+                append(address.countryCode, separator, stringBuilder)
+                if (stringBuilder.isEmpty())
+                    address.toString()
+                else
+                    stringBuilder.toString()
+            }
         }
     }
 
@@ -112,7 +118,7 @@ object LocationUtil {
      */
     fun openExternalMap(placemark: PlacemarkBase, forceAppChooser: Boolean, context: Context) {
         try {
-            var intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}"))
+            var intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${Uri.encode("${placemark.coordinates}(${placemark.name})")}"))
             if (forceAppChooser) {
                 intent = Intent.createChooser(intent, placemark.name)
             }
@@ -128,7 +134,7 @@ object LocationUtil {
         if (addressCacheFile.canRead()) {
             try {
                 val inputStream = DataInputStream(BufferedInputStream(FileInputStream(addressCacheFile)))
-                try {
+                inputStream.use { inputStream ->
                     // first item is entry count
                     repeat(inputStream.readShort().toInt()) {
                         val latitude = inputStream.readFloat()
@@ -136,8 +142,6 @@ object LocationUtil {
                         val address = inputStream.readUTF()
                         ADDRESS_CACHE.put(Coordinates(latitude, longitude), address)
                     }
-                } finally {
-                    inputStream.close()
                 }
             } catch (e: IOException) {
                 Log.w(LocationUtil::class.java.simpleName, e)
