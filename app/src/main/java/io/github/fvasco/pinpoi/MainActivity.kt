@@ -298,7 +298,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                             } catch (e: Exception) {
                                 showProgressDialog(address, null, view.context) {
                                     val addresses =
-                                            LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() } ?: listOf()
+                                            LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
+                                                    ?: listOf()
                                     onUiThread {
                                         chooseAddress(addresses, view.context)
                                     }
@@ -542,8 +543,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         } else {
             val minTime = System.currentTimeMillis() - LOCATION_TIME_ACCURACY
             if (location.time >= minTime && (location.accuracy <= LOCATION_RANGE_ACCURACY
-                    || lastLocation == null || lastLocation!!.time <= minTime
-                    || lastLocation!!.accuracy < location.accuracy)) {
+                            || lastLocation == null || lastLocation!!.time <= minTime
+                            || lastLocation!!.accuracy < location.accuracy)) {
                 lastLocation = location
                 latitudeText.setText(location.latitude.toString())
                 longitudeText.setText(location.longitude.toString())

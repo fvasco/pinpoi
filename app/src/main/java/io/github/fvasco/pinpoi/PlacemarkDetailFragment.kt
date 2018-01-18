@@ -112,7 +112,8 @@ class PlacemarkDetailFragment : Fragment() {
         placemarkDao.open()
         placemarkCollectionDao.open()
 
-        val id = savedInstanceState?.getLong(ARG_PLACEMARK_ID) ?: arguments.getLong(ARG_PLACEMARK_ID, preferences.getLong(ARG_PLACEMARK_ID, 0))
+        val id = savedInstanceState?.getLong(ARG_PLACEMARK_ID)
+                ?: arguments.getLong(ARG_PLACEMARK_ID, preferences.getLong(ARG_PLACEMARK_ID, 0))
         preferences.edit().putLong(ARG_PLACEMARK_ID, id).apply()
     }
 

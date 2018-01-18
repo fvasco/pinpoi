@@ -47,7 +47,8 @@ object LocationUtil {
         }
         if (addressString == null) {
             val addresses = try {
-                LocationUtil.geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1) ?: listOf()
+                LocationUtil.geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
+                        ?: listOf()
             } catch (e: Exception) {
                 listOf<Address>()
             }

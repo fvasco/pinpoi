@@ -53,7 +53,9 @@ fun assertDebug(check: Boolean, value: Any? = null) {
 }
 
 fun showToast(throwable: Throwable) {
-    Util.applicationContext.onUiThread { Util.applicationContext.longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}") }
+    Util.applicationContext.onUiThread {
+        Util.applicationContext.longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}")
+    }
 }
 
 /**

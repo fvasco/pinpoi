@@ -250,7 +250,8 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
         val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN))
         searchCoordinate = Coordinates(latitude, longitude)
         range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
-        val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null) ?: ""
+        val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null)
+        ?: ""
         val favourite = intent.getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false))
 
         // read collections id or parse from preference
@@ -293,8 +294,8 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
             val arguments = Bundle()
             arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
             arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray)
-            fragment = PlacemarkDetailFragment().apply {
-                this.arguments = arguments
+            fragment = PlacemarkDetailFragment().also { f ->
+                f.arguments = arguments
             }
             supportFragmentManager.beginTransaction().replace(R.id.placemarkDetailContainer, fragment).commit()
 
@@ -316,15 +317,15 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
     }
 
     private fun resetStarFabIcon() {
-        fragment!!.resetStarFabIcon(fabStar)
+        fragment?.resetStarFabIcon(fabStar)
     }
 
     fun onStarClick(view: View) {
-        fragment!!.onStarClick(fabStar)
+        fragment?.onStarClick(fabStar)
     }
 
     fun onMapClick(view: View) {
-        fragment!!.onMapClick(view)
+        fragment?.onMapClick(view)
     }
 
     inner class SimpleItemRecyclerViewAdapter : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
