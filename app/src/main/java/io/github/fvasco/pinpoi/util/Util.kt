@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi.util
 
 import android.app.AlertDialog
+import android.app.Dialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
@@ -182,12 +183,14 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
     }
 }
 
-fun DialogInterface.tryDismiss() =
-        try {
+fun DialogInterface.tryDismiss() {
+    try {
+        if (this !is Dialog || isShowing)
             dismiss()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
 
 /**
  * Append text (if present) to string builder using a separator (if present)

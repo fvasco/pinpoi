@@ -172,9 +172,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
             try {
                 placemarkCollectionDao.close()
             } finally {
-                progressDialog?.let { pd ->
-                    Util.applicationContext.onUiThread { pd.tryDismiss() }
-                }
+                progressDialog?.tryDismiss()
             }
         }
     }
