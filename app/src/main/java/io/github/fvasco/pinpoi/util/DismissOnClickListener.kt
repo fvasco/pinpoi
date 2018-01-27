@@ -10,6 +10,6 @@ import android.content.DialogInterface
 object DismissOnClickListener : DialogInterface.OnClickListener {
 
     override fun onClick(dialog: DialogInterface, which: Int) {
-        dialog.tryDimsiss()
+        dialog.tryDismiss()
     }
 }

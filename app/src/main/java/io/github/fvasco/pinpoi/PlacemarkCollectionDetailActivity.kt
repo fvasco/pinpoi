@@ -16,6 +16,7 @@ import android.view.View
 import android.widget.EditText
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.Util
+import io.github.fvasco.pinpoi.util.tryDismiss
 
 /**
  * An activity representing a single Placemark Collection detail screen. This
@@ -144,7 +145,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
                     .setView(editText).setPositiveButton(R.string.yes) { dialog, _ ->
-                dialog.dismiss()
+                dialog.tryDismiss()
                 fragment.renamePlacemarkCollection(editText.text.toString())
             }
                     .setNegativeButton(R.string.no, DismissOnClickListener)
@@ -158,7 +159,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
                     .setPositiveButton(R.string.yes) { dialog, _ ->
-                        dialog.dismiss()
+                        dialog.tryDismiss()
                         fragment.deletePlacemarkCollection()
                         onBackPressed()
                     }

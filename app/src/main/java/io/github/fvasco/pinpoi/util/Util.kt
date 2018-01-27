@@ -15,7 +15,6 @@ import org.jetbrains.anko.onUiThread
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.net.HttpURLConnection
-import java.util.*
 import java.util.regex.Pattern
 
 /**
@@ -117,21 +116,28 @@ fun escapeJavascript(text: CharSequence): CharSequence {
 }
 
 fun openFileChooser(dir: File, context: Context, fileConsumer: (File) -> Unit) {
-    if (dir.isDirectory && dir.canRead()) {
-        val files = dir.listFiles { pathname -> pathname.canRead() && !pathname.name.startsWith(".") }
-        val fileNames = arrayOfNulls<String>(files.size + 1)
-        // last is up dir
-        fileNames[files.size] = ".."
-        for (i in files.indices.reversed()) {
-            val file = files[i]
-            fileNames[i] = if (file.isDirectory)
-                file.name + '/'
-            else
-                file.name
+    val parentDir = dir.parentFile
+    if (parentDir == null || dir.isDirectory && dir.canRead()) {
+        val files = dir.listFiles { pathname ->
+            pathname.canRead()
+                    && !pathname.name.startsWith(".")
+                    && (pathname.isFile || pathname.list()?.isEmpty() == false)
+        } ?: emptyArray()
+        val fileNames = ArrayList<String>(files.size + 1)
+        // check permission/readability of parent file
+        if (parentDir?.list()?.isEmpty() == false) {
+            fileNames += ".."
         }
-        Arrays.sort(fileNames)
-        AlertDialog.Builder(context).setTitle(dir.absolutePath).setItems(fileNames) { dialog, which ->
-            dialog.dismiss()
+        for (file in files) {
+            fileNames +=
+                    if (file.isDirectory)
+                        file.name + '/'
+                    else
+                        file.name
+        }
+        fileNames.sort()
+        AlertDialog.Builder(context).setTitle(dir.absolutePath).setItems(fileNames.toTypedArray()) { dialog, which ->
+            dialog.tryDismiss()
             val file = File(dir, fileNames[which]).absoluteFile.canonicalFile
             if (file.isDirectory) {
                 openFileChooser(file, context, fileConsumer)
@@ -140,7 +146,7 @@ fun openFileChooser(dir: File, context: Context, fileConsumer: (File) -> Unit) {
             }
         }.show()
     } else {
-        openFileChooser(dir.parentFile, context, fileConsumer)
+        openFileChooser(parentDir, context, fileConsumer)
     }
 }
 
@@ -166,17 +172,17 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
             Log.i(Util::class.java.simpleName, "showProgressDialog begin: $title")
             runnable()
         } catch (e: Exception) {
-            progressDialog.tryDimsiss()
+            progressDialog.tryDismiss()
             Log.e(Util::class.java.simpleName, "showProgressDialog error $title", e)
             showToast(e)
         } finally {
             Log.i(Util::class.java.simpleName, "showProgressDialog end: $title")
-            progressDialog.tryDimsiss()
+            progressDialog.tryDismiss()
         }
     }
 }
 
-fun DialogInterface.tryDimsiss() =
+fun DialogInterface.tryDismiss() =
         try {
             dismiss()
         } catch (e: Exception) {

@@ -20,6 +20,7 @@ import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.openFileChooser
 import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.tryDismiss
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
 import org.jetbrains.anko.async
 import org.jetbrains.anko.support.v4.longToast
@@ -205,8 +206,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 .setItems(FileFormatFilter.values().map {
                     "${it.name} ${if (it == FileFormatFilter.NONE) getString(R.string.any_filter) else it.validExtension.joinToString(prefix = "(", postfix = ")") { ".$it" }}"
                 }.toTypedArray(), { dialog, which ->
+                    dialog.tryDismiss()
                     setFileFormatFilter(FileFormatFilter.values()[which])
-                    dialog.dismiss()
                 })
                 .show()
     }

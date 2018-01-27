@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             AlertDialog.Builder(view.context)
                     .setTitle(getString(R.string.collection))
                     .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray()), { dialog, which ->
-                        dialog.dismiss()
+                        dialog.tryDismiss()
                         setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
                     })
                     .show()
@@ -221,7 +221,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 AlertDialog.Builder(view.context)
                         .setTitle(getString(R.string.collection))
                         .setItems(placemarkCollectionNames.toTypedArray()) { dialog, which ->
-                            dialog.dismiss()
+                            dialog.tryDismiss()
                             setPlacemarkCollection(
                                     if (which == 0) null else placemarkCollections[which])
                         }
@@ -248,7 +248,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 .setMessage(R.string.insert_address)
                 .setView(editText)
                 .setPositiveButton(R.string.search) { dialog, _ ->
-                    dialog.dismiss()
+                    dialog.tryDismiss()
                     switchGps.isChecked = false
                     // clear old coordinates
                     onLocationChanged(null)
@@ -329,7 +329,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             } else {
                 val options = addresses.map { LocationUtil.toString(it) }.toTypedArray()
                 AlertDialog.Builder(context).setItems(options) { dialog, which ->
-                    dialog.dismiss()
+                    dialog.tryDismiss()
                     val a = addresses[which]
                     onLocationChanged(LocationUtil.newLocation(a.latitude, a.longitude))
                 }.show()
@@ -401,7 +401,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 .setTitle(getString(R.string.action_create_backup))
                 .setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath))
                 .setPositiveButton(R.string.yes) { dialogInterface, _ ->
-                    dialogInterface.dismiss()
+                    dialogInterface.tryDismiss()
                     createBackup()
                 }
                 .setNegativeButton(R.string.no, DismissOnClickListener)
@@ -434,7 +434,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                         .setTitle(getString(R.string.action_restore_backup))
                         .setMessage(getString(R.string.backup_file, file.absolutePath))
                         .setPositiveButton(R.string.yes) { dialogInterface, _ ->
-                            dialogInterface.dismiss()
+                            dialogInterface.tryDismiss()
                             restoreBackup(file)
                         }
                         .setNegativeButton(R.string.no, DismissOnClickListener)

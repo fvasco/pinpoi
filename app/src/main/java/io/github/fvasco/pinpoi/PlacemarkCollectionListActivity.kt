@@ -23,6 +23,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.tryDismiss
 import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
 
 /**
@@ -154,7 +155,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                 placemarkCollectionDao.insert(placemarkCollection)
 
                 // edit placemark collection
-                dialog.dismiss()
+                dialog.tryDismiss()
                 val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
                 intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.id)
                 startActivity(intent)
@@ -209,7 +210,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                     .setTitle(R.string.action_rename)
                     .setView(editText)
                     .setPositiveButton(R.string.yes) { dialog, _ ->
-                        dialog.dismiss()
+                        dialog.tryDismiss()
                         fragment.renamePlacemarkCollection(editText.text.toString())
                         setupRecyclerView()
                     }
@@ -224,7 +225,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
                     .setPositiveButton(R.string.yes) { dialog, _ ->
-                        dialog.dismiss()
+                        dialog.tryDismiss()
                         fragment!!.deletePlacemarkCollection()
                         fabUpdate.visibility = View.GONE
                         supportFragmentManager.beginTransaction().remove(fragment).commit()

@@ -22,10 +22,7 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
-import io.github.fvasco.pinpoi.util.LocationUtil
-import io.github.fvasco.pinpoi.util.escapeHtml
-import io.github.fvasco.pinpoi.util.isHtml
-import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.placemark_detail.*
 import java.util.concurrent.Future
 
@@ -182,7 +179,7 @@ class PlacemarkDetailFragment : Fragment() {
         AlertDialog.Builder(view.context)
                 .setTitle(getString(R.string.share))
                 .setItems(places.toTypedArray()) { dialog, which ->
-                    dialog.dismiss()
+                    dialog.tryDismiss()
                     try {
                         val text = places[which]
                         var intent = Intent(Intent.ACTION_SEND)
