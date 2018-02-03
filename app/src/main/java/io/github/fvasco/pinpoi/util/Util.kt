@@ -184,11 +184,14 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
 }
 
 fun DialogInterface.tryDismiss() {
-    try {
-        if (this !is Dialog || isShowing)
-            dismiss()
-    } catch (e: Exception) {
-        e.printStackTrace()
+    Util.applicationContext.onUiThread {
+        try {
+            if (this !is Dialog || isShowing)
+                dismiss()
+        } catch (e: Exception) {
+            Log.w(DialogInterface::tryDismiss.javaClass.canonicalName, "Error on dialog dismiss", e)
+            e.printStackTrace()
+        }
     }
 }
 
