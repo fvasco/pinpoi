@@ -57,7 +57,7 @@ object LocationUtil {
                 addressString = LocationUtil.toString(addresses.first())
                 // save result in cache
                 synchronized(ADDRESS_CACHE) {
-                    ADDRESS_CACHE.put(coordinates, addressString!!)
+                    ADDRESS_CACHE.put(coordinates, addressString)
                     if (Thread.interrupted()) {
                         throw InterruptedException()
                     }
@@ -134,14 +134,13 @@ object LocationUtil {
         assertDebug(Thread.holdsLock(ADDRESS_CACHE))
         if (addressCacheFile.canRead()) {
             try {
-                val inputStream = DataInputStream(BufferedInputStream(FileInputStream(addressCacheFile)))
-                inputStream.use { inputStream ->
+                DataInputStream(BufferedInputStream(FileInputStream(addressCacheFile))).use { inputStream ->
                     // first item is entry count
                     repeat(inputStream.readShort().toInt()) {
                         val latitude = inputStream.readFloat()
                         val longitude = inputStream.readFloat()
                         val address = inputStream.readUTF()
-                        ADDRESS_CACHE.put(Coordinates(latitude, longitude), address)
+                        ADDRESS_CACHE[Coordinates(latitude, longitude)] = address
                     }
                 }
             } catch (e: IOException) {

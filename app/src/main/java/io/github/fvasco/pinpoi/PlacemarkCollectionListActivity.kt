@@ -146,24 +146,24 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                 .setTitle(getString(R.string.title_placemarkcollection_detail))
                 .setMessage(getString(R.string.placemark_collection_name))
                 .setView(input).setPositiveButton("Ok") { dialog, _ ->
-            try {
-                val placemarkCollectionName = input.text.toString()
-                val placemarkCollection = PlacemarkCollection()
-                placemarkCollection.name = placemarkCollectionName
-                placemarkCollection.source = sourceUri?.toString() ?: ""
-                placemarkCollection.category = sourceUri?.host ?: ""
-                placemarkCollectionDao.insert(placemarkCollection)
+                    try {
+                        val placemarkCollectionName = input.text.toString()
+                        val placemarkCollection = PlacemarkCollection()
+                        placemarkCollection.name = placemarkCollectionName
+                        placemarkCollection.source = sourceUri?.toString() ?: ""
+                        placemarkCollection.category = sourceUri?.host ?: ""
+                        placemarkCollectionDao.insert(placemarkCollection)
 
-                // edit placemark collection
-                dialog.tryDismiss()
-                val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
-                intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.id)
-                startActivity(intent)
-            } catch (e: Exception) {
-                // cannot insert collection
-                showToast(e)
-            }
-        }
+                        // edit placemark collection
+                        dialog.tryDismiss()
+                        val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
+                        intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.id)
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        // cannot insert collection
+                        showToast(e)
+                    }
+                }
                 .setNegativeButton("Cancel", DismissOnClickListener)
                 .show()
     }
@@ -268,7 +268,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                     fragment = PlacemarkCollectionDetailFragment().apply {
                         this.arguments = arguments
                         supportFragmentManager.beginTransaction().replace(R.id.placemarkcollectionDetailContainer, this).commit()
-                        fabUpdate.setOnClickListener { this.updatePlacemarkCollection() }
+                        this@PlacemarkCollectionListActivity.fabUpdate.setOnClickListener { this.updatePlacemarkCollection() }
                     }
                     // show update button
                     fabUpdate.visibility = View.VISIBLE

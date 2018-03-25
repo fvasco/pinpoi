@@ -17,8 +17,9 @@
     
     -->
     <FrameLayout
-            android:layout_width="@dimen/item_width"
-            android:layout_height="match_parent">
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
 
         <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
                                                 xmlns:tools="http://schemas.android.com/tools"
@@ -43,6 +44,6 @@
             android:id="@+id/placemarkDetailContainer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"/>
+            android:layout_weight="1"/>
 
 </LinearLayout>

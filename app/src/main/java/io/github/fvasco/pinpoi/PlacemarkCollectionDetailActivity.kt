@@ -116,7 +116,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
      *
      * @param view required for view binding
      */
-    fun updatePlacemarkCollection(view: View?) {
+    fun updatePlacemarkCollection(@Suppress("UNUSED_PARAMETER") view: View?) {
         fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
@@ -145,9 +145,9 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
                     .setView(editText).setPositiveButton(R.string.yes) { dialog, _ ->
-                dialog.tryDismiss()
-                fragment.renamePlacemarkCollection(editText.text.toString())
-            }
+                        dialog.tryDismiss()
+                        fragment.renamePlacemarkCollection(editText.text.toString())
+                    }
                     .setNegativeButton(R.string.no, DismissOnClickListener)
                     .show()
         }

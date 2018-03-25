@@ -320,7 +320,7 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
         fragment?.resetStarFabIcon(fabStar)
     }
 
-    fun onStarClick(view: View) {
+    fun onStarClick(@Suppress("UNUSED_PARAMETER") view: View) {
         fragment?.onStarClick(fabStar)
     }
 
