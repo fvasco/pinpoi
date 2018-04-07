@@ -9,8 +9,8 @@ android {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 56
-        versionName '1.4.24'
+        versionCode 57
+        versionName '1.4.25'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         vectorDrawables {
             useSupportLibrary = true
