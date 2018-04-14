@@ -77,19 +77,25 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
 
         // load intent parameters for geo scheme (if present)
-        intent.data?.let { intentUri ->
-            Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
-            val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-            var matcher = coordinatePattern.matcher(intentUri.host ?: "")
-            if (!matcher.matches() && intentUri.isHierarchical) {
-                matcher = coordinatePattern.matcher(intentUri.getQueryParameter("q"))
-            }
-            if (matcher.matches()) {
-                switchGps.isChecked = false
-                latitudeText.setText(matcher.group(1))
-                longitudeText.setText(matcher.group(2))
-            }
-        }
+        intent.data
+                ?.takeIf { it.scheme == "geo" }
+                ?.let { intentUri ->
+                    Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
+                    val paramQ: String? = (if (intentUri.isHierarchical) intentUri else Uri.parse(intentUri.toString().replaceFirst("geo:", "geo://"))).getQueryParameter("q")
+                    val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?")
+                    var matcher = coordinatePattern.matcher(intentUri.host ?: "")
+
+                    if (!matcher.matches() && paramQ != null) {
+                        matcher = coordinatePattern.matcher(paramQ)
+                    }
+
+                    if (matcher.matches()) {
+                        switchGps.isChecked = false
+                        latitudeText.setText(matcher.group(1))
+                        longitudeText.setText(matcher.group(2))
+                    } else if (paramQ != null)
+                        openSearchAddress(this, paramQ)
+                }
     }
 
     override fun onResume() {
@@ -233,14 +239,18 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     fun onSearchAddress(view: View) {
+        val preference = getPreferences(Context.MODE_PRIVATE)
+        openSearchAddress(view.context, preference.getString(PREFEFERNCE_ADDRESS, ""))
+    }
+
+    private fun openSearchAddress(context: Context, suggestedText: String?) {
         futureSearchAddress?.cancel(true)
         // no gps open search dialog
-        val context = view.context
         val preference = getPreferences(Context.MODE_PRIVATE)
 
         val editText = EditText(context)
         editText.maxLines = 6
-        editText.setText(preference.getString(PREFEFERNCE_ADDRESS, ""))
+        editText.setText(suggestedText)
         editText.isFocusableInTouchMode = true
         editText.selectAll()
 
@@ -296,12 +306,12 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                     onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
                                 }
                             } catch (e: Exception) {
-                                showProgressDialog(address, null, view.context) {
+                                showProgressDialog(address, null, context) {
                                     val addresses =
                                             LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
                                                     ?: listOf()
                                     onUiThread {
-                                        chooseAddress(addresses, view.context)
+                                        chooseAddress(addresses, context)
                                     }
                                 }
                             }

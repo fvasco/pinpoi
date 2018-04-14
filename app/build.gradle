@@ -9,8 +9,8 @@ android {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 57
-        versionName '1.4.25'
+        versionCode 58
+        versionName '1.4.26'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         vectorDrawables {
             useSupportLibrary = true
@@ -27,7 +27,7 @@ android {
 }
 
 buildscript {
-    ext.android_support_version = '25.3.1'
+    ext.android_support_version = '25.4.0'
     ext.kotlin_version = '1.2.31'
     repositories {
         mavenCentral()

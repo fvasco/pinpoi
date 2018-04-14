@@ -86,7 +86,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                 Util.applicationContext.onUiThread { this@apply.show() }
             }
             // insert new placemark
-            val importFuture = async() {
+            val importFuture = async {
                 try {
                     val max: Int
                     var inputStream: InputStream = if (resource.startsWith("/")) {
@@ -133,7 +133,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                         ++placemarkCount
                         if (progressDialog != null && progressDialogMessageFormat != null) {
                             val message = String.format(progressDialogMessageFormat!!, placemarkCount)
-                            Util.applicationContext.onUiThread { progressDialog!!.setMessage(message) }
+                            Util.applicationContext.onUiThread { progressDialog?.setMessage(message) }
                         }
                     } else {
                         // discard (duplicate?) placemark

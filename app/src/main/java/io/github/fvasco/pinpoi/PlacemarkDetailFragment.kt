@@ -135,7 +135,7 @@ class PlacemarkDetailFragment : Fragment() {
         shareButton.setOnClickListener { onShare() }
         // By default these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
-        placemark = placemarkDao.getPlacemark(preferences.getLong(ARG_PLACEMARK_ID, 0))
+        placemark = preferences.getLong(ARG_PLACEMARK_ID, 0).takeIf { it > 0 }?.let { placemarkDao.getPlacemark(it) }
     }
 
     override fun onResume() {

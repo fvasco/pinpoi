@@ -32,7 +32,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
     fun findAllPlacemarkByCollectionId(collectionId: Long): List<Placemark> {
         database!!.query("PLACEMARK", null,
-                "collection_id=" + collectionId, null, null, null, "_ID").use { cursor ->
+                "collection_id=$collectionId", null, null, null, "_ID").use { cursor ->
             val res = ArrayList<Placemark>()
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
@@ -60,7 +60,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             onlyFavourite: Boolean = false
     ): SortedSet<PlacemarkSearchResult> {
         require(collectionIds.isNotEmpty()) { "collection empty" }
-        require(range > 0) { "range not valid " + range }
+        require(range > 0) { "range not valid $range" }
 
 
         // sql clause
@@ -129,23 +129,17 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         database!!.query("PLACEMARK_ANNOTATION", null,
                 "latitude=" + coordinateToInt(latitude) + " AND longitude=" + coordinateToInt(longitude), null,
                 null, null, null).use { cursor ->
-            var res: PlacemarkAnnotation? = null
             cursor.moveToFirst()
-            if (!cursor.isAfterLast) {
-                res = cursorToPlacemarkAnnotation(cursor)
+            return if (cursor.isAfterLast) {
+                PlacemarkAnnotation(coordinates = Coordinates(latitude, longitude))
+            } else {
+                cursorToPlacemarkAnnotation(cursor)
             }
-            cursor.close()
-
-            if (res == null) {
-                res = PlacemarkAnnotation()
-                res.coordinates = Coordinates(latitude, longitude)
-            }
-            return res
         }
     }
 
     fun update(placemarkAnnotation: PlacemarkAnnotation) {
-        if (placemarkAnnotation.note.isEmpty() && !placemarkAnnotation.flagged) {
+        if (placemarkAnnotation.note.isBlank() && !placemarkAnnotation.flagged) {
             database!!.delete("PLACEMARK_ANNOTATION", "_ID=" + placemarkAnnotation.id, null)
             placemarkAnnotation.id = 0
         } else {
@@ -157,7 +151,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             }
             if (placemarkAnnotation.id == 0L) {
                 val id = database!!.insert("PLACEMARK_ANNOTATION", null, placemarkAnnotationToContentValues(placemarkAnnotation))
-                require(id != -1L) { "Data not valid" }
+                require(id != -1L) { "Data not valid $placemarkAnnotation" }
                 placemarkAnnotation.id = id
             }
         }
