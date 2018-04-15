@@ -24,6 +24,7 @@ import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.placemark_detail.*
+import org.jetbrains.anko.async
 import java.util.concurrent.Future
 
 /**
@@ -135,7 +136,7 @@ class PlacemarkDetailFragment : Fragment() {
         shareButton.setOnClickListener { onShare() }
         // By default these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
-        placemark = preferences.getLong(ARG_PLACEMARK_ID, 0).takeIf { it > 0 }?.let { placemarkDao.getPlacemark(it) }
+        placemark = placemarkDao.getPlacemark(preferences.getLong(ARG_PLACEMARK_ID, 0))
     }
 
     override fun onResume() {
@@ -211,6 +212,9 @@ class PlacemarkDetailFragment : Fragment() {
     fun onStarClick(starFab: FloatingActionButton) {
         placemarkAnnotation?.flagged = !placemarkAnnotation!!.flagged
         resetStarFabIcon(starFab)
+        async {
+            saveData()
+        }
     }
 
     private fun saveData() {

@@ -111,8 +111,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun getPlacemark(id: Long): Placemark? {
+        if (id <= 0) return null
         database!!.query("PLACEMARK", null,
-                "_ID=" + id, null, null, null, null).use { cursor ->
+                "_ID=$id", null, null, null, null).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) null else cursorToPlacemark(cursor)
         }
@@ -139,20 +140,16 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun update(placemarkAnnotation: PlacemarkAnnotation) {
+        val whereClause = "latitude=${coordinateToInt(placemarkAnnotation.coordinates.latitude)} AND longitude=${coordinateToInt(placemarkAnnotation.coordinates.longitude)}"
         if (placemarkAnnotation.note.isBlank() && !placemarkAnnotation.flagged) {
-            database!!.delete("PLACEMARK_ANNOTATION", "_ID=" + placemarkAnnotation.id, null)
-            placemarkAnnotation.id = 0
+            database!!.delete("PLACEMARK_ANNOTATION",
+                    whereClause,
+                    null)
         } else {
-            if (placemarkAnnotation.id > 0) {
-                val count = database!!.update("PLACEMARK_ANNOTATION", placemarkAnnotationToContentValues(placemarkAnnotation), "_ID=" + placemarkAnnotation.id, null)
-                if (count == 0) {
-                    placemarkAnnotation.id = 0
-                }
-            }
-            if (placemarkAnnotation.id == 0L) {
-                val id = database!!.insert("PLACEMARK_ANNOTATION", null, placemarkAnnotationToContentValues(placemarkAnnotation))
-                require(id != -1L) { "Data not valid $placemarkAnnotation" }
-                placemarkAnnotation.id = id
+            val contentValues = placemarkAnnotationToContentValues(placemarkAnnotation)
+            val count = database!!.update("PLACEMARK_ANNOTATION", contentValues, whereClause, null)
+            if (count == 0) {
+                database!!.insertOrThrow("PLACEMARK_ANNOTATION", null, contentValues)
             }
         }
     }
@@ -207,7 +204,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
     private fun cursorToPlacemarkAnnotation(cursor: Cursor) =
             PlacemarkAnnotation(
-                    id = cursor.getLong(0),
+                    // column 0 is id (ignored)
                     coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
                     note = cursor.getString(3),
                     flagged = cursor.getInt(4) != 0

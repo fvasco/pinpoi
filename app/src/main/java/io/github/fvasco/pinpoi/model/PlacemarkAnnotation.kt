@@ -8,7 +8,7 @@ import io.github.fvasco.pinpoi.util.Coordinates
  * @author Francesco Vasco
  */
 data class PlacemarkAnnotation(
-        var id: Long = 0,
         var coordinates: Coordinates = Coordinates.EMPTY,
         var note: String = "",
-        var flagged: Boolean = false)
+        var flagged: Boolean = false
+)
