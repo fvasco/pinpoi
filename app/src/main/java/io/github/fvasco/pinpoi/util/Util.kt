@@ -198,8 +198,8 @@ fun DialogInterface.tryDismiss() {
 /**
  * Append text (if present) to string builder using a separator (if present)
  */
-fun append(text: CharSequence, separator: CharSequence?, stringBuilder: StringBuilder) {
-    if (text.isNotEmpty()) {
+fun append(text: CharSequence?, separator: CharSequence?, stringBuilder: StringBuilder) {
+    if (!text.isNullOrEmpty()) {
         if (stringBuilder.isNotEmpty() && separator != null) {
             stringBuilder.append(separator)
         }

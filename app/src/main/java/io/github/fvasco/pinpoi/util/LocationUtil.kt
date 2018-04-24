@@ -96,16 +96,19 @@ object LocationUtil {
                 }
                 stringBuilder.toString()
             }
-            else -> {
+            else -> try {
                 val stringBuilder = StringBuilder()
                 append(address.featureName, separator, stringBuilder)
                 append(address.locality, separator, stringBuilder)
                 append(address.adminArea, separator, stringBuilder)
                 append(address.countryCode, separator, stringBuilder)
                 if (stringBuilder.isEmpty())
-                    address.toString()
+                    Coordinates(address.latitude.toFloat(), address.longitude.toFloat()).toString()
                 else
                     stringBuilder.toString()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                address.toString()
             }
         }
     }
