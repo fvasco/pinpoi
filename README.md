@@ -1,4 +1,4 @@
-![PinPoi](https://raw.githubusercontent.com/fvasco/pinpoi/master/app/src/main/res/mipmap-mdpi/ic_launcher.png)
+![pinpoi-main-hdpi-foreground.png](https://steemitimages.com/DQmNxrCficZcuemZs83dZxzsfwF184r31y67WBbdCKev9Bk/pinpoi-main-hdpi-foreground.png)
 # PinPoi
 
 PinPoi imports thousand points of interest for your GPS navigator in your Android phone.
