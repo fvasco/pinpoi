@@ -25,6 +25,8 @@
     <string name="delete_placemark_collection_confirm">Delete POI collection?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
     <string name="use_gps">Use GPS</string>
     <string name="search_address">Search address</string>
     <string name="insert_address">Insert address</string>

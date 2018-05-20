@@ -144,11 +144,11 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             editText.setText(fragment.placemarkCollection.name)
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
-                    .setView(editText).setPositiveButton(R.string.yes) { dialog, _ ->
+                    .setView(editText).setPositiveButton(R.string.ok) { dialog, _ ->
                         dialog.tryDismiss()
                         fragment.renamePlacemarkCollection(editText.text.toString())
                     }
-                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .setNegativeButton(R.string.cancel, DismissOnClickListener)
                     .show()
         }
     }
@@ -158,12 +158,12 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
-                    .setPositiveButton(R.string.yes) { dialog, _ ->
+                    .setPositiveButton(R.string.ok) { dialog, _ ->
                         dialog.tryDismiss()
                         fragment.deletePlacemarkCollection()
                         onBackPressed()
                     }
-                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .setNegativeButton(R.string.cancel, DismissOnClickListener)
                     .show()
         }
     }

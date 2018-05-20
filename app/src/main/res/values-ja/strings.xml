@@ -25,6 +25,8 @@
     <string name="delete_placemark_collection_confirm">POI コレクションを削除しますか?</string>
     <string name="yes">はい</string>
     <string name="no">いいえ</string>
+    <string name="ok">オーケー</string>
+    <string name="cancel">キャンセル</string>
     <string name="use_gps">GPS を使用する</string>
     <string name="search_address">住所を検索</string>
     <string name="insert_address">住所を入力</string>

@@ -145,7 +145,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.title_placemarkcollection_detail))
                 .setMessage(getString(R.string.placemark_collection_name))
-                .setView(input).setPositiveButton("Ok") { dialog, _ ->
+                .setView(input).setPositiveButton(R.string.ok) { dialog, _ ->
                     try {
                         val placemarkCollectionName = input.text.toString()
                         val placemarkCollection = PlacemarkCollection()
@@ -209,12 +209,12 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_rename)
                     .setView(editText)
-                    .setPositiveButton(R.string.yes) { dialog, _ ->
+                    .setPositiveButton(R.string.ok) { dialog, _ ->
                         dialog.tryDismiss()
                         fragment.renamePlacemarkCollection(editText.text.toString())
                         setupRecyclerView()
                     }
-                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .setNegativeButton(R.string.cancel, DismissOnClickListener)
                     .show()
         }
     }
@@ -224,7 +224,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
-                    .setPositiveButton(R.string.yes) { dialog, _ ->
+                    .setPositiveButton(R.string.ok) { dialog, _ ->
                         dialog.tryDismiss()
                         fragment!!.deletePlacemarkCollection()
                         fabUpdate.visibility = View.GONE
@@ -232,7 +232,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                         fragment = null
                         setupRecyclerView()
                     }
-                    .setNegativeButton(R.string.no, DismissOnClickListener)
+                    .setNegativeButton(R.string.cancel, DismissOnClickListener)
                     .show()
         }
     }

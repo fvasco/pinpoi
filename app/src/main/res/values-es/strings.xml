@@ -25,6 +25,8 @@
     <string name="delete_placemark_collection_confirm">Eliminar la colección?</string>
     <string name="yes">Sí</string>
     <string name="no">No</string>
+    <string name="ok">De acuerdo</string>
+    <string name="cancel">Cancelar</string>
     <string name="use_gps">Usar GPS</string>
     <string name="search_address">Búsqueda de dirección</string>
     <string name="insert_address">Introduzca la dirección</string>

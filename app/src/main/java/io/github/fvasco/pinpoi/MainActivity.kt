@@ -410,11 +410,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.action_create_backup))
                 .setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath))
-                .setPositiveButton(R.string.yes) { dialogInterface, _ ->
+                .setPositiveButton(R.string.ok) { dialogInterface, _ ->
                     dialogInterface.tryDismiss()
                     createBackup()
                 }
-                .setNegativeButton(R.string.no, DismissOnClickListener)
+                .setNegativeButton(R.string.cancel, DismissOnClickListener)
                 .show()
     }
 
@@ -443,11 +443,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 AlertDialog.Builder(this@MainActivity)
                         .setTitle(getString(R.string.action_restore_backup))
                         .setMessage(getString(R.string.backup_file, file.absolutePath))
-                        .setPositiveButton(R.string.yes) { dialogInterface, _ ->
+                        .setPositiveButton(R.string.ok) { dialogInterface, _ ->
                             dialogInterface.tryDismiss()
                             restoreBackup(file)
                         }
-                        .setNegativeButton(R.string.no, DismissOnClickListener)
+                        .setNegativeButton(R.string.cancel, DismissOnClickListener)
                         .show()
             }
         } else {
