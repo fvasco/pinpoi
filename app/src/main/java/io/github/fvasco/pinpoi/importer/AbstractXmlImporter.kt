@@ -63,7 +63,10 @@ abstract class AbstractXmlImporter : AbstractImporter() {
     }
 
     protected fun importPlacemark() {
-        importPlacemark(placemark!!)
+        val p = checkNotNull(placemark) { "No placemark to import" }
+        if (!p.name.isBlank()) {
+            importPlacemark(p)
+        }
         placemark = null
     }
 

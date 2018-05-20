@@ -49,8 +49,8 @@ class KmlImporter : AbstractXmlImporter() {
                         // set placemark to center
                         p.coordinates = Coordinates((latitude / coordinateCount.toDouble()).toFloat(),
                                 (longitude / coordinateCount.toDouble()).toFloat())
-                    }
-                    importPlacemark()
+                        importPlacemark()
+                    } else placemark = null
                 }
                 "name" -> p.name = text
                 "description" -> p.description = text
