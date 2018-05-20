@@ -11,7 +11,7 @@
     <string name="title_placemarkcollection_list">POI Collections</string>
     <string name="title_placemarkcollection_detail">POI Collection Detail</string>
     <string name="category">Category</string>
-    <string name="source">Source URL (or local file path)</string>
+    <string name="source">Source URL (or file path)</string>
     <string name="description">Description</string>
     <string name="update">Update %1$s</string>
     <string name="update_collection_success">Update success %1$s, %2$,d POIs imported (%3$s)</string>

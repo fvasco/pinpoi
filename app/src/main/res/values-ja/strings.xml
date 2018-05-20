@@ -11,7 +11,7 @@
     <string name="title_placemarkcollection_list">POI コレクション</string>
     <string name="title_placemarkcollection_detail">POI コレクションの詳細</string>
     <string name="category">カテゴリー</string>
-    <string name="source">ソース URL (またはローカルファイルのパス)</string>
+    <string name="source">ソース URL (またはファイルのパス)</string>
     <string name="description">説明</string>
     <string name="update">%1$s を更新</string>
     <string name="update_collection_success">%1$s を更新しました。 %2$,d POI をインポートしました (%3$s)</string>

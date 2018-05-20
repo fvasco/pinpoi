@@ -180,6 +180,12 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         }
     }
 
+    fun pasteUrl(view: View?) {
+        fragment?.let { fragment ->
+            fragment.pasteUrl(view)
+        }
+    }
+
     fun updatePlacemarkCollection() {
         fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection

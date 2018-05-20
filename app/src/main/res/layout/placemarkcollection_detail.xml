@@ -56,15 +56,26 @@
                 android:padding="@dimen/text_margin"
                 android:text="@string/source"/>
 
-        <ImageButton
-                android:id="@+id/browseButton"
+        <LinearLayout
+                android:orientation="horizontal"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="false"
-                android:layout_alignParentRight="true"
-                android:contentDescription="Browse file"
-                app:srcCompat="@drawable/ic_search_white"
-                android:onClick="openFileChooser"/>
+                android:layout_height="wrap_content" android:layout_centerVertical="true"
+                android:layout_alignParentRight="true" android:layout_alignParentEnd="true">
+            <ImageButton
+                    android:id="@+id/pasteButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Paste file"
+                    app:srcCompat="?android:attr/actionModePasteDrawable"
+                    android:onClick="pasteUrl"/>
+            <ImageButton
+                    android:id="@+id/browseButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Browse file"
+                    app:srcCompat="@drawable/ic_search_white"
+                    android:onClick="openFileChooser"/>
+        </LinearLayout>
     </RelativeLayout>
 
     <EditText

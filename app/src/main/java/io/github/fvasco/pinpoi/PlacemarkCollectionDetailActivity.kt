@@ -111,6 +111,12 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         }
     }
 
+    fun pasteUrl(view: View?) {
+        fragment?.let { fragment ->
+            fragment.pasteUrl(view)
+        }
+    }
+
     /**
      * Update placemark collection
      *

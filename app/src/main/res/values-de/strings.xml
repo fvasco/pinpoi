@@ -11,7 +11,7 @@
     <string name="title_placemarkcollection_list">POI Sammlungen</string>
     <string name="title_placemarkcollection_detail">POI Sammlungsdetail</string>
     <string name="category">Sammlung</string>
-    <string name="source">Quell URL (oder lokaler Dateipfad)</string>
+    <string name="source">Quell URL (oder Dateipfad)</string>
     <string name="description">Beschreibung</string>
     <string name="fileFormatFilter">Dateiformatfilter</string>
     <string name="update">Update %1$s</string>

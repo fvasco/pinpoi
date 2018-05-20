@@ -3,6 +3,8 @@ package io.github.fvasco.pinpoi
 import android.Manifest
 import android.app.AlertDialog
 import android.app.ProgressDialog
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.os.Environment
 import android.support.design.widget.CollapsingToolbarLayout
@@ -221,6 +223,17 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         openFileChooser(Environment.getExternalStorageDirectory(), view?.context ?: context) {
             sourceText.setText(it.absolutePath)
         }
+    }
+
+    fun pasteUrl(view: View?) {
+        (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+                ?.takeIf { it.hasPrimaryClip() }
+                ?.primaryClip
+                ?.takeIf { it.itemCount > 0 }
+                ?.getItemAt(0)
+                ?.let {
+                    sourceText.setText(it.text)
+                }
     }
 
     companion object {

@@ -11,7 +11,7 @@
     <string name="title_placemarkcollection_list">Coleções de PdI</string>
     <string name="title_placemarkcollection_detail">Detalho da coleção PdI</string>
     <string name="category">Categoria</string>
-    <string name="source">URL fonte (de um arquivo local)</string>
+    <string name="source">URL fonte (de um arquivo)</string>
     <string name="description">Descrição</string>
     <string name="update">Atualização %1$s</string>
     <string name="update_collection_success">Atualização bem sucedida %1$s, importados %2$,d PdI (%3$s)</string>
