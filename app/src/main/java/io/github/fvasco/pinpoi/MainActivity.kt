@@ -32,7 +32,6 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.longToast
-import org.jetbrains.anko.onUiThread
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -310,7 +309,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                     val addresses =
                                             LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
                                                     ?: listOf()
-                                    onUiThread {
+                                    runOnUiThread {
                                         chooseAddress(addresses, context)
                                     }
                                 }
@@ -462,7 +461,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             try {
                 val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
                 backupManager.restore(file)
-                onUiThread { setPlacemarkCollection(null) }
+                runOnUiThread { setPlacemarkCollection(null) }
             } catch (e: Exception) {
                 Log.w(MainActivity::class.java.simpleName, "restore backup failed", e)
                 showToast(e)

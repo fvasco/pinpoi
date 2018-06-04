@@ -24,7 +24,7 @@ import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.placemark_detail.*
-import org.jetbrains.anko.async
+import org.jetbrains.anko.doAsync
 import java.util.concurrent.Future
 
 /**
@@ -212,7 +212,7 @@ class PlacemarkDetailFragment : Fragment() {
     fun onStarClick(starFab: FloatingActionButton) {
         placemarkAnnotation?.flagged = !placemarkAnnotation!!.flagged
         resetStarFabIcon(starFab)
-        async {
+        doAsync {
             saveData()
         }
     }

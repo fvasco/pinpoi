@@ -1,11 +1,15 @@
 package io.github.fvasco.pinpoi.importer
 
+import android.support.test.runner.AndroidJUnit4
 import io.github.fvasco.pinpoi.util.Coordinates
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.Assert.*
 
 /**
  * @author Francesco Vasco
  */
+@RunWith(AndroidJUnit4::class)
 class TextImporterTest : AbstractImporterTestCase() {
     @Test
     fun testImportImplAsc() {

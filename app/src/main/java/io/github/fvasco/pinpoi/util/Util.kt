@@ -10,9 +10,10 @@ import android.support.v7.app.AppCompatDelegate
 import android.text.Html
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
-import org.jetbrains.anko.async
+import org.jetbrains.anko.custom.onUiThread
+import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.longToast
-import org.jetbrains.anko.onUiThread
+import org.jetbrains.anko.runOnUiThread
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.File
 import java.net.HttpURLConnection
@@ -53,7 +54,7 @@ fun assertDebug(check: Boolean, value: Any? = null) {
 }
 
 fun showToast(throwable: Throwable) {
-    Util.applicationContext.onUiThread {
+    Util.applicationContext.runOnUiThread {
         Util.applicationContext.longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}")
     }
 }
@@ -168,7 +169,7 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
     progressDialog.setCancelable(false)
     progressDialog.setCanceledOnTouchOutside(false)
     progressDialog.show()
-    context.async {
+    context.doAsync {
         try {
             Log.i(Util::class.java.simpleName, "showProgressDialog begin: $title")
             runnable()

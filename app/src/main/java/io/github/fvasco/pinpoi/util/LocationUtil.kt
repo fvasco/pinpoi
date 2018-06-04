@@ -9,7 +9,7 @@ import android.net.Uri
 import android.util.Log
 import io.github.fvasco.pinpoi.PlacemarkDetailActivity
 import io.github.fvasco.pinpoi.model.PlacemarkBase
-import org.jetbrains.anko.async
+import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.*
 import java.util.*
@@ -40,7 +40,7 @@ object LocationUtil {
      */
     fun getAddressStringAsync(
             coordinates: Coordinates,
-            addressConsumer: ((String?) -> Unit)?) = coordinates.async {
+            addressConsumer: ((String?) -> Unit)?) = coordinates.doAsync {
         var addressString: String? = synchronized(ADDRESS_CACHE) {
             if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
             ADDRESS_CACHE[coordinates]

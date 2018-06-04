@@ -13,13 +13,19 @@ import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
 import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.isUri
 import io.github.fvasco.pinpoi.util.tryDismiss
-import org.jetbrains.anko.async
-import org.jetbrains.anko.onUiThread
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.runOnUiThread
 import org.jetbrains.anko.uiThread
 import java.io.*
 import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ExecutionException
+import kotlin.Exception
+import kotlin.Int
+import kotlin.RuntimeException
+import kotlin.String
+import kotlin.apply
+import kotlin.let
 
 /**
  * Importer facade for:
@@ -83,10 +89,10 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
         try {
             progressDialog?.apply {
                 setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                Util.applicationContext.onUiThread { this@apply.show() }
+                Util.applicationContext.runOnUiThread { this@apply.show() }
             }
             // insert new placemark
-            val importFuture = async {
+            val importFuture = doAsync {
                 try {
                     val max: Int
                     var inputStream: InputStream = if (resource.startsWith("/")) {
@@ -133,7 +139,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                         ++placemarkCount
                         if (progressDialog != null && progressDialogMessageFormat != null) {
                             val message = String.format(progressDialogMessageFormat!!, placemarkCount)
-                            Util.applicationContext.onUiThread { progressDialog?.setMessage(message) }
+                            Util.applicationContext.runOnUiThread { progressDialog?.setMessage(message) }
                         }
                     } else {
                         // discard (duplicate?) placemark
@@ -144,7 +150,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                     placemark = placemarkQueue.take()
                 }
                 progressDialog?.let {
-                    Util.applicationContext.onUiThread { it.isIndeterminate = true }
+                    Util.applicationContext.runOnUiThread { it.isIndeterminate = true }
                 }
                 // wait import and check exception
                 importFuture.get()

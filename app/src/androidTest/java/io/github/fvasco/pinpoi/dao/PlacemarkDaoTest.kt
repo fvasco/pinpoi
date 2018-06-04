@@ -209,7 +209,6 @@ class PlacemarkDaoTest : AndroidTestCase() {
         // test insert
         pa.note = "test note"
         dao.update(pa)
-        assertTrue(pa.id > 0)
 
         pa = dao.loadPlacemarkAnnotation(p)
         assertEquals(p.coordinates, pa.coordinates)
@@ -232,7 +231,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
         dao.update(pa)
 
         pa = dao.loadPlacemarkAnnotation(p)
-        assertEquals(0, pa.id)
+        assertEquals("", pa.note)
+        assertEquals(false, pa.flagged)
     }
-
 }

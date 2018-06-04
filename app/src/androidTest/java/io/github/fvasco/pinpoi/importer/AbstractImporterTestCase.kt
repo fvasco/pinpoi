@@ -1,16 +1,30 @@
 package io.github.fvasco.pinpoi.importer
 
-import android.test.AndroidTestCase
+import android.content.Context
+import android.support.test.InstrumentationRegistry
 import io.github.fvasco.pinpoi.model.Placemark
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import java.io.InputStream
 import java.util.*
+
 
 /**
  * Base importer test case class.
 
  * @author Francesco Vasco
  */
-abstract class AbstractImporterTestCase : AndroidTestCase() {
+abstract class AbstractImporterTestCase {
+
+
+    protected lateinit var context: Context
+        private set
+
+    @Before
+    fun setup() {
+        context = InstrumentationRegistry.getContext()
+    }
 
     /**
      * Execute import

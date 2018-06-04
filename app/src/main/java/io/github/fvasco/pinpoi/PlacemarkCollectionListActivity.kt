@@ -17,6 +17,7 @@ import android.support.v7.widget.Toolbar
 import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
@@ -64,7 +65,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         val actionBar = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        if (findViewById(R.id.placemarkcollectionDetailContainer) != null) {
+        if (findViewById<FrameLayout>(R.id.placemarkcollectionDetailContainer) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the

@@ -23,6 +23,7 @@ import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.FrameLayout
 import android.widget.TextView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
@@ -31,7 +32,6 @@ import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
 import org.jetbrains.anko.longToast
-import org.jetbrains.anko.onUiThread
 import org.jetbrains.anko.toast
 import java.security.MessageDigest
 import java.text.DecimalFormat
@@ -84,7 +84,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
         preference.edit().putBoolean(PREFEFERNCE_SHOW_MAP, showMap).apply()
 
-        if (findViewById(R.id.placemarkDetailContainer) != null) {
+        if (findViewById<FrameLayout>(R.id.placemarkDetailContainer) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the
@@ -133,7 +133,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             searchPoi { placemarks ->
                 // create array in background thread
                 val placemarksArray = placemarks.toTypedArray()
-                onUiThread { adapter.setPlacemarks(placemarksArray) }
+                runOnUiThread { adapter.setPlacemarks(placemarksArray) }
             }
         }
     }
@@ -206,9 +206,9 @@ html, body {padding: 0; margin: 0; height: 100%;}
                     append("""<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css" />""")
                     append("""<script src="http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js"></script>""")
                     // add tiles fallback https://github.com/ghybs/Leaflet.TileLayer.Fallback
-                    append("""<script src="https://fvasco.github.io/pinpoi/app-lib/Leaflet.TileLayer.Fallback.js"></script>""")
+                    append("""<script src="https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js"></script>""")
                     // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
-                    append("""<script src="https://fvasco.github.io/pinpoi/app-lib/Leaflet.Icon.Glyph.js"></script>""")
+                    append("""<script src="https://leaflet.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js"></script>""")
                     append("</html>")
                     append("""<body> <div id="map"></div> <script>""")
                     append("""var map = L.map('map').setView([$searchCoordinate], $zoom);""")
@@ -321,7 +321,7 @@ new mapboxgl.Marker(markerEl${marker.index})
             if (BuildConfig.DEBUG)
                 Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML $htmlText")
 
-            onUiThread {
+            runOnUiThread {
                 try {
                     mapWebView.loadData(htmlText, "text/html; charset=UTF-8", null)
                 } catch (e: Throwable) {
@@ -373,14 +373,14 @@ new mapboxgl.Marker(markerEl${marker.index})
                 val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate,
                         range.toDouble(), collectionIds, nameFilter, favourite)
                 Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=${placemarks.size}")
-                onUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size)) }
+                runOnUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size)) }
                 placemarksConsumer(placemarks)
 
                 // set up placemark id list for left/right swipe in placemark detail
                 placemarkIdArray = placemarks.map { it.id }.toLongArray()
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                onUiThread { longToast(getString(R.string.error_search, e.message)) }
+                runOnUiThread { longToast(getString(R.string.error_search, e.message)) }
             } finally {
                 placemarkDao.close()
             }

@@ -24,10 +24,9 @@ import io.github.fvasco.pinpoi.util.openFileChooser
 import io.github.fvasco.pinpoi.util.showToast
 import io.github.fvasco.pinpoi.util.tryDismiss
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
-import org.jetbrains.anko.async
+import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
-import org.jetbrains.anko.uiThread
 import java.text.DecimalFormat
 
 /**
@@ -148,7 +147,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         val progressDialog = ProgressDialog(activity)
         progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
         progressDialog.setMessage(sourceText.text)
-        async {
+        doAsync {
             try {
                 savePlacemarkCollection()
                 val oldCount = placemarkCollection.poiCount
@@ -173,7 +172,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 }
             } finally {
                 // update placemark collection info
-                uiThread { showUpdatedCollectionInfo() }
+                onUiThread { showUpdatedCollectionInfo() }
             }
         }
     }
