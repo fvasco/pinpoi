@@ -122,7 +122,8 @@ object LocationUtil {
      */
     fun openExternalMap(placemark: PlacemarkBase, forceAppChooser: Boolean, context: Context) {
         try {
-            var intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${Uri.encode("${placemark.coordinates}(${placemark.name})")}"))
+            // use simple intent (no description) for max compatibility
+            var intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${placemark.coordinates}"))
             if (forceAppChooser) {
                 intent = Intent.createChooser(intent, placemark.name)
             }
