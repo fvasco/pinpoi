@@ -21,6 +21,7 @@
             android:theme="@style/Theme.AppCompat">
         <activity
                 android:name=".MainActivity"
+                android:configChanges="orientation|screenSize|keyboardHidden"
                 android:label="@string/title_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -48,6 +49,7 @@
                 android:name=".PlacemarkDetailActivity"
                 android:label="@string/title_placemark_detail"
                 android:parentActivityName=".PlacemarkListActivity"
+                android:configChanges="orientation|screenSize|keyboardHidden"
                 android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -65,7 +67,7 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
 
                 <data android:scheme="file"/>
                 <data android:scheme="http"/>
@@ -82,7 +84,7 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
 
                 <data android:scheme="file"/>
                 <data android:scheme="http"/>
@@ -103,7 +105,7 @@
                 android:name=".PlacemarkCollectionDetailActivity"
                 android:label="@string/title_placemarkcollection_detail"
                 android:parentActivityName=".PlacemarkCollectionListActivity"
-                android:screenOrientation="locked"
+                android:configChanges="orientation|screenSize|keyboardHidden"
                 android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
