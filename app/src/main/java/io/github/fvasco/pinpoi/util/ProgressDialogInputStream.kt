@@ -2,6 +2,7 @@ package io.github.fvasco.pinpoi.util
 
 import android.app.ProgressDialog
 import android.content.DialogInterface
+import org.jetbrains.anko.doAsync
 
 import java.io.FilterInputStream
 import java.io.IOException
@@ -45,6 +46,8 @@ class ProgressDialogInputStream(private val input: InputStream, private val prog
     override fun markSupported(): Boolean = false
 
     override fun onCancel(dialog: DialogInterface) {
-        input.close()
+        doAsync {
+            input.close()
+        }
     }
 }

@@ -20,12 +20,7 @@ import java.io.*
 import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ExecutionException
-import kotlin.Exception
-import kotlin.Int
-import kotlin.RuntimeException
-import kotlin.String
 import kotlin.apply
-import kotlin.let
 
 /**
  * Importer facade for:
@@ -45,13 +40,9 @@ import kotlin.let
  */
 class ImporterFacade constructor(context: Context = Util.applicationContext) {
 
-    /**
-     * Signpost for end of elaboration
-     */
-    private val STOP_PLACEMARK = Placemark()
     private val placemarkDao: PlacemarkDao
     private val placemarkCollectionDao: PlacemarkCollectionDao
-    private val placemarkQueue = ArrayBlockingQueue<Placemark>(256)
+    private val placemarkQueue = ArrayBlockingQueue<PlacemarkEvent>(256)
     private var progressDialog: ProgressDialog? = null
     private var progressDialogMessageFormat: String? = null
     var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
@@ -117,13 +108,15 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                         }
 
                         importer.collectionId = placemarkCollection.id
-                        importer.consumer = { placemarkQueue.put(it) }
+                        importer.consumer = { placemarkQueue.put(PlacemarkEvent.NewPlacemark(it)) }
                         importer.importPlacemarks(inputStream)
+                    } catch (e: Exception) {
+                        placemarkQueue.put(PlacemarkEvent.ParseError(e))
                     } finally {
                         inputStream.close()
                     }
                 } finally {
-                    placemarkQueue.put(STOP_PLACEMARK)
+                    placemarkQueue.put(PlacemarkEvent.End)
                 }
             }
             var placemarkCount = 0
@@ -133,8 +126,9 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
             try {
                 // remove old placemark
                 placemarkDao.deleteByCollectionId(placemarkCollection.id)
-                var placemark = placemarkQueue.take()
-                while (placemark !== STOP_PLACEMARK) {
+                var placemarkEvent = placemarkQueue.take()
+                while (placemarkEvent is PlacemarkEvent.NewPlacemark) {
+                    val placemark = placemarkEvent.placemark
                     if (placemarkDao.insert(placemark)) {
                         ++placemarkCount
                         if (progressDialog != null && progressDialogMessageFormat != null) {
@@ -144,11 +138,12 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                     } else {
                         // discard (duplicate?) placemark
                         if (BuildConfig.DEBUG) {
-                            Log.i(ImporterFacade::class.java.simpleName, "Placemark discarded $placemark")
+                            Log.d(ImporterFacade::class.java.simpleName, "Placemark discarded $placemark")
                         }
                     }
-                    placemark = placemarkQueue.take()
+                    placemarkEvent = placemarkQueue.take()
                 }
+                if (placemarkEvent is PlacemarkEvent.ParseError) throw placemarkEvent.throwable
                 progressDialog?.let {
                     Util.applicationContext.runOnUiThread { it.isIndeterminate = true }
                 }
@@ -184,7 +179,6 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
     }
 
     companion object {
-
         internal fun createImporter(resource: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
             var path: String?
             try {
@@ -231,5 +225,11 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                     "Importer for " + resource + " is " + if (res == null) null else res.javaClass.simpleName)
             return res
         }
+    }
+
+    private sealed class PlacemarkEvent {
+        class NewPlacemark(val placemark: Placemark) : PlacemarkEvent()
+        object End : PlacemarkEvent()
+        class ParseError(val throwable: Throwable) : PlacemarkEvent()
     }
 }
