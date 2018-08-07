@@ -1,14 +1,13 @@
 package io.github.fvasco.pinpoi.importer
 
 import android.support.test.runner.AndroidJUnit4
-import android.test.RenamingDelegatingContext
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import org.junit.After
-import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.IOException
 

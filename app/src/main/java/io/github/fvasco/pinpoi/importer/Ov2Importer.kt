@@ -33,7 +33,7 @@ class Ov2Importer : AbstractImporter() {
         while (rectype >= 0) {
             when (rectype) {
 
-            // it is a simple POI record
+                // it is a simple POI record
                 2, 3 -> {
                     val total = readIntLE(dataInputStream)
                     Log.i(Ov2Importer::class.java.simpleName, "Process record type $rectype total $total")
@@ -77,7 +77,7 @@ class Ov2Importer : AbstractImporter() {
                     importPlacemark(placemark)
                 }
 
-            // block header
+                // block header
                 1 -> {
                     Log.i(Ov2Importer::class.java.simpleName, "Skip record type " + rectype)
                     dataInputStream.skipBytes(20)

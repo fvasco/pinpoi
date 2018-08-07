@@ -1,9 +1,9 @@
 package io.github.fvasco.pinpoi.importer
 
 import android.support.test.runner.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Assert.*
 
 /**
  * @author Francesco Vasco

@@ -45,10 +45,10 @@ class PlacemarkDetailFragment : Fragment() {
             placemarkAnnotation = if (value == null) null else placemarkDao.loadPlacemarkAnnotation(value)
             val placemarkCollection = if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
             if (value != null) {
-                preferences.edit().putLong(ARG_PLACEMARK_ID, value.id).apply()
+                preferences?.edit()?.putLong(ARG_PLACEMARK_ID, value.id)?.apply()
             }
 
-            (activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout)?.title = value?.name
+            (activity?.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout)?.title = value?.name
             placemarkDetailText.text = when {
                 value == null -> null
                 value.description.isBlank() -> value.name
@@ -99,20 +99,20 @@ class PlacemarkDetailFragment : Fragment() {
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
     var placemarkAnnotation: PlacemarkAnnotation? = null
         private set
-    private lateinit var preferences: SharedPreferences
+    private var preferences: SharedPreferences? = null
     private var searchAddressFuture: Future<Unit>? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        preferences = activity.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
+        preferences = activity?.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
         placemarkDao = PlacemarkDao.instance
         placemarkCollectionDao = PlacemarkCollectionDao.instance
         placemarkDao.open()
         placemarkCollectionDao.open()
 
         val id = savedInstanceState?.getLong(ARG_PLACEMARK_ID)
-                ?: arguments.getLong(ARG_PLACEMARK_ID, preferences.getLong(ARG_PLACEMARK_ID, 0))
-        preferences.edit().putLong(ARG_PLACEMARK_ID, id).apply()
+                ?: arguments?.getLong(ARG_PLACEMARK_ID, preferences?.getLong(ARG_PLACEMARK_ID, 0) ?: 0) ?: 0
+        preferences?.edit()?.putLong(ARG_PLACEMARK_ID, id)?.apply()
     }
 
     override fun onStop() {
@@ -136,12 +136,12 @@ class PlacemarkDetailFragment : Fragment() {
         shareButton.setOnClickListener { onShare() }
         // By default these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
-        placemark = placemarkDao.getPlacemark(preferences.getLong(ARG_PLACEMARK_ID, 0))
+        placemark = placemarkDao.getPlacemark(preferences?.getLong(ARG_PLACEMARK_ID, 0) ?: 0)
     }
 
     override fun onResume() {
         super.onResume()
-        resetStarFabIcon(activity.findViewById(R.id.fabStar) as FloatingActionButton)
+        resetStarFabIcon(activity!!.findViewById(R.id.fabStar) as FloatingActionButton)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -187,7 +187,7 @@ class PlacemarkDetailFragment : Fragment() {
                         intent.type = "text/plain"
                         intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
                         intent = Intent.createChooser(intent, text)
-                        context.startActivity(intent)
+                        context!!.startActivity(intent)
                     } catch (e: Exception) {
                         Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
                         showToast(e)
@@ -202,7 +202,7 @@ class PlacemarkDetailFragment : Fragment() {
         else
             R.drawable.ic_bookmark_border_white
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            starFab.setImageDrawable(resources.getDrawable(drawable, activity.baseContext.theme))
+            starFab.setImageDrawable(resources.getDrawable(drawable, activity!!.baseContext.theme))
         } else {
             //noinspection deprecation
             starFab.setImageDrawable(resources.getDrawable(drawable))

@@ -37,7 +37,7 @@ class GeoRssImporter : AbstractXmlImporter() {
                 }
             }
 
-        // RSS
+            // RSS
             "lat" -> p.coordinates = p.coordinates.copy(latitude = text.toFloat())
             "long" -> p.coordinates = p.coordinates.copy(longitude = text.toFloat())
         }

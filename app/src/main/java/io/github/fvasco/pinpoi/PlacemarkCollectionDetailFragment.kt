@@ -45,7 +45,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         placemarkCollectionDao = PlacemarkCollectionDao.instance
         placemarkCollectionDao.open()
 
-        if (arguments.containsKey(ARG_PLACEMARK_COLLECTION_ID)) {
+        val arguments = arguments
+        if (arguments?.containsKey(ARG_PLACEMARK_COLLECTION_ID) == true) {
             placemarkCollection = placemarkCollectionDao.findPlacemarkCollectionById(
                     if (savedInstanceState == null)
                         arguments.getLong(ARG_PLACEMARK_COLLECTION_ID)
@@ -53,8 +54,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                         savedInstanceState.getLong(ARG_PLACEMARK_COLLECTION_ID))
                     ?: PlacemarkCollection()
 
-            val activity = this.activity
-            val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
+            val appBarLayout = activity?.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
             if (appBarLayout != null) {
                 appBarLayout.title = placemarkCollection.name
             }
@@ -126,7 +126,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
      * Update screen with poi count and last update
      */
     private fun showUpdatedCollectionInfo() {
-        val appBarLayout = activity.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
+        val appBarLayout = activity?.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
         appBarLayout?.title = placemarkCollection.name
         val poiCount = placemarkCollection.poiCount
         poiCountText.text = getString(R.string.poi_count, poiCount)
@@ -219,13 +219,13 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun openFileChooser(view: View?) {
-        openFileChooser(Environment.getExternalStorageDirectory(), view?.context ?: context) {
+        openFileChooser(Environment.getExternalStorageDirectory(), view?.context ?: context!!) {
             sourceText.setText(it.absolutePath)
         }
     }
 
     fun pasteUrl(view: View?) {
-        (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+        (context?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
                 ?.takeIf { it.hasPrimaryClip() }
                 ?.primaryClip
                 ?.takeIf { it.itemCount > 0 }

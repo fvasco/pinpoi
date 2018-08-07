@@ -83,7 +83,7 @@ fun escapeHtml(text: CharSequence): CharSequence {
         val out = StringBuilder(text.length + text.length / 4)
         for (c in text) {
             when (c) {
-            // html escape
+                // html escape
                 '<', '>', '&', '\'', '\"' -> out.append("&#x").append(Integer.toHexString(c.toInt())).append(';')
                 else -> out.append(c)
             }
@@ -99,13 +99,13 @@ fun escapeJavascript(text: CharSequence): CharSequence {
     val out = StringBuilder(text.length + text.length / 3)
     for (c in text) {
         when (c) {
-        // C escape
+            // C escape
             '\'', '\"', '\\', '/' -> out.append('\\').append(c)
 
-        // html escape
+            // html escape
             '<', '>', '&' -> out.append("&#x").append(Integer.toHexString(c.toInt())).append(';')
 
-        // special characters escape
+            // special characters escape
             '\b' -> out.append("\\b")
             '\n' -> out.append("\\n")
             '\t' -> out.append("\\t")

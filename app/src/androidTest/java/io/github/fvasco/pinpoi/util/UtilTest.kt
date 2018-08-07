@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
  * @author Francesco Vasco
  */
 @RunWith(AndroidJUnit4::class)
-class UtilTest  {
+class UtilTest {
 
     @Test
     fun testIsHtml() {
