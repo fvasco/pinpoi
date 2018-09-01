@@ -178,18 +178,15 @@ class PlacemarkListActivity : AppCompatActivity() {
                 val distance = floatArray[0].toInt()
                 Marker(
                         index = index + 1,
-                        id = psr.id,
-                        name = psr.name,
+                        placemark = psr,
                         collectionName = collectionNameMap[psr.collectionId] ?: "",
-                        coordinates = psr.coordinates,
-                        distance = integerFormat.format(distance.toLong()),
-                        flagged = psr.flagged
+                        distance = integerFormat.format(distance.toLong())
                 )
             }
                     // reversed: "1" on top
                     .asReversed()
                     // flagged on top
-                    .partition { it.flagged }
+                    .partition { it.placemark.flagged }
                     .let { it.second + it.first }
 
             val maptilerMapKey: String? = BuildConfig.MAPTILER_MAP_KEY.takeIf { it.isNotBlank() }
@@ -225,18 +222,22 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
                     for (marker in markers) {
                         val markerColor = collectionColors.getOrPut(marker.collectionName) { colorFor(collectionColors.size) }
                         val glyph = StringBuilder().apply {
-                            if (marker.flagged) append("<i><b>")
+                            if (marker.placemark.hasNote) append("<i>")
+                            if (marker.placemark.flagged) append("<b>")
                             append(marker.index)
-                            if (marker.flagged) append("</b></i>")
+                            if (marker.placemark.flagged) append("</b>")
+                            if (marker.placemark.hasNote) append("</i>")
                         }
 
-                        append("L.marker([${marker.coordinates}],{")
+                        append("L.marker([${marker.placemark.coordinates}],{")
                         append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'})")
                         append("""}).addTo(map).bindPopup("""")
-                        append("<a href='javascript:pinpoi.openPlacemark(${marker.id})'>")
-                        if (marker.flagged) append("<b>")
-                        append(escapeJavascript(marker.name))
-                        if (marker.flagged) append("</b>")
+                        append("<a href='javascript:pinpoi.openPlacemark(${marker.placemark.id})'>")
+                        if (marker.placemark.hasNote) append("<i>")
+                        if (marker.placemark.flagged) append("<b>")
+                        append(escapeJavascript(marker.placemark.name))
+                        if (marker.placemark.flagged) append("</b>")
+                        if (marker.placemark.hasNote) append("</i>")
                         append("</a>")
                         append("<br>${marker.distance}&nbsp;m - ")
                         append(escapeJavascript(marker.collectionName))
@@ -255,9 +256,9 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
  vertical-align: middle;
  text-align: center;
 }</style>""")
-                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.js"></script>""")
+                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.js"></script>""")
                     append("""<script src="https://cdn.klokantech.com/openmaptiles-language/v1.0/openmaptiles-language.js"></script>""")
-                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css" rel="stylesheet" />""")
+                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.css" rel="stylesheet" />""")
                     append("</html>")
                     append("""<body> <div id="map"></div> <script>""")
                     val markerHeight = 50
@@ -297,17 +298,22 @@ var markerEl${marker.index} = document.createElement('div');
         markerEl${marker.index}.innerHTML = '${marker.index}';
         markerEl${marker.index}.style.borderColor = '#${stringToColorCode(marker.collectionName)}';
 """)
-                        if (marker.flagged)
+                        if (marker.placemark.flagged) {
                             append("""markerEl${marker.index}.style.borderWidth = '2px';""")
+                        }
+
+                        if (marker.placemark.hasNote) {
+                            append("""markerEl${marker.index}.style.borderStyle = 'dashed';""")
+                        }
 
                         append("""
 new mapboxgl.Marker(markerEl${marker.index})
-  .setLngLat([${marker.coordinates.longitude},${marker.coordinates.latitude}])
+  .setLngLat([${marker.placemark.coordinates.longitude},${marker.placemark.coordinates.latitude}])
   .setPopup(new mapboxgl.Popup({offset:popupOffsets}).setHTML("""")
-                        append("<a href='javascript:pinpoi.openPlacemark(${marker.id})'>")
-                        if (marker.flagged) append("<b>")
-                        append(escapeJavascript(marker.name))
-                        if (marker.flagged) append("</b>")
+                        append("<a href='javascript:pinpoi.openPlacemark(${marker.placemark.id})'>")
+                        if (marker.placemark.flagged) append("<b>")
+                        append(escapeJavascript(marker.placemark.name))
+                        if (marker.placemark.flagged) append("</b>")
                         append("</a>")
                         append("<br>${marker.distance}&nbsp;m - ")
                         append(escapeJavascript(marker.collectionName))
@@ -334,12 +340,9 @@ new mapboxgl.Marker(markerEl${marker.index})
 
     private data class Marker(
             val index: Int,
-            val id: Long,
-            val name: String,
+            val placemark: PlacemarkSearchResult,
             val collectionName: String,
-            val coordinates: Coordinates,
-            val distance: String,
-            val flagged: Boolean
+            val distance: String
     )
 
     private fun searchPoi(placemarksConsumer: (Collection<PlacemarkSearchResult>) -> Unit) {
@@ -481,7 +484,12 @@ new mapboxgl.Marker(markerEl${marker.index})
                     .append("  ")
                     .append(placemark.name)
             holder.view.text = stringBuilder.toString()
-            holder.view.typeface = if (placemark.flagged) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            holder.view.typeface = when {
+                placemark.flagged && placemark.hasNote -> Typeface.defaultFromStyle(Typeface.BOLD_ITALIC)
+                placemark.flagged -> Typeface.DEFAULT_BOLD
+                placemark.hasNote -> Typeface.defaultFromStyle(Typeface.ITALIC)
+                else -> Typeface.DEFAULT
+            }
 
             holder.view.setOnClickListener { openPlacemark(holder.placemark!!.id) }
             holder.view.setOnLongClickListener { view ->

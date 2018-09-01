@@ -45,11 +45,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
     /**
      * Search [Placemark] near location
-
+     *
      * @param coordinates   the center of search
-     * *
      * @param range         radius of search, in meters
-     * *
      * @param collectionIds collection id filter
      */
     fun findAllPlacemarkNear(
@@ -66,7 +64,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         // sql clause
         // collection ids
         val sql = StringBuilder(
-                "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag,collection_id FROM PLACEMARK p" +
+                "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag,pa.note,collection_id FROM PLACEMARK p" +
                         " LEFT OUTER JOIN PLACEMARK_ANNOTATION pa USING(latitude,longitude)" +
                         " WHERE p.collection_id in (")
         val whereArgs = ArrayList<String>()
@@ -199,7 +197,8 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
                     coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
                     name = cursor.getString(3),
                     flagged = cursor.getInt(4) != 0,
-                    collectionId = cursor.getLong(5)
+                    hasNote = !cursor.getString(5).isNullOrEmpty(),
+                    collectionId = cursor.getLong(6)
             )
 
     private fun cursorToPlacemarkAnnotation(cursor: Cursor) =
@@ -216,6 +215,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
          * Max result for [.findAllPlacemarkNear]
          */
         private const val MAX_NEAR_RESULT = 250
+
         private val SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 
         // 2^20

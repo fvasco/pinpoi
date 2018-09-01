@@ -6,8 +6,9 @@ import io.github.fvasco.pinpoi.util.Coordinates
  * @author Placemark result with annotation information.
  *         Used by [io.github.fvasco.pinpoi.dao.PlacemarkDao.findAllPlacemarkNear]
  */
-class PlacemarkSearchResult(var id: Long = 0,
-                            override var coordinates: Coordinates,
-                            override var name: String = "",
-                            var flagged: Boolean = false,
-                            var collectionId: Long = 0) : PlacemarkBase
+class PlacemarkSearchResult(val id: Long = 0,
+                            override val coordinates: Coordinates,
+                            override val name: String,
+                            val flagged: Boolean,
+                            val hasNote: Boolean,
+                            val collectionId: Long) : PlacemarkBase
