@@ -12,12 +12,6 @@ import java.util.*
  */
 data class Coordinates(val latitude: Float, val longitude: Float) {
 
-    fun distanceTo(other: Coordinates): Float {
-        val result = FloatArray(1)
-        Location.distanceBetween(latitude.toDouble(), longitude.toDouble(), other.latitude.toDouble(), other.longitude.toDouble(), result)
-        return result[0]
-    }
-
     override fun toString(): String = synchronized(DECIMAL_FORMAT) {
         return DECIMAL_FORMAT.format(latitude) + ',' + DECIMAL_FORMAT.format(longitude)
     }
@@ -27,4 +21,10 @@ data class Coordinates(val latitude: Float, val longitude: Float) {
         val EMPTY = Coordinates(Float.NaN, Float.NaN)
         private val DECIMAL_FORMAT = DecimalFormat("###.######", DecimalFormatSymbols(Locale.ENGLISH))
     }
+}
+
+fun Coordinates.distanceTo(other: Coordinates): Float {
+    val result = FloatArray(1)
+    Location.distanceBetween(latitude.toDouble(), longitude.toDouble(), other.latitude.toDouble(), other.longitude.toDouble(), result)
+    return result[0]
 }
