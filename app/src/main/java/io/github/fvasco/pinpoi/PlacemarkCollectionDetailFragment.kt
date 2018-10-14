@@ -42,7 +42,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        placemarkCollectionDao = PlacemarkCollectionDao.instance
+        placemarkCollectionDao = PlacemarkCollectionDao(context!!)
         placemarkCollectionDao.open()
 
         val arguments = arguments
@@ -151,7 +151,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             try {
                 savePlacemarkCollection()
                 val oldCount = placemarkCollection.poiCount
-                val importerFacade = ImporterFacade()
+                val importerFacade = ImporterFacade(checkNotNull(context))
                 importerFacade.setProgressDialog(progressDialog)
                 importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
                 importerFacade.fileFormatFilter = placemarkCollection.fileFormatFilter
@@ -183,7 +183,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             try {
                 savePlacemarkCollection()
             } catch (e: Exception) {
-                showToast(e)
+                context?.showToast(e)
             } finally {
                 showUpdatedCollectionInfo()
             }
@@ -191,7 +191,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun deletePlacemarkCollection() {
-        val placemarkDao = PlacemarkDao.instance
+        val placemarkDao = PlacemarkDao(context!!)
         placemarkDao.open()
         try {
             placemarkDao.deleteByCollectionId(placemarkCollection.id)

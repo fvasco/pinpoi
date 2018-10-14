@@ -34,10 +34,10 @@ class KmlImporter : AbstractXmlImporter() {
                 val href = text
                 val delegateImporter = ImporterFacade.createImporter(href, fileFormatFilter)
                 Log.e(KmlImporter::class.java.simpleName, "NetworkLink href $href importer $delegateImporter")
-                delegateImporter?.let { delegateImporter ->
+                delegateImporter?.run {
                     URL(href).openStream().use { inputStream ->
-                        delegateImporter.configureFrom(this)
-                        delegateImporter.importPlacemarks(inputStream)
+                        configureFrom(this)
+                        importPlacemarks(inputStream)
                     }
                 }
             }

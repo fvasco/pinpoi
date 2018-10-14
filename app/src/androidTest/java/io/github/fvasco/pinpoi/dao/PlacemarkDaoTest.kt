@@ -4,6 +4,7 @@ import android.test.AndroidTestCase
 import android.test.RenamingDelegatingContext
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.Coordinates
+import io.github.fvasco.pinpoi.util.distanceTo
 import org.junit.Test
 
 /**

@@ -10,7 +10,6 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
-import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.isUri
 import io.github.fvasco.pinpoi.util.tryDismiss
 import org.jetbrains.anko.doAsync
@@ -38,7 +37,7 @@ import kotlin.apply
 
  * @author Francesco Vasco
  */
-class ImporterFacade constructor(context: Context = Util.applicationContext) {
+class ImporterFacade(private val context: Context) {
 
     private val placemarkDao: PlacemarkDao
     private val placemarkCollectionDao: PlacemarkCollectionDao
@@ -80,7 +79,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
         try {
             progressDialog?.apply {
                 setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                Util.applicationContext.runOnUiThread { this@apply.show() }
+                context.runOnUiThread { this@apply.show() }
             }
             // insert new placemark
             val importFuture = doAsync {
@@ -133,7 +132,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                         ++placemarkCount
                         if (progressDialog != null && progressDialogMessageFormat != null) {
                             val message = String.format(progressDialogMessageFormat!!, placemarkCount)
-                            Util.applicationContext.runOnUiThread { progressDialog?.setMessage(message) }
+                            context.runOnUiThread { progressDialog?.setMessage(message) }
                         }
                     } else {
                         // discard (duplicate?) placemark
@@ -145,7 +144,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
                 }
                 if (placemarkEvent is PlacemarkEvent.ParseError) throw placemarkEvent.throwable
                 progressDialog?.let {
-                    Util.applicationContext.runOnUiThread { it.isIndeterminate = true }
+                    context.runOnUiThread { it.isIndeterminate = true }
                 }
                 // wait import and check exception
                 importFuture.get()
@@ -173,7 +172,7 @@ class ImporterFacade constructor(context: Context = Util.applicationContext) {
             try {
                 placemarkCollectionDao.close()
             } finally {
-                progressDialog?.tryDismiss()
+                if (progressDialog != null) context.runOnUiThread { progressDialog?.tryDismiss() }
             }
         }
     }

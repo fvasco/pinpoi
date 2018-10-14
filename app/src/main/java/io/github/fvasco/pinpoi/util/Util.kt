@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatDelegate
 import android.text.Html
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
-import org.jetbrains.anko.custom.onUiThread
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.runOnUiThread
@@ -40,7 +39,7 @@ object Util {
         }
     }
 
-    lateinit var applicationContext: Context
+    fun init() = Unit
 }
 
 private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
@@ -53,9 +52,9 @@ fun assertDebug(check: Boolean, value: Any? = null) {
         throw AssertionError(value?.toString())
 }
 
-fun showToast(throwable: Throwable) {
-    Util.applicationContext.runOnUiThread {
-        Util.applicationContext.longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}")
+fun Context.showToast(throwable: Throwable) {
+    runOnUiThread {
+        longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}")
     }
 }
 
@@ -159,8 +158,8 @@ fun openFileChooser(dir: File, context: Context, fileConsumer: (File) -> Unit) {
  * @param context  dialog context
  * @param runnable task to execute in background
  */
-fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Context,
-                       runnable: () -> Unit) {
+fun Context.showProgressDialog(title: CharSequence, message: CharSequence?, context: Context,
+                               runnable: () -> Unit) {
     val progressDialog = ProgressDialog(context)
     progressDialog.setTitle(title)
     progressDialog.setMessage(message)
@@ -174,25 +173,21 @@ fun showProgressDialog(title: CharSequence, message: CharSequence?, context: Con
             Log.i(Util::class.java.simpleName, "showProgressDialog begin: $title")
             runnable()
         } catch (e: Exception) {
-            progressDialog.tryDismiss()
             Log.e(Util::class.java.simpleName, "showProgressDialog error $title", e)
             showToast(e)
         } finally {
             Log.i(Util::class.java.simpleName, "showProgressDialog end: $title")
-            progressDialog.tryDismiss()
+runOnUiThread {             progressDialog.tryDismiss()}
         }
     }
 }
 
 fun DialogInterface.tryDismiss() {
-    Util.applicationContext.onUiThread {
-        try {
-            if (this !is Dialog || isShowing)
-                dismiss()
-        } catch (e: Exception) {
-            Log.w(DialogInterface::tryDismiss.javaClass.canonicalName, "Error on dialog dismiss", e)
-            e.printStackTrace()
-        }
+    if (this !is Dialog || isShowing) try {
+        dismiss()
+    } catch (e: Exception) {
+        Log.w(DialogInterface::tryDismiss.javaClass.canonicalName, "Error on dialog dismiss", e)
+        e.printStackTrace()
     }
 }
 

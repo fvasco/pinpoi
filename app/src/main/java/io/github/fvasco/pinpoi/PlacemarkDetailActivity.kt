@@ -34,9 +34,9 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.applicationContext = applicationContext
+        Util.init()
         setContentView(R.layout.activity_placemark_detail)
-        placemarkDao = PlacemarkDao.instance
+        placemarkDao = PlacemarkDao(applicationContext)
         placemarkDao.open()
         val mapFab = findViewById(R.id.fabMap) as FloatingActionButton
         val toolbar = findViewById(R.id.detailToolbar) as Toolbar

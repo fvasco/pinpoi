@@ -19,20 +19,19 @@ import java.util.*
 
  * @author Francesco Vasco
  */
-object LocationUtil {
+class LocationUtil(private val context: Context) {
 
-    private const val ADDRESS_CACHE_SIZE = 512
     /**
      * Store resolved address
      */
-    private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
-    private val addressCacheFile by lazy { File(Util.applicationContext.cacheDir, "addressCache") }
+    private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(Companion.ADDRESS_CACHE_SIZE * 2, .75f, true)
+    private val addressCacheFile by lazy { File(context.cacheDir, "addressCache") }
 
     // avoid geocoder cache to reset it on initialization error
     val geocoder: Geocoder?
         get() =
             if (Geocoder.isPresent())
-                Geocoder(Util.applicationContext)
+                Geocoder(context)
             else null
 
     /**
@@ -47,14 +46,14 @@ object LocationUtil {
         }
         if (addressString == null) {
             val addresses = try {
-                LocationUtil.geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
+                geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
                         ?: listOf()
             } catch (e: Exception) {
                 listOf<Address>()
             }
 
             if (addresses.isNotEmpty()) {
-                addressString = LocationUtil.toString(addresses.first())
+                addressString = toString(addresses.first())
                 // save result in cache
                 synchronized(ADDRESS_CACHE) {
                     ADDRESS_CACHE.put(coordinates, addressString)
@@ -73,46 +72,6 @@ object LocationUtil {
         }
     }
 
-    fun newLocation(latitude: Double, longitude: Double): Location {
-        val location = Location(Util::class.java.simpleName)
-        location.latitude = latitude
-        location.longitude = longitude
-        location.accuracy = 0f
-        location.time = System.currentTimeMillis()
-        return location
-    }
-
-    /**
-     * Convert an [Address] to address string
-     */
-    fun toString(address: Address): String {
-        val separator = ", "
-        return when {
-            address.maxAddressLineIndex == 0 -> address.getAddressLine(0)
-            address.maxAddressLineIndex > 0 -> {
-                val stringBuilder = StringBuilder(address.getAddressLine(0))
-                for (i in 1..address.maxAddressLineIndex) {
-                    stringBuilder.append(separator).append(address.getAddressLine(i))
-                }
-                stringBuilder.toString()
-            }
-            else -> try {
-                val stringBuilder = StringBuilder()
-                append(address.featureName, separator, stringBuilder)
-                append(address.locality, separator, stringBuilder)
-                append(address.adminArea, separator, stringBuilder)
-                append(address.countryCode, separator, stringBuilder)
-                if (stringBuilder.isEmpty())
-                    Coordinates(address.latitude.toFloat(), address.longitude.toFloat()).toString()
-                else
-                    stringBuilder.toString()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                address.toString()
-            }
-        }
-    }
-
     /**
      * Open external map app
 
@@ -120,7 +79,7 @@ object LocationUtil {
      * *
      * @param forceAppChooser if true show always app chooser
      */
-    fun openExternalMap(placemark: PlacemarkBase, forceAppChooser: Boolean, context: Context) {
+    fun openExternalMap(placemark: PlacemarkBase, forceAppChooser: Boolean) {
         try {
             // use simple intent (no description) for max compatibility
             var intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${placemark.coordinates}"))
@@ -130,7 +89,7 @@ object LocationUtil {
             context.startActivity(intent)
         } catch (e: Exception) {
             Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
-            showToast(e)
+            context.showToast(e)
         }
     }
 
@@ -161,11 +120,11 @@ object LocationUtil {
         try {
             DataOutputStream(BufferedOutputStream(FileOutputStream(addressCacheFile))).use { outputStream ->
                 // first item is entry count
-                outputStream.writeShort(Math.min(ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
+                outputStream.writeShort(Math.min(Companion.ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
 
                 val iterator = ADDRESS_CACHE.entries.iterator()
                 // if (ADDRESS_CACHE.size > ADDRESS_CACHE_SIZE) skip entries
-                repeat(ADDRESS_CACHE.size - ADDRESS_CACHE_SIZE) {
+                repeat(ADDRESS_CACHE.size - Companion.ADDRESS_CACHE_SIZE) {
                     iterator.next()
                 }
                 while (iterator.hasNext()) {
@@ -180,6 +139,50 @@ object LocationUtil {
             Log.w(LocationUtil::class.java.simpleName, e)
             //noinspection ResultOfMethodCallIgnored
             addressCacheFile.delete()
+        }
+    }
+
+    companion object {
+        private const val ADDRESS_CACHE_SIZE = 512
+
+        fun newLocation(latitude: Double, longitude: Double): Location {
+            val location = Location(Util::class.java.simpleName)
+            location.latitude = latitude
+            location.longitude = longitude
+            location.accuracy = 0f
+            location.time = System.currentTimeMillis()
+            return location
+        }
+
+        /**
+         * Convert an [Address] to address string
+         */
+        fun toString(address: Address): String {
+            val separator = ", "
+            return when {
+                address.maxAddressLineIndex == 0 -> address.getAddressLine(0)
+                address.maxAddressLineIndex > 0 -> {
+                    val stringBuilder = StringBuilder(address.getAddressLine(0))
+                    for (i in 1..address.maxAddressLineIndex) {
+                        stringBuilder.append(separator).append(address.getAddressLine(i))
+                    }
+                    stringBuilder.toString()
+                }
+                else -> try {
+                    val stringBuilder = StringBuilder()
+                    append(address.featureName, separator, stringBuilder)
+                    append(address.locality, separator, stringBuilder)
+                    append(address.adminArea, separator, stringBuilder)
+                    append(address.countryCode, separator, stringBuilder)
+                    if (stringBuilder.isEmpty())
+                        Coordinates(address.latitude.toFloat(), address.longitude.toFloat()).toString()
+                    else
+                        stringBuilder.toString()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    address.toString()
+                }
+            }
         }
     }
 }

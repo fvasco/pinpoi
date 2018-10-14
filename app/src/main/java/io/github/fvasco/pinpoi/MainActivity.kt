@@ -44,17 +44,19 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private lateinit var locationManager: LocationManager
     private var lastLocation: Location? = null
     private var futureSearchAddress: Future<*>? = null
+    private lateinit var locationUtil: LocationUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.applicationContext = applicationContext
+        Util.init()
         setContentView(R.layout.activity_main)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationUtil = LocationUtil(applicationContext)
 
         // widget
         switchGps.setOnCheckedChangeListener(this)
         switchGps.isEnabled = !locationManager.allProviders.isEmpty()
-        if (LocationUtil.geocoder == null) {
+        if (locationUtil.geocoder == null) {
             searchAddressButton.visibility = View.GONE
         }
 
@@ -164,7 +166,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     private fun setPlacemarkCollection(placemarkCollectionId: Long) {
-        val placemarkCollectionDao = PlacemarkCollectionDao.instance
+        val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
         try {
             setPlacemarkCollection(placemarkCollectionDao.findPlacemarkCollectionById(placemarkCollectionId))
@@ -179,7 +181,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     fun openPlacemarkCategoryChooser(view: View) {
-        val placemarkCollectionDao = PlacemarkCollectionDao.instance
+        val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
         try {
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
@@ -196,7 +198,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     fun openPlacemarkCollectionChooser(view: View) {
-        val placemarkCollectionDao = PlacemarkCollectionDao.instance
+        val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
         try {
             val placemarkCollections = ArrayList<PlacemarkCollection?>()
@@ -307,7 +309,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                             } catch (e: Exception) {
                                 showProgressDialog(address, null, context) {
                                     val addresses =
-                                            LocationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
+                                            locationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
                                                     ?: listOf()
                                     runOnUiThread {
                                         chooseAddress(addresses, context)
@@ -353,7 +355,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         try {
             val collectionsIds: LongArray
             if (selectedPlacemarkCollection == null) {
-                val placemarkCollectionDao = PlacemarkCollectionDao.instance
+                val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
                 placemarkCollectionDao.open()
                 try {
                     val collections = if (selectedPlacemarkCategory.isEmpty())
@@ -423,7 +425,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     getString(R.string.action_create_backup),
                     getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), this) {
                 try {
-                    val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
+                    val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
                     backupManager.create(BackupManager.DEFAULT_BACKUP_FILE)
                 } catch (e: Exception) {
                     Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
@@ -459,7 +461,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         showProgressDialog(getString(R.string.action_restore_backup),
                 getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), this) {
             try {
-                val backupManager = BackupManager(PlacemarkCollectionDao.instance, PlacemarkDao.instance)
+                val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
                 backupManager.restore(file)
                 runOnUiThread { setPlacemarkCollection(null) }
             } catch (e: Exception) {

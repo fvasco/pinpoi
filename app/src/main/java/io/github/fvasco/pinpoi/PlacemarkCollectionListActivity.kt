@@ -52,9 +52,9 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.applicationContext = applicationContext
+        Util.init()
         setContentView(R.layout.activity_placemarkcollection_list)
-        placemarkCollectionDao = PlacemarkCollectionDao.instance
+        placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
 
         val toolbar = findViewById(R.id.toolbar) as Toolbar

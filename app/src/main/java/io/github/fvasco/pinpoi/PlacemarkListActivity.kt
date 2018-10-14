@@ -60,7 +60,7 @@ class PlacemarkListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.applicationContext = applicationContext
+        Util.init()
         setContentView(R.layout.activity_placemark_list)
         val preference = getPreferences(Context.MODE_PRIVATE)
 
@@ -154,7 +154,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             val zoom: Int = ((Math.log((40_000_000.0 / range)) / Math.log(2.0)).toInt()).coerceIn(0, 18)
             // map each collection id to color name
             val collectionNameMap: Map<Long, String> =
-                    PlacemarkCollectionDao.instance.let { placemarkCollectionDao ->
+                    PlacemarkCollectionDao(applicationContext).let { placemarkCollectionDao ->
                         placemarkCollectionDao.open()
                         try {
                             placemarkCollectionDao
@@ -370,7 +370,7 @@ new mapboxgl.Marker(markerEl${marker.index})
                 .apply()
 
         showProgressDialog(getString(R.string.title_placemark_list), null, this) {
-            val placemarkDao = PlacemarkDao.instance
+            val placemarkDao = PlacemarkDao(applicationContext)
             placemarkDao.open()
             try {
                 val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate,
@@ -493,7 +493,7 @@ new mapboxgl.Marker(markerEl${marker.index})
 
             holder.view.setOnClickListener { openPlacemark(holder.placemark!!.id) }
             holder.view.setOnLongClickListener { view ->
-                LocationUtil.openExternalMap(holder.placemark!!, false, view.context)
+                LocationUtil(applicationContext).openExternalMap(holder.placemark!!, false)
                 true
             }
         }

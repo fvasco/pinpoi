@@ -25,8 +25,6 @@ import java.util.*
  */
 class PlacemarkDao(context: Context) : AbstractDao(context) {
 
-    internal constructor() : this(Util.applicationContext)
-
     override fun createSqLiteOpenHelper(context: Context): SQLiteOpenHelper {
         return PlacemarkDatabase(context)
     }
@@ -221,8 +219,6 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
         // 2^20
         private const val COORDINATE_MULTIPLIER = 1048576f
-
-        val instance: PlacemarkDao by lazy { PlacemarkDao() }
 
         /**
          * Convert DB coordinates to double

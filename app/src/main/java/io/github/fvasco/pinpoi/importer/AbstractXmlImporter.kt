@@ -37,7 +37,7 @@ abstract class AbstractXmlImporter : AbstractImporter() {
                         text = ""
                         handleStartTag()
                     }
-                    XmlPullParser.TEXT -> text = parser.text
+                    XmlPullParser.TEXT -> if (text.isEmpty()) text = parser.text else text += parser.text
                     XmlPullParser.END_TAG -> {
                         handleEndTag()
                         tag = tagStack.removeLast()

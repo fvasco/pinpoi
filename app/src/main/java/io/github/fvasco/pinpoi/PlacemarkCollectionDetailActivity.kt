@@ -31,7 +31,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.applicationContext = applicationContext
+        Util.init()
         setContentView(R.layout.activity_placemarkcollection_detail)
 
         val toolbar = findViewById(R.id.detailToolbar) as Toolbar

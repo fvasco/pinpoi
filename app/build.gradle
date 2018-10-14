@@ -8,7 +8,7 @@ if (!project.hasProperty("MAPTILER_MAP_KEY")) {
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 16
@@ -36,7 +36,7 @@ android {
 buildscript {
 
     ext.android_support_version = '27.1.1'
-    ext.kotlin_version = '1.2.61'
+    ext.kotlin_version = '1.2.71'
 
     repositories {
         mavenCentral()

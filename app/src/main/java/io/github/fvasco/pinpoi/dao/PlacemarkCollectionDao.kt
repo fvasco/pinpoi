@@ -6,7 +6,6 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteOpenHelper
 import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.Util
 import java.util.*
 
 /**
@@ -15,9 +14,6 @@ import java.util.*
  * @author Francesco Vasco
  */
 class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
-
-    internal constructor() : this(Util.applicationContext) {
-    }
 
     override fun createSqLiteOpenHelper(context: Context): SQLiteOpenHelper {
         return PlacemarkCollectionDatabase(context)
@@ -116,9 +112,4 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
         pc.fileFormatFilter = FileFormatFilter.valueOf(cursor.getString(7) ?: FileFormatFilter.NONE.toString())
         return pc
     }
-
-    companion object {
-        val instance: PlacemarkCollectionDao by lazy { PlacemarkCollectionDao() }
-    }
-
 }
