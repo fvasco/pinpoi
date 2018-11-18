@@ -11,7 +11,6 @@ import io.github.fvasco.pinpoi.model.PlacemarkBase
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.PlacemarkDistanceComparator
-import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.distanceTo
 import java.util.*
 

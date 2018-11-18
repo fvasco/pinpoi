@@ -177,7 +177,7 @@ fun Context.showProgressDialog(title: CharSequence, message: CharSequence?, cont
             showToast(e)
         } finally {
             Log.i(Util::class.java.simpleName, "showProgressDialog end: $title")
-runOnUiThread {             progressDialog.tryDismiss()}
+            runOnUiThread { progressDialog.tryDismiss() }
         }
     }
 }
