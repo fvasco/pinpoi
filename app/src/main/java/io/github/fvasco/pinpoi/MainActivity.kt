@@ -82,13 +82,14 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 ?.takeIf { it.scheme == "geo" }
                 ?.let { intentUri ->
                     Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
+                    val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+)[, ]([+-]?\\d+\\.\\d+)(?:\\D.*)?")
                     val paramQ: String? = (if (intentUri.isHierarchical) intentUri else Uri.parse(intentUri.toString().replaceFirst("geo:", "geo://"))).getQueryParameter("q")
-                    val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+),([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-                    var matcher = coordinatePattern.matcher(intentUri.host ?: "")
 
-                    if (!matcher.matches() && paramQ != null) {
-                        matcher = coordinatePattern.matcher(paramQ)
-                    }
+                    val matcher =
+                            paramQ?.let { coordinatePattern.matcher(it) }
+                                    ?: intentUri.host?.let { coordinatePattern.matcher(it) }
+                                    ?: Pattern.compile("""geo:(?://)?([+-]?\d+\.\d+),([+-]?\d+\.\d+)(?:\D.*)?""")
+                                            .matcher(intentUri.toString())
 
                     if (matcher.matches()) {
                         switchGps.isChecked = false
