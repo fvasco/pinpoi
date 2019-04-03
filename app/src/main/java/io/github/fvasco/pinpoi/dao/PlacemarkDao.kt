@@ -212,7 +212,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         /**
          * Max result for [.findAllPlacemarkNear]
          */
-        private const val MAX_NEAR_RESULT = 250
+        private const val MAX_NEAR_RESULT = 1_000
 
         private val SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 

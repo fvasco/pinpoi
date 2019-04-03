@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         favouriteCheck.isChecked = preference.getBoolean(PREFEFERNCE_FAVOURITE, false)
         showMapCheck.isChecked = preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)
         rangeSeek.progress = Math.min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
-        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, ""))
+        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, "") ?: "")
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
 
         // load intent parameters for geo scheme (if present)
@@ -188,10 +188,10 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
             AlertDialog.Builder(view.context)
                     .setTitle(getString(R.string.collection))
-                    .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray()), { dialog, which ->
+                    .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray())) { dialog, which ->
                         dialog.tryDismiss()
                         setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
-                    })
+                    }
                     .show()
         } finally {
             placemarkCollectionDao.close()
@@ -506,7 +506,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     onLocationChanged(null)
                     for (provider in locationManager.allProviders) {
-                        Log.i(MainActivity::class.java.simpleName, "provider " + provider)
+                        Log.i(MainActivity::class.java.simpleName, "provider $provider")
                         // search updated location
                         onLocationChanged(locationManager.getLastKnownLocation(provider))
                         locationManager.requestLocationUpdates(provider, LOCATION_TIME_ACCURACY.toLong(), LOCATION_RANGE_ACCURACY.toFloat(), this)
@@ -523,7 +523,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             showToast(se)
         }
 
-        Log.i(MainActivity::class.java.simpleName, "setUseLocationManagerListener.status " + locationManagerListenerEnabled)
+        Log.i(MainActivity::class.java.simpleName, "setUseLocationManagerListener.status $locationManagerListenerEnabled")
         latitudeText.isEnabled = !locationManagerListenerEnabled
         longitudeText.isEnabled = !locationManagerListenerEnabled
     }

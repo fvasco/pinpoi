@@ -256,20 +256,20 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
  vertical-align: middle;
  text-align: center;
 }</style>""")
-                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.js"></script>""")
+                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js"></script>""")
                     append("""<script src="https://cdn.klokantech.com/openmaptiles-language/v1.0/openmaptiles-language.js"></script>""")
-                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.css" rel="stylesheet" />""")
+                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css" rel="stylesheet" />""")
                     append("</html>")
                     append("""<body> <div id="map"></div> <script>""")
                     val markerHeight = 50
                     val markerRadius = 10
-                    val linearOffset = 25;
+                    val linearOffset = 25
                     append("""
 var map = new mapboxgl.Map({
   container: 'map',
   center: [${searchCoordinate.longitude},${searchCoordinate.latitude}],
   zoom: ${zoom - 1},
-  style: 'https://maps.tilehosting.com/styles/bright/style.json?key=$maptilerMapKey',
+  style: 'https://api.maptiler.com/maps/0e4dbb1d-3fe4-4b6e-9b56-210fe9e31d3c/style.json?key=$maptilerMapKey',
   attribution: '<a href="http://www.openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="http://www.openstreetmap.org/about/" target="_blank">© OpenStreetMap contributors</a>'
 });
 map.autodetectLanguage();
