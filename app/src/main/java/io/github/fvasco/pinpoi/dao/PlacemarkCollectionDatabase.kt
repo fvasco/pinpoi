@@ -35,7 +35,7 @@ internal class PlacemarkCollectionDatabase(context: Context) : SQLiteOpenHelper(
                 "VALUES" +
                 "('World Heritage List'," +
                 "'Terms and Conditions of Use: http://whc.unesco.org/en/syndication/'," +
-                "'http://whc.unesco.org/en/list/kml/'," +
+                "'https://whc.unesco.org/en/list/kml/'," +
                 "''," +
                 "0, 0," +
                 "'KML')")

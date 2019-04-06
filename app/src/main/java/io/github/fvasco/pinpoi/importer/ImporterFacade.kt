@@ -11,6 +11,7 @@ import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
 import io.github.fvasco.pinpoi.util.isUri
+import io.github.fvasco.pinpoi.util.openInputStream
 import io.github.fvasco.pinpoi.util.tryDismiss
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.runOnUiThread
@@ -74,45 +75,29 @@ class ImporterFacade(private val context: Context) {
     @Throws(IOException::class)
     fun importPlacemarks(placemarkCollection: PlacemarkCollection): Int {
         val resource = placemarkCollection.source
-        val importer = createImporter(resource, fileFormatFilter) ?: throw IOException("Cannot import $resource")
+        val importer = createImporter(resource, fileFormatFilter)
+                ?: throw IOException("Cannot import $resource")
         placemarkCollectionDao.open()
         try {
             progressDialog?.apply {
-                setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                context.runOnUiThread { this@apply.show() }
+                context.runOnUiThread {
+                    setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+                    isIndeterminate = true
+                    this@apply.show()
+                }
             }
             // insert new placemark
             val importFuture = doAsync {
                 try {
-                    val max: Int
-                    var inputStream: InputStream = if (resource.startsWith("/")) {
-                        val file = File(resource)
-                        max = file.length().toInt()
-                        BufferedInputStream(FileInputStream(file))
-                    } else {
-                        val urlConnection = URL(resource).openConnection()
-                        max = urlConnection.contentLength
-                        urlConnection.inputStream
-                    }
-                    try {
-                        progressDialog?.apply {
-                            if (max > 0) {
-                                this.max = max
-                                inputStream = ProgressDialogInputStream(inputStream, this)
-                            } else {
-                                uiThread {
-                                    isIndeterminate = true
-                                }
-                            }
-                        }
+                    openInputStream(resource).use { inputStream ->
+                        try {
 
-                        importer.collectionId = placemarkCollection.id
-                        importer.consumer = { placemarkQueue.put(PlacemarkEvent.NewPlacemark(it)) }
-                        importer.importPlacemarks(inputStream)
-                    } catch (e: Exception) {
-                        placemarkQueue.put(PlacemarkEvent.ParseError(e))
-                    } finally {
-                        inputStream.close()
+                            importer.collectionId = placemarkCollection.id
+                            importer.consumer = { placemarkQueue.put(PlacemarkEvent.NewPlacemark(it)) }
+                            importer.importPlacemarks(inputStream)
+                        } catch (e: Exception) {
+                            placemarkQueue.put(PlacemarkEvent.ParseError(e))
+                        }
                     }
                 } finally {
                     placemarkQueue.put(PlacemarkEvent.End)

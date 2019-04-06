@@ -20,10 +20,8 @@ abstract class AbstractImporter {
      * @param inputStream data source
      */
     fun importPlacemarks(inputStream: InputStream) {
-        if (consumer == null) error("No consumer")
-        if (collectionId <= 0) {
-            error("Collection id not valid: $collectionId")
-        }
+        requireNotNull(consumer) { "No consumer" }
+        require(collectionId > 0) { "Collection id not valid: $collectionId" }
         // do import
         importImpl(inputStream)
     }

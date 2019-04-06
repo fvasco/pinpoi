@@ -14,8 +14,12 @@ import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.runOnUiThread
 import org.xmlpull.v1.XmlPullParserFactory
+import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
+import java.net.URL
 import java.util.regex.Pattern
 
 /**
@@ -150,6 +154,22 @@ fun openFileChooser(dir: File, context: Context, fileConsumer: (File) -> Unit) {
         openFileChooser(parentDir, context, fileConsumer)
     }
 }
+
+/**
+ * Open an input stream for the [resource].
+ *
+ * Use HTTPS connection.
+ */
+fun openInputStream(resource: String): InputStream =
+        if (resource.startsWith("/")) {
+            val file = File(resource)
+            BufferedInputStream(FileInputStream(file))
+        } else {
+            val url =
+                    if (resource.startsWith("http://")) "https${resource.substring(4)}"
+                    else resource
+            URL(url).openConnection().inputStream
+        }
 
 /**
  * Show indeterminate progress dialog and execute runnable in background

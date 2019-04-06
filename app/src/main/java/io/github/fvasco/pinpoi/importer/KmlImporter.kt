@@ -2,6 +2,7 @@ package io.github.fvasco.pinpoi.importer
 
 import android.util.Log
 import io.github.fvasco.pinpoi.util.Coordinates
+import io.github.fvasco.pinpoi.util.openInputStream
 import java.io.IOException
 import java.net.URL
 
@@ -34,10 +35,10 @@ class KmlImporter : AbstractXmlImporter() {
                 val href = text
                 val delegateImporter = ImporterFacade.createImporter(href, fileFormatFilter)
                 Log.e(KmlImporter::class.java.simpleName, "NetworkLink href $href importer $delegateImporter")
-                delegateImporter?.run {
-                    URL(href).openStream().use { inputStream ->
-                        configureFrom(this)
-                        importPlacemarks(inputStream)
+                if (delegateImporter != null) {
+                    openInputStream(href).use { inputStream ->
+                        delegateImporter.configureFrom(this)
+                        delegateImporter.importPlacemarks(inputStream)
                     }
                 }
             }
@@ -57,7 +58,8 @@ class KmlImporter : AbstractXmlImporter() {
                 "coordinates" -> // read multiple lines if present (point, line, polygon)
                     for (line in text.trim { it <= ' ' }.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }) {
                         // format: longitude, latitude, altitude
-                        val coordinates = line.split(',', limit = 3).takeIf { it.size in 2..3 } ?: continue
+                        val coordinates = line.split(',', limit = 3).takeIf { it.size in 2..3 }
+                                ?: continue
                         val lat = coordinates[0].toDoubleOrNull() ?: continue
                         val lon = coordinates[1].toDoubleOrNull() ?: continue
                         longitude += lat
