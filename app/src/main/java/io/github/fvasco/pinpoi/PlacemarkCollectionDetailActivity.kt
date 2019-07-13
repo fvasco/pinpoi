@@ -26,15 +26,13 @@ import io.github.fvasco.pinpoi.util.tryDismiss
  */
 class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     private var fragment: PlacemarkCollectionDetailFragment? = null
-    private val PERMISSION_UPDATE = 1
-    private val PERMISSION_CHOOSE_FILE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Util.init()
         setContentView(R.layout.activity_placemarkcollection_detail)
 
-        val toolbar = findViewById(R.id.detailToolbar) as Toolbar
+        val toolbar = findViewById<Toolbar>(R.id.detailToolbar)
         setSupportActionBar(toolbar)
 
         // Show the Up button in the action bar.
@@ -58,7 +56,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             fragment = PlacemarkCollectionDetailFragment().apply {
                 this.arguments = arguments
             }
-            supportFragmentManager.beginTransaction().add(R.id.placemarkcollectionDetailContainer, fragment).commit()
+            supportFragmentManager.beginTransaction().add(R.id.placemarkcollectionDetailContainer, fragment!!).commit()
         }
     }
 
@@ -106,7 +104,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 fragment.openFileChooser(view)
             } else {
                 // request permission
-                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_CHOOSE_FILE)
+                ActivityCompat.requestPermissions(this, arrayOf(permission), Companion.PERMISSION_CHOOSE_FILE)
             }
         }
     }
@@ -129,7 +127,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 fragment.updatePlacemarkCollection()
             } else {
                 // request permission
-                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_UPDATE)
+                ActivityCompat.requestPermissions(this, arrayOf(permission), Companion.PERMISSION_UPDATE)
             }
         }
     }
@@ -138,8 +136,8 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                                             permissions: Array<String>, grantResults: IntArray) {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
-                PERMISSION_UPDATE -> updatePlacemarkCollection(null)
-                PERMISSION_CHOOSE_FILE -> openFileChooser(null)
+                Companion.PERMISSION_UPDATE -> updatePlacemarkCollection(null)
+                Companion.PERMISSION_CHOOSE_FILE -> openFileChooser(null)
             }
         }
     }
@@ -174,4 +172,8 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         }
     }
 
+    companion object {
+        private const val PERMISSION_UPDATE = 1
+        private const val PERMISSION_CHOOSE_FILE = 2
+    }
 }

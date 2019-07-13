@@ -64,7 +64,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         setContentView(R.layout.activity_placemark_list)
         val preference = getPreferences(Context.MODE_PRIVATE)
 
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.title = title
 
@@ -352,8 +352,9 @@ new mapboxgl.Marker(markerEl${marker.index})
         val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN))
         searchCoordinate = Coordinates(latitude, longitude)
         range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
-        val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER) ?: preferences.getString(ARG_NAME_FILTER, null)
-        ?: ""
+        val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER)
+                ?: preferences.getString(ARG_NAME_FILTER, null)
+                ?: ""
         val favourite = intent.getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false))
 
         // read collections id or parse from preference
@@ -399,11 +400,11 @@ new mapboxgl.Marker(markerEl${marker.index})
             fragment = PlacemarkDetailFragment().also { f ->
                 f.arguments = arguments
             }
-            supportFragmentManager.beginTransaction().replace(R.id.placemarkDetailContainer, fragment).commit()
+            supportFragmentManager.beginTransaction().replace(R.id.placemarkDetailContainer, fragment!!).commit()
 
             // show fab
-            fabStar.visibility = View.VISIBLE
-            fabMap.visibility = View.VISIBLE
+            fabStar.show()
+            fabMap.show()
             fabMap.setOnLongClickListener(fragment!!.longClickListener)
         } else {
             val intent = Intent(this, PlacemarkDetailActivity::class.java)

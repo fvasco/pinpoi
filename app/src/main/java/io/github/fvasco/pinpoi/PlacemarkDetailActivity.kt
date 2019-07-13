@@ -38,8 +38,8 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         setContentView(R.layout.activity_placemark_detail)
         placemarkDao = PlacemarkDao(applicationContext)
         placemarkDao.open()
-        val mapFab = findViewById(R.id.fabMap) as FloatingActionButton
-        val toolbar = findViewById(R.id.detailToolbar) as Toolbar
+        val mapFab = findViewById<FloatingActionButton>(R.id.fabMap)
+        val toolbar = findViewById<Toolbar>(R.id.detailToolbar)
         setSupportActionBar(toolbar)
         placemarkDetailContainer.setOnTouchListener(OnSwipeTouchListener(this, placemarkDetailContainer.context))
 

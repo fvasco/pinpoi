@@ -4,7 +4,6 @@ import android.util.Log
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.openInputStream
 import java.io.IOException
-import java.net.URL
 
 /**
  * KML importer

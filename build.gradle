@@ -7,9 +7,10 @@ buildscript {
             url 'https://maven.google.com/'
             name 'Google'
         }
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.4.2'
     }
 }
 
@@ -23,6 +24,6 @@ allprojects {
     }
 
     wrapper {
-        gradleVersion = '4.10.2'
+        gradleVersion = '5.1.1'
     }
 }

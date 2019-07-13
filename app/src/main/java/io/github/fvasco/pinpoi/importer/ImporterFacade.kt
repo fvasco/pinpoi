@@ -9,15 +9,12 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.ProgressDialogInputStream
 import io.github.fvasco.pinpoi.util.isUri
 import io.github.fvasco.pinpoi.util.openInputStream
 import io.github.fvasco.pinpoi.util.tryDismiss
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.runOnUiThread
-import org.jetbrains.anko.uiThread
-import java.io.*
-import java.net.URL
+import java.io.IOException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ExecutionException
 import kotlin.apply

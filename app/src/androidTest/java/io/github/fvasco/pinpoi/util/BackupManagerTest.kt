@@ -35,7 +35,7 @@ class BackupManagerTest : AndroidTestCase() {
     }
 
     @Throws(Exception::class)
-    public override fun tearDown() {
+    override fun tearDown() {
         super.tearDown()
         //noinspection ResultOfMethodCallIgnored
         backupFile.delete()

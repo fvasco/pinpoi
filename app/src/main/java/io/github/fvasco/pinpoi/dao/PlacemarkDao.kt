@@ -80,7 +80,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
         if (SQL_INSTR_PRESENT && !nameFilter.isNullOrBlank()) {
             sql.append(" AND instr(upper(name),?)>0")
-            whereArgs.add(nameFilter!!.toUpperCase())
+            whereArgs.add(nameFilter.toUpperCase())
         }
 
         val locationComparator = PlacemarkDistanceComparator(coordinates)
@@ -90,7 +90,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             var maxDistance = range
             while (!cursor.isAfterLast) {
                 val p = cursorToPlacemarkSearchResult(cursor)
-                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter.isNullOrBlank() || p.name.contains(nameFilter!!, true))) {
+                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter.isNullOrBlank() || p.name.contains(nameFilter, true))) {
                     res.add(p)
                     // ensure size limit, discard farest
                     if (res.size > MAX_NEAR_RESULT) {

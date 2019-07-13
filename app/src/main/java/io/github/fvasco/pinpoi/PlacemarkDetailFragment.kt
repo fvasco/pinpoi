@@ -54,8 +54,8 @@ class PlacemarkDetailFragment : Fragment() {
                 value.description.isBlank() -> value.name
                 value.description.isHtml() ->
                     "<p>${escapeHtml(value.name)}</p>${value.description}".let { html ->
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY);
-                        else Html.fromHtml(html);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
+                        else Html.fromHtml(html)
                     }
                 else -> "${value.name}\n\n${value.description}"
             }
@@ -115,7 +115,8 @@ class PlacemarkDetailFragment : Fragment() {
         placemarkCollectionDao.open()
 
         val id = savedInstanceState?.getLong(ARG_PLACEMARK_ID)
-                ?: arguments?.getLong(ARG_PLACEMARK_ID, preferences?.getLong(ARG_PLACEMARK_ID, 0) ?: 0) ?: 0
+                ?: arguments?.getLong(ARG_PLACEMARK_ID, preferences?.getLong(ARG_PLACEMARK_ID, 0)
+                        ?: 0) ?: 0
         preferences?.edit()?.putLong(ARG_PLACEMARK_ID, id)?.apply()
     }
 
@@ -201,7 +202,7 @@ class PlacemarkDetailFragment : Fragment() {
     }
 
     fun resetStarFabIcon(starFab: FloatingActionButton) {
-        val drawable = if (placemarkAnnotation?.flagged ?: false)
+        val drawable = if (placemarkAnnotation?.flagged == true)
             R.drawable.ic_bookmark_white
         else
             R.drawable.ic_bookmark_border_white

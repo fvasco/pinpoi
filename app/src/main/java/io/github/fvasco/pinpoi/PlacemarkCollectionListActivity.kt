@@ -37,9 +37,6 @@ import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
  */
 class PlacemarkCollectionListActivity : AppCompatActivity() {
 
-    private val PERMISSION_UPDATE = 1
-    private val PERMISSION_CHOOSE_FILE = 2
-
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -57,7 +54,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
 
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.title = title
 
@@ -124,7 +121,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        val recyclerView = findViewById(R.id.placemarkcollectionList) as RecyclerView
+        val recyclerView = findViewById<RecyclerView>(R.id.placemarkcollectionList)
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(placemarkCollectionDao.findAllPlacemarkCollection())
     }
 
@@ -227,16 +224,16 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     private fun deleteCollection() {
-        if (fragment != null) {
+        fragment?.let { fragment ->
             AlertDialog.Builder(this)
                     .setTitle(R.string.action_delete)
                     .setMessage(R.string.delete_placemark_collection_confirm)
                     .setPositiveButton(R.string.ok) { dialog, _ ->
                         dialog.tryDismiss()
-                        fragment!!.deletePlacemarkCollection()
-                        fabUpdate.visibility = View.GONE
+                        fragment.deletePlacemarkCollection()
+                        fabUpdate.hide()
                         supportFragmentManager.beginTransaction().remove(fragment).commit()
-                        fragment = null
+                        this.fragment = null
                         setupRecyclerView()
                     }
                     .setNegativeButton(R.string.cancel, DismissOnClickListener)
@@ -255,7 +252,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val pc = mValues[position]
             holder.mItem = pc
-            if (pc.category.isNullOrEmpty()) {
+            if (pc.category.isEmpty()) {
                 holder.view.text = pc.name
             } else {
                 stringBuilder.setLength(0)
@@ -278,7 +275,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                         this@PlacemarkCollectionListActivity.fabUpdate.setOnClickListener { this.updatePlacemarkCollection() }
                     }
                     // show update button
-                    fabUpdate.visibility = View.VISIBLE
+                    fabUpdate.show()
                 } else {
                     val context = view.context
                     val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
@@ -293,12 +290,13 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val view: TextView
+            val view: TextView = view.findViewById(android.R.id.text1) as TextView
             var mItem: PlacemarkCollection? = null
-
-            init {
-                this.view = view.findViewById(android.R.id.text1) as TextView
-            }
         }
+    }
+
+    companion object {
+        private const val PERMISSION_UPDATE = 1
+        private const val PERMISSION_CHOOSE_FILE = 2
     }
 }

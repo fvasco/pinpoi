@@ -315,7 +315,7 @@ public final class OpenLocationCode {
             } else {
                 // Use the 4x5 grid for digits after 10.
                 int digitVal = CODE_ALPHABET.indexOf(decoded.charAt(digit));
-                int row = (int) (digitVal / GRID_COLUMNS.intValue());
+                int row = (digitVal / GRID_COLUMNS.intValue());
                 int col = digitVal % GRID_COLUMNS.intValue();
                 latPrecision = latPrecision.divide(GRID_ROWS);
                 lngPrecision = lngPrecision.divide(GRID_COLUMNS);

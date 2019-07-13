@@ -109,7 +109,8 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
         pc.category = cursor.getString(4)
         pc.lastUpdate = cursor.getLong(5)
         pc.poiCount = cursor.getInt(6)
-        pc.fileFormatFilter = FileFormatFilter.valueOf(cursor.getString(7) ?: FileFormatFilter.NONE.toString())
+        pc.fileFormatFilter = FileFormatFilter.valueOf(cursor.getString(7)
+                ?: FileFormatFilter.NONE.toString())
         return pc
     }
 }
