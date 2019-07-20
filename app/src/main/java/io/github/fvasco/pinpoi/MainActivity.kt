@@ -107,12 +107,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     override fun onPause() {
         setUseLocationManagerListener(false)
-        super.onPause()
-    }
-
-    override fun onStop() {
         getPreferences(Context.MODE_PRIVATE).edit().putBoolean(PREFEFERNCE_GPS, switchGps.isChecked).putString(PREFEFERNCE_LATITUDE, latitudeText.text.toString()).putString(PREFEFERNCE_LONGITUDE, longitudeText.text.toString()).putString(PREFEFERNCE_NAME_FILTER, nameFilterText.text.toString()).putBoolean(PREFEFERNCE_FAVOURITE, favouriteCheck.isChecked).putBoolean(PREFEFERNCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFEFERNCE_RANGE, rangeSeek.progress).putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory).putLong(PREFEFERNCE_COLLECTION, if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id).apply()
-        super.onStop()
+        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

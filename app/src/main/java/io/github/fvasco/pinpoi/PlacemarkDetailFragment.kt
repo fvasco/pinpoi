@@ -120,9 +120,9 @@ class PlacemarkDetailFragment : Fragment() {
         preferences?.edit()?.putLong(ARG_PLACEMARK_ID, id)?.apply()
     }
 
-    override fun onStop() {
+    override fun onPause() {
         saveData()
-        super.onStop()
+        super.onPause()
     }
 
     override fun onDestroy() {
