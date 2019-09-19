@@ -15,8 +15,7 @@ import java.util.*
  * @author Francesco Vasco
  */
 abstract class AbstractXmlImporter : AbstractImporter() {
-    protected val DOCUMENT_TAG = "<XML>"
-    protected val parser = Util.XML_PULL_PARSER_FACTORY.newPullParser()
+    protected val parser: XmlPullParser = Util.XML_PULL_PARSER_FACTORY.newPullParser()
     protected var placemark: Placemark? = null
     protected var text: String = ""
     protected var tag: String = DOCUMENT_TAG
@@ -94,4 +93,7 @@ abstract class AbstractXmlImporter : AbstractImporter() {
     @Throws(IOException::class)
     protected abstract fun handleEndTag()
 
+    companion object {
+        private const val DOCUMENT_TAG = "<XML>"
+    }
 }

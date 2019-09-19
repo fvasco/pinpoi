@@ -55,7 +55,7 @@ abstract class AbstractImporter {
     }
 
     /**
-     * Read datas, use [.importPlacemark] to persistence it
+     * Read datas, use [importPlacemark] to persistence it
 
      * @param inputStream data source
      * *

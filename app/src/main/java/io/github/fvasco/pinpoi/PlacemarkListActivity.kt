@@ -256,9 +256,9 @@ attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contri
  vertical-align: middle;
  text-align: center;
 }</style>""")
-                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js"></script>""")
+                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.3.0/mapbox-gl.js"></script>""")
                     append("""<script src="https://cdn.klokantech.com/openmaptiles-language/v1.0/openmaptiles-language.js"></script>""")
-                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css" rel="stylesheet" />""")
+                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.3.0/mapbox-gl.css" rel="stylesheet" />""")
                     append("</html>")
                     append("""<body> <div id="map"></div> <script>""")
                     val markerHeight = 50

@@ -56,7 +56,7 @@ class Ov2Importer : AbstractImporter() {
                     dataInputStream.readFully(nameBuffer, 0, nameLength)
                     // skip null byte
                     if (dataInputStream.read() != 0) {
-                        throw IOException("wrong string termination " + rectype)
+                        throw IOException("wrong string termination $rectype")
                     }
                     // if rectype=3 description contains two-zero terminated string
                     // select first, discard other
@@ -79,7 +79,7 @@ class Ov2Importer : AbstractImporter() {
 
                 // block header
                 1 -> {
-                    Log.i(Ov2Importer::class.java.simpleName, "Skip record type " + rectype)
+                    Log.i(Ov2Importer::class.java.simpleName, "Skip record type $rectype")
                     dataInputStream.skipBytes(20)
                 }
 

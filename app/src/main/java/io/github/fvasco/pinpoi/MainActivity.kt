@@ -272,9 +272,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                                     // check OLC
                                     var olc = OpenLocationCode(address)
                                     // if required try to recover location
-                                    try {
+                                    runCatching {
                                         olc = olc.recover(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                    } catch (e: Exception) {
                                         // ignore error
                                     }
                                     val codeArea = olc.decode()
