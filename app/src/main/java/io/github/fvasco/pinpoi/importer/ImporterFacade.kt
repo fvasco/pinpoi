@@ -100,9 +100,6 @@ class ImporterFacade(context: Context) {
                     val placemark = placemarkEvent.placemark
                     if (placemarkDao.insert(placemark)) {
                         ++placemarkCount
-                        if (progressDialog != null && progressDialogMessageFormat != null) {
-                            val message = String.format(progressDialogMessageFormat!!, placemarkCount)
-                        }
                     } else {
                         // discard (duplicate?) placemark
                         if (BuildConfig.DEBUG) {

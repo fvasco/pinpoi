@@ -81,33 +81,39 @@ fun DialogInterface.tryDismiss() {
     }
 }
 
-fun longToast(text: CharSequence, context: Context?) {
+fun showLongToast(text: CharSequence, context: Context?) {
     if (context == null) return
     val toast = Toast.makeText(context, text, Toast.LENGTH_LONG)
     toast.show()
 }
 
-fun longToast(resId: Int, context: Context?) {
+fun showLongToast(resId: Int, context: Context?) {
     if (context == null) return
     val toast = Toast.makeText(context, resId, Toast.LENGTH_LONG)
     toast.show()
 }
 
-fun toast(text: CharSequence, context: Context?) {
+fun showToast(text: CharSequence, context: Context?) {
     if (context == null) return
     val toast = Toast.makeText(context, text, Toast.LENGTH_SHORT)
     toast.show()
 }
 
-fun toast(resId: Int, context: Context?) {
+fun showToast(resId: Int, context: Context?) {
     if (context == null) return
     val toast = Toast.makeText(context, resId, Toast.LENGTH_SHORT)
     toast.show()
 }
 
+fun Context.showToast(throwable: Throwable) {
+    runOnUiThread {
+        showLongToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}", this)
+    }
+}
+
 private val uiHandler = Handler(Looper.getMainLooper())
 fun runOnUiThread(block: () -> Unit) {
-    uiHandler.post(Runnable { block() })
+    uiHandler.post { block() }
 }
 
 private val EXECUTOR = Executors.newCachedThreadPool()

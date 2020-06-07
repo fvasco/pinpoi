@@ -11,6 +11,7 @@ android {
         versionCode 71
         versionName '1.7.0'
         testApplicationId 'io.github.fvasco.pinpoi_test'
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -45,7 +46,6 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'com.google.android.material:material:1.1.0'
 }

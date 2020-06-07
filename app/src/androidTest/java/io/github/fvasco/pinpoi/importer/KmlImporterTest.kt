@@ -13,7 +13,6 @@ import java.io.ByteArrayInputStream
 class KmlImporterTest : AbstractImporterTestCase() {
 
     @Test
-    @Throws(Exception::class)
     fun testImport2() {
         val list = importPlacemark(KmlImporter(), "test2.kml")
         assertEquals(2, list.size)
@@ -30,7 +29,6 @@ class KmlImporterTest : AbstractImporterTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testImportNetworkLink() {
         val xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<kml xmlns=\"http://earth.google.com/kml/2.0\">\n" +

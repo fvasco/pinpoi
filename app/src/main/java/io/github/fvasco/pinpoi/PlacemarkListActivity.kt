@@ -296,14 +296,14 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
                 val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate,
                         range.toDouble(), collectionIds, nameFilter, favourite)
                 Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=${placemarks.size}")
-                runOnUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size), applicationContext) }
+                runOnUiThread { showToast(getString(R.string.n_placemarks_found, placemarks.size), applicationContext) }
                 placemarksConsumer(placemarks)
 
                 // set up placemark id list for left/right swipe in placemark detail
                 placemarkIdArray = placemarks.map { it.id }.toLongArray()
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                runOnUiThread { longToast(getString(R.string.error_search, e.message), applicationContext) }
+                runOnUiThread { showLongToast(getString(R.string.error_search, e.message), applicationContext) }
             } finally {
                 placemarkDao.close()
             }

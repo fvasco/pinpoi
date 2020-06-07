@@ -1,48 +1,55 @@
 package io.github.fvasco.pinpoi.util
 
-import android.test.AndroidTestCase
-import android.test.RenamingDelegatingContext
+import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import org.junit.After
+import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import java.io.File
 
 /**
  * @author Francesco Vasco
  */
-class BackupManagerTest : AndroidTestCase() {
+@RunWith(AndroidJUnit4::class)
+class BackupManagerTest {
+
+    lateinit var instrumentationContext: Context
 
     private lateinit var backupFile: File
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
     private lateinit var placemarkDao: PlacemarkDao
     private lateinit var backupManager: BackupManager
 
-    @Throws(Exception::class)
-    override fun setUp() {
-        super.setUp()
-        val testContext = RenamingDelegatingContext(context, "test_")
-        backupFile = File(testContext.cacheDir, "test.backup")
-        placemarkCollectionDao = PlacemarkCollectionDao(testContext)
-        placemarkDao = PlacemarkDao(testContext)
+    @Before
+    fun setUp() {
+        instrumentationContext = InstrumentationRegistry.getInstrumentation().context
+        backupFile = File(instrumentationContext.cacheDir, "test.backup")
+        placemarkCollectionDao = PlacemarkCollectionDao(instrumentationContext)
+        placemarkDao = PlacemarkDao(instrumentationContext)
         //noinspection ResultOfMethodCallIgnored
         if (backupFile.exists()) {
             assertTrue(backupFile.delete())
         }
 
         // init database
-        setUpDebugDatabase(testContext)
+        setUpDebugDatabase(instrumentationContext)
         backupManager = BackupManager(placemarkCollectionDao, placemarkDao)
     }
 
-    @Throws(Exception::class)
-    override fun tearDown() {
-        super.tearDown()
+    @After
+    fun tearDown() {
         //noinspection ResultOfMethodCallIgnored
         backupFile.delete()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testBackup() {
         // create
         backupManager.create(backupFile)

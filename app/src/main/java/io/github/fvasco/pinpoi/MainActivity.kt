@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun chooseAddress(addresses: List<Address>, context: Context) {
         try {
             if (addresses.isEmpty()) {
-                longToast(getString(R.string.error_no_address_found), context)
+                showLongToast(getString(R.string.error_no_address_found), context)
             } else {
                 val options = addresses.map { LocationUtil.toString(it) }.toTypedArray()
                 AlertDialog.Builder(context).setItems(options) { dialog, which ->
@@ -315,7 +315,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         } catch (e: IOException) {
             Log.e(MainActivity::class.java.simpleName, "searchAddress", e)
-            longToast(getString(R.string.error_network), context)
+            showLongToast(getString(R.string.error_network), context)
         }
     }
 
@@ -339,7 +339,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
             Log.d(MainActivity::class.java.simpleName, "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds")
             if (collectionsIds.isEmpty()) {
-                longToast(getString(R.string.n_placemarks_found, 0), view.context)
+                showLongToast(getString(R.string.n_placemarks_found, 0), view.context)
                 onManagePlacemarkCollections()
             } else {
                 val context = view.context
@@ -365,7 +365,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 context.startActivity(intent)
             }
         } catch (e: Exception) {
-            longToast(R.string.validation_error, view.context)
+            showLongToast(R.string.validation_error, view.context)
             Log.e(MainActivity::class.java.simpleName, "onSearchPoi", e)
         }
 

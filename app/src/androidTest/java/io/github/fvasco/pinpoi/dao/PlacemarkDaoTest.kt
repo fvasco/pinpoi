@@ -1,17 +1,25 @@
 package io.github.fvasco.pinpoi.dao
 
-import android.test.AndroidTestCase
-import android.test.RenamingDelegatingContext
+import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.distanceTo
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import kotlin.math.cos
 
 /**
  * @author Francesco Vasco
  */
-class PlacemarkDaoTest : AndroidTestCase() {
+@RunWith(AndroidJUnit4::class)
+class PlacemarkDaoTest {
+
+    lateinit var instrumentationContext: Context
 
     val POMPEI_LOCATION: Coordinates = Coordinates(40.7491819f, 14.5007385f)
     val ERCOLANO_LOCATION: Coordinates = Coordinates(40.8060768f, 14.3529209f)
@@ -19,16 +27,16 @@ class PlacemarkDaoTest : AndroidTestCase() {
 
     private lateinit var dao: PlacemarkDao
 
-    @Throws(Exception::class)
-    override fun setUp() {
-        dao = PlacemarkDao(RenamingDelegatingContext(context, "test_"))
+    @Before
+    fun setUp() {
+        instrumentationContext = InstrumentationRegistry.getInstrumentation().context
+        dao = PlacemarkDao(instrumentationContext)
         dao.open()
     }
 
-    @Throws(Exception::class)
-    override fun tearDown() {
+    @After
+    fun tearDown() {
         dao.close()
-        super.tearDown()
     }
 
     private fun insertPompeiErcolanoVesuvio() {
@@ -53,7 +61,6 @@ class PlacemarkDaoTest : AndroidTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testFindAllPlacemarkNear() {
         insertPompeiErcolanoVesuvio()
 
@@ -104,7 +111,6 @@ class PlacemarkDaoTest : AndroidTestCase() {
      * Test aroung longitude 180
      */
     @Test
-    @Throws(Exception::class)
     fun testFindAllPlacemarkNearLongitude180() {
         // insert some other point
         insertPompeiErcolanoVesuvio()
@@ -149,7 +155,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
                 val referenceLocation = Coordinates((lat + 4 * cos(lon.toDouble())).toFloat(), (lon + 3 * cos(lat.toDouble())).toFloat())
                 val placemarks = dao.findAllPlacemarkNear(referenceLocation,
                         referenceLocation.distanceTo(p.coordinates).toDouble(), setOf(1L))
-                assertEquals("Error on " + name, 1, placemarks.size)
+                assertEquals("Error on $name", 1, placemarks.size)
                 val psr = placemarks.first()
                 assertEquals(name, psr.name)
                 lat += 12
@@ -159,7 +165,6 @@ class PlacemarkDaoTest : AndroidTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testInsert() {
         insertPompeiErcolanoVesuvio()
 
@@ -181,7 +186,6 @@ class PlacemarkDaoTest : AndroidTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testDeleteByCollectionId() {
         insertPompeiErcolanoVesuvio()
 
@@ -197,7 +201,6 @@ class PlacemarkDaoTest : AndroidTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testPlacemarkAnnotation() {
         insertPompeiErcolanoVesuvio()
         val p = dao.getPlacemark(1) ?: error("'1' not found")

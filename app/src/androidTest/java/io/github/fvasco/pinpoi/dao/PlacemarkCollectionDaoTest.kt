@@ -1,35 +1,41 @@
 package io.github.fvasco.pinpoi.dao
 
-import android.test.AndroidTestCase
-import android.test.RenamingDelegatingContext
+import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
 /**
  * @author Francesco Vasco
  */
-class PlacemarkCollectionDaoTest : AndroidTestCase() {
+@RunWith(AndroidJUnit4::class)
+class PlacemarkCollectionDaoTest {
 
     private lateinit var dao: PlacemarkCollectionDao
 
-    @Throws(Exception::class)
-    override fun setUp() {
-        super.setUp()
-        dao = PlacemarkCollectionDao(RenamingDelegatingContext(context, "test_"))
+    lateinit var instrumentationContext: Context
+
+    @Before
+    fun setUp() {
+        instrumentationContext = InstrumentationRegistry.getInstrumentation().context
+        dao = PlacemarkCollectionDao(instrumentationContext)
         dao.open()
         for (pc in dao.findAllPlacemarkCollection()) {
             dao.delete(pc)
         }
     }
 
-    @Throws(Exception::class)
-    override fun tearDown() {
+    @After
+    fun tearDown() {
         dao.close()
-        super.tearDown()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testFindPlacemarkCollectionCategory() {
         val pc = PlacemarkCollection()
         pc.name = "test"
@@ -46,7 +52,6 @@ class PlacemarkCollectionDaoTest : AndroidTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testFindPlacemarkCollection() {
         val pc = PlacemarkCollection()
         pc.name = "test"
@@ -95,7 +100,7 @@ class PlacemarkCollectionDaoTest : AndroidTestCase() {
         assertNull(dao.findPlacemarkCollectionById(1))
     }
 
-    @Throws(Exception::class)
+    @Test
     fun testFindPlacemarkCollectionByName() {
         val pc = PlacemarkCollection()
         pc.name = "test"

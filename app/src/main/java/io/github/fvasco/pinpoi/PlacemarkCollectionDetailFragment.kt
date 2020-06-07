@@ -71,7 +71,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         showUpdatedCollectionInfo()
 
         if (placemarkCollection.poiCount == 0) {
-            longToast(getString(R.string.poi_count, 0), context)
+            showLongToast(getString(R.string.poi_count, 0), context)
         }
     }
 
@@ -145,9 +145,9 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 val count = importerFacade.importPlacemarks(placemarkCollection)
                 runOnUiThread {
                     if (count == 0) {
-                        longToast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)), context)
+                        showLongToast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)), context)
                     } else {
-                        longToast(getString(R.string.update_collection_success, placemarkCollection.name, count, DecimalFormat("+0;-0").format(count - oldCount)), context)
+                        showLongToast(getString(R.string.update_collection_success, placemarkCollection.name, count, DecimalFormat("+0;-0").format(count - oldCount)), context)
                     }
                 }
             } catch (e: Exception) {
@@ -193,10 +193,10 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 .setTitle(getString(R.string.fileFormatFilter))
                 .setItems(FileFormatFilter.values().map {
                     "${it.name} ${if (it == FileFormatFilter.NONE) getString(R.string.any_filter) else it.validExtension.joinToString(prefix = "(", postfix = ")") { ".$it" }}"
-                }.toTypedArray(), { dialog, which ->
+                }.toTypedArray()) { dialog, which ->
                     dialog.tryDismiss()
                     setFileFormatFilter(FileFormatFilter.values()[which])
-                })
+                }
                 .show()
     }
 

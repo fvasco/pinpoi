@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.openlocationcode.OpenLocationCode
@@ -51,8 +52,7 @@ class PlacemarkDetailFragment : Fragment() {
                 value.description.isBlank() -> value.name
                 value.description.isHtml() ->
                     "<p>${Html.escapeHtml(value.name)}</p>${value.description}".let { html ->
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
-                        else Html.fromHtml(html)
+                        Html.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT)
                     }
                 else -> "${value.name}\n\n${value.description}"
             }

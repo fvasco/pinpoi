@@ -11,9 +11,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class GeoRssImporterTest : AbstractImporterTestCase() {
 
-
     @Test
-    @Throws(Exception::class)
     fun testimportAtom() {
         val list = importPlacemark(GeoRssImporter(), "georss.atom.xml")
 
@@ -27,7 +25,6 @@ class GeoRssImporterTest : AbstractImporterTestCase() {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testimportRss() {
         val list = importPlacemark(GeoRssImporter(), "georss.rss.xml")
 

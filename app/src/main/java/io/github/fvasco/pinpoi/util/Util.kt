@@ -20,12 +20,6 @@ fun assertDebug(check: Boolean, value: Any? = null) {
         throw AssertionError(value?.toString())
 }
 
-fun Context.showToast(throwable: Throwable) {
-    runOnUiThread {
-        longToast(throwable.message ?: "Error ${throwable.javaClass.simpleName}", this)
-    }
-}
-
 /**
  * Try to detect HTML text
  */

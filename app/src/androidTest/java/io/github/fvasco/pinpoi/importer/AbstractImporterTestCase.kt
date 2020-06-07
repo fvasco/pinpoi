@@ -23,7 +23,7 @@ abstract class AbstractImporterTestCase {
 
     @Before
     fun setup() {
-        context = InstrumentationRegistry.getContext()
+        context = InstrumentationRegistry.getInstrumentation().context
     }
 
     /**
@@ -33,9 +33,8 @@ abstract class AbstractImporterTestCase {
      * *
      * @return list of imported placemark
      */
-    @Throws(Exception::class)
     fun importPlacemark(importer: AbstractImporter, resource: String, fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE): List<Placemark> {
-        javaClass.getResourceAsStream(resource).use {
+        checkNotNull(javaClass.getResourceAsStream(resource)).use {
             return importPlacemark(importer, it, fileFormatFilter)
         }
     }
@@ -43,7 +42,6 @@ abstract class AbstractImporterTestCase {
     /**
      * Execute import
      */
-    @Throws(Exception::class)
     fun importPlacemark(importer: AbstractImporter, input: InputStream, fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE): List<Placemark> {
         val list = ArrayList<Placemark>()
         importer.collectionId = 1
@@ -52,7 +50,7 @@ abstract class AbstractImporterTestCase {
         importer.importPlacemarks(input)
         for (p in list) {
             assertEquals(0, p.id)
-            assertTrue(!p.name.isEmpty())
+            assertTrue(p.name.isNotEmpty())
             assertTrue(!p.coordinates.latitude.isNaN())
             assertTrue(!p.coordinates.longitude.isNaN())
             assertEquals(1, p.collectionId)

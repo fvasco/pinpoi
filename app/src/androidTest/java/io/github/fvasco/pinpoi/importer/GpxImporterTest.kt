@@ -12,7 +12,6 @@ import org.junit.runner.RunWith
 class GpxImporterTest : AbstractImporterTestCase() {
 
     @Test
-    @Throws(Exception::class)
     fun testImportImpl() {
         val list = importPlacemark(GpxImporter(), "test.gpx")
 
