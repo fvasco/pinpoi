@@ -7,6 +7,7 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
+import kotlin.math.sin
 
 /**
  * Debug utilities
@@ -50,13 +51,12 @@ fun setUpDebugDatabase(context: Context) {
                     for (lon in -90..90 step 2) {
                         placemark.id = 0
                         placemark.name = "Placemark $lat,$lon / $pci"
-                        placemark.description = if ((lat + lon) % 10 == 0)
-                            ""
-                        else if (pci == 0)
-                            placemark.name + "<u>beautiful</u> description"
-                        else
-                            placemark.name + " description"
-                        placemark.coordinates = Coordinates((lat + Math.sin((lat + pci).toDouble())).toFloat(), (lon + Math.sin((lon - pci).toDouble())).toFloat())
+                        placemark.description = when {
+                            (lat + lon) % 10 == 0 -> ""
+                            pci == 0 -> placemark.name + "<u>beautiful</u> description"
+                            else -> placemark.name + " description"
+                        }
+                        placemark.coordinates = Coordinates((lat + sin((lat + pci).toDouble())).toFloat(), (lon + sin((lon - pci).toDouble())).toFloat())
                         placemark.collectionId = placemarkCollection.id
                         placemarkDao.insert(placemark)
 

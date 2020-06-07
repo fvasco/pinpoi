@@ -6,6 +6,7 @@ import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.distanceTo
 import org.junit.Test
+import kotlin.math.cos
 
 /**
  * @author Francesco Vasco
@@ -145,7 +146,7 @@ class PlacemarkDaoTest : AndroidTestCase() {
                 p.collectionId = 1
                 dao.insert(p)
 
-                val referenceLocation = Coordinates((lat + 4 * Math.cos(lon.toDouble())).toFloat(), (lon + 3 * Math.cos(lat.toDouble())).toFloat())
+                val referenceLocation = Coordinates((lat + 4 * cos(lon.toDouble())).toFloat(), (lon + 3 * cos(lat.toDouble())).toFloat())
                 val placemarks = dao.findAllPlacemarkNear(referenceLocation,
                         referenceLocation.distanceTo(p.coordinates).toDouble(), setOf(1L))
                 assertEquals("Error on " + name, 1, placemarks.size)

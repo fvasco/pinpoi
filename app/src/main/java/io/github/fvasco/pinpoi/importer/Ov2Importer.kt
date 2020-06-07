@@ -13,7 +13,7 @@ import java.io.InputStream
  * @author Francesco Vasco
  */
 /* File format
-1 byte: recotd type
+1 byte: record type
 4 bytes: length of this record in bytes (including the T and L fields)
 4 bytes: longitude coordinate of the POI
 4 bytes: latitude coordinate of the POI
@@ -36,7 +36,7 @@ class Ov2Importer : AbstractImporter() {
                 // it is a simple POI record
                 2, 3 -> {
                     val total = readIntLE(dataInputStream)
-                    Log.i(Ov2Importer::class.java.simpleName, "Process record type $rectype total $total")
+                    Log.d(Ov2Importer::class.java.simpleName, "Process record type $rectype total $total")
                     var nameLength = total - 14
 
                     // read lon, lat
@@ -79,7 +79,7 @@ class Ov2Importer : AbstractImporter() {
 
                 // block header
                 1 -> {
-                    Log.i(Ov2Importer::class.java.simpleName, "Skip record type $rectype")
+                    Log.d(Ov2Importer::class.java.simpleName, "Skip record type $rectype")
                     dataInputStream.skipBytes(20)
                 }
 

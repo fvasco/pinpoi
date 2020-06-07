@@ -1,69 +1,78 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:focusable="true"
-              android:focusableInTouchMode="true"
-              android:orientation="vertical">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/placemarkNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment" />
 
     <Space
-            android:layout_width="match_parent"
-            android:layout_height="32dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="32dp" />
 
     <EditText
-            android:id="@+id/noteText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textMultiLine"
-            android:padding="@dimen/text_margin"/>
+        android:id="@+id/noteText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textMultiLine"
+        android:padding="@dimen/text_margin" />
 
     <TextView
-            android:id="@+id/placemarkDetailText"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment"/>
+        android:id="@+id/placemarkDetailText"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        tools:context="io.github.fvasco.pinpoi.PlacemarkDetailFragment" />
 
     <TextView
-            android:id="@+id/coordinatesText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="3dp"
-            android:text="@string/location"/>
+        android:id="@+id/coordinatesText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="3dp"
+        android:text="@string/location" />
 
     <TextView
-            android:id="@+id/addressText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"/>
+        android:id="@+id/addressText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
 
     <TextView
-            android:id="@+id/mapcodeText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"/>
+        android:id="@+id/plusCodeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
 
     <TextView
-            android:id="@+id/collectionDescriptionTitle"
-            style="?android:attr/textAppearanceLarge"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/text_margin"/>
+        android:id="@+id/collectionDescriptionTitle"
+        style="?android:attr/textAppearanceLarge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/text_margin" />
 
     <TextView
-            android:id="@+id/collectionDescriptionText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+        android:id="@+id/collectionDescriptionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <ImageButton
-            android:id="@+id/shareButton"
-            android:text=""
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:src="@android:drawable/ic_menu_share"/>
+        android:id="@+id/shareButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@android:drawable/ic_menu_share"
+        android:text="" />
 
     <Space
-            android:layout_width="match_parent"
-            android:layout_height="128dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="128dp" />
 </LinearLayout>

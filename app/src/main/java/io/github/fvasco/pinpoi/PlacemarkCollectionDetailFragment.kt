@@ -2,32 +2,26 @@ package io.github.fvasco.pinpoi
 
 import android.Manifest
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import android.os.Environment
-import android.support.design.widget.CollapsingToolbarLayout
-import android.support.v4.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.openFileChooser
-import io.github.fvasco.pinpoi.util.showToast
-import io.github.fvasco.pinpoi.util.tryDismiss
+import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.support.v4.longToast
-import org.jetbrains.anko.support.v4.onUiThread
 import java.text.DecimalFormat
+
 
 /**
  * A fragment representing a single Placemark Collection detail screen.
@@ -46,20 +40,15 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         placemarkCollectionDao.open()
 
         val arguments = arguments
-        if (arguments?.containsKey(ARG_PLACEMARK_COLLECTION_ID) == true) {
-            placemarkCollection = placemarkCollectionDao.findPlacemarkCollectionById(
+        placemarkCollection = if (arguments?.containsKey(ARG_PLACEMARK_COLLECTION_ID) == true) {
+            placemarkCollectionDao.findPlacemarkCollectionById(
                     if (savedInstanceState == null)
                         arguments.getLong(ARG_PLACEMARK_COLLECTION_ID)
                     else
                         savedInstanceState.getLong(ARG_PLACEMARK_COLLECTION_ID))
                     ?: PlacemarkCollection()
-
-            val appBarLayout = activity?.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
-            if (appBarLayout != null) {
-                appBarLayout.title = placemarkCollection.name
-            }
         } else {
-            placemarkCollection = PlacemarkCollection()
+            PlacemarkCollection()
         }
     }
 
@@ -70,7 +59,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        categoryText.setAdapter(ArrayAdapter(context,
+        categoryText.setAdapter(ArrayAdapter(context!!,
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()))
         fileFormatFilterButton.setOnClickListener { openFileFormatFilterChooser() }
@@ -82,7 +71,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         showUpdatedCollectionInfo()
 
         if (placemarkCollection.poiCount == 0) {
-            longToast(getString(R.string.poi_count, 0))
+            longToast(getString(R.string.poi_count, 0), context)
         }
     }
 
@@ -126,8 +115,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
      * Update screen with poi count and last update
      */
     private fun showUpdatedCollectionInfo() {
-        val appBarLayout = activity?.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout
-        appBarLayout?.title = placemarkCollection.name
+        collectionNameText.text = placemarkCollection.name
         val poiCount = placemarkCollection.poiCount
         poiCountText.text = getString(R.string.poi_count, poiCount)
         lastUpdateText.text = getString(R.string.last_update, placemarkCollection.lastUpdate)
@@ -144,9 +132,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         }
 
     fun updatePlacemarkCollection() {
-        val progressDialog = ProgressDialog(activity)
+        val progressDialog = io.github.fvasco.pinpoi.util.ProgressDialog(context!!)
         progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
-        progressDialog.setMessage(sourceText.text)
         doAsync {
             try {
                 savePlacemarkCollection()
@@ -156,23 +143,23 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
                 importerFacade.fileFormatFilter = placemarkCollection.fileFormatFilter
                 val count = importerFacade.importPlacemarks(placemarkCollection)
-                onUiThread {
+                runOnUiThread {
                     if (count == 0) {
-                        longToast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)))
+                        longToast(getString(R.string.error_update, placemarkCollection.name, getString(R.string.n_placemarks_found, 0)), context)
                     } else {
-                        longToast(getString(R.string.update_collection_success, placemarkCollection.name, count, DecimalFormat("+0;-0").format(count - oldCount)))
+                        longToast(getString(R.string.update_collection_success, placemarkCollection.name, count, DecimalFormat("+0;-0").format(count - oldCount)), context)
                     }
                 }
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "updatePlacemarkCollection", e)
-                onUiThread {
+                runOnUiThread {
                     AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
                             .setMessage(getString(R.string.error_update, placemarkCollection.name, e.message))
                             .show()
                 }
             } finally {
                 // update placemark collection info
-                onUiThread { showUpdatedCollectionInfo() }
+                runOnUiThread { showUpdatedCollectionInfo() }
             }
         }
     }

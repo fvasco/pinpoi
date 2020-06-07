@@ -7,24 +7,21 @@ import android.content.SharedPreferences
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.support.design.widget.CollapsingToolbarLayout
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.Fragment
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.openlocationcode.OpenLocationCode
-import com.mapcode.MapcodeCodec
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.placemark_detail.*
-import org.jetbrains.anko.doAsync
 import java.util.concurrent.Future
 
 /**
@@ -48,12 +45,12 @@ class PlacemarkDetailFragment : Fragment() {
                 preferences?.edit()?.putLong(ARG_PLACEMARK_ID, value.id)?.apply()
             }
 
-            (activity?.findViewById(R.id.toolbarLayout) as? CollapsingToolbarLayout)?.title = value?.name
+            placemarkNameText.text = value?.name
             placemarkDetailText.text = when {
                 value == null -> null
                 value.description.isBlank() -> value.name
                 value.description.isHtml() ->
-                    "<p>${escapeHtml(value.name)}</p>${value.description}".let { html ->
+                    "<p>${Html.escapeHtml(value.name)}</p>${value.description}".let { html ->
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
                         else Html.fromHtml(html)
                     }
@@ -66,13 +63,11 @@ class PlacemarkDetailFragment : Fragment() {
                 getString(R.string.location,
                         Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
                         Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES))
-            mapcodeText.visibility = View.GONE
+            plusCodeText.visibility = View.GONE
             if (value != null) {
-                MapcodeCodec.encode(value.coordinates.latitude.toDouble(), value.coordinates.longitude.toDouble()).firstOrNull()?.let { mapcode ->
-                    mapcodeText.text = "MapCode: $mapcode"
-                    mapcodeText.visibility = View.VISIBLE
-
-                }
+                val plusCode = OpenLocationCode.encode(value.coordinates.latitude.toDouble(), value.coordinates.longitude.toDouble())
+                plusCodeText.text = "Plus Code: $plusCode"
+                plusCodeText.visibility = View.VISIBLE
             }
             searchAddressFuture?.cancel(true)
             addressText.text = null
@@ -170,7 +165,6 @@ class PlacemarkDetailFragment : Fragment() {
             places.add(placemark.description)
         places.add(placemarkAnnotation?.note)
         places.add(addressText.text?.toString())
-        places.add(mapcodeText.text?.toString())
         with(placemark.coordinates) {
             places.add(this.toString())
             places.add(Location.convert(latitude.toDouble(), Location.FORMAT_DEGREES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES))

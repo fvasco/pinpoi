@@ -1,124 +1,136 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:focusable="true"
-              android:focusableInTouchMode="true"
-              android:orientation="vertical">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/collectionNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionDetailFragment" />
 
     <Space
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/fab_margin"/>
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fab_margin" />
 
     <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:labelFor="@+id/categoryText"
-            android:padding="@dimen/text_margin"
-            android:text="@string/category"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/categoryText"
+        android:padding="@dimen/text_margin"
+        android:text="@string/category" />
 
     <AutoCompleteTextView
-            android:id="@+id/categoryText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text|textCapCharacters"
-            android:padding="@dimen/text_margin"
-            android:singleLine="true"/>
+        android:id="@+id/categoryText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text|textCapCharacters"
+        android:padding="@dimen/text_margin"
+        android:singleLine="true" />
 
     <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:labelFor="@+id/descriptionText"
-            android:padding="@dimen/text_margin"
-            android:text="@string/description"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/descriptionText"
+        android:padding="@dimen/text_margin"
+        android:text="@string/description" />
 
     <EditText
-            android:id="@+id/descriptionText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textMultiLine"
-            android:padding="@dimen/text_margin"
-            tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionDetailFragment"/>
+        android:id="@+id/descriptionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textMultiLine"
+        android:padding="@dimen/text_margin"
+        tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionDetailFragment" />
 
     <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:labelFor="@+id/sourceText"
-                android:padding="@dimen/text_margin"
-                android:text="@string/source"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:labelFor="@+id/sourceText"
+            android:padding="@dimen/text_margin"
+            android:text="@string/source" />
 
         <LinearLayout
-                android:orientation="horizontal"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true">
+
+            <ImageButton
+                android:id="@+id/pasteButton"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:layout_centerVertical="true"
-                android:layout_alignParentRight="true" android:layout_alignParentEnd="true">
+                android:layout_height="wrap_content"
+                android:contentDescription="Paste file"
+                app:srcCompat="?android:attr/actionModePasteDrawable"
+                android:onClick="pasteUrl" />
+
             <ImageButton
-                    android:id="@+id/pasteButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Paste file"
-                    app:srcCompat="?android:attr/actionModePasteDrawable"
-                    android:onClick="pasteUrl"/>
-            <ImageButton
-                    android:id="@+id/browseButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Browse file"
-                    app:srcCompat="@drawable/ic_search_white"
-                    android:onClick="openFileChooser"/>
+                android:id="@+id/browseButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Browse file"
+                app:srcCompat="@drawable/ic_search_white"
+                android:onClick="openFileChooser" />
         </LinearLayout>
     </RelativeLayout>
 
     <EditText
-            android:id="@+id/sourceText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textUri|textMultiLine"
-            android:padding="@dimen/text_margin"
-            android:singleLine="true"/>
+        android:id="@+id/sourceText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textUri|textMultiLine"
+        android:padding="@dimen/text_margin"
+        android:singleLine="true" />
 
     <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".4"
-                android:labelFor="@+id/fileFormatFilterButton"
-                android:text="@string/fileFormatFilter"/>
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".4"
+            android:labelFor="@+id/fileFormatFilterButton"
+            android:text="@string/fileFormatFilter" />
 
         <Button
-                android:id="@+id/fileFormatFilterButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight=".6"/>
+            android:id="@+id/fileFormatFilterButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".6" />
     </LinearLayout>
 
 
     <TextView
-            android:id="@+id/lastUpdateText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/text_margin"/>
+        android:id="@+id/lastUpdateText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/text_margin" />
 
     <TextView
-            android:id="@+id/poiCountText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/text_margin"/>
+        android:id="@+id/poiCountText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/text_margin" />
 
     <Space
-            android:layout_width="match_parent"
-            android:layout_height="64dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="64dp" />
 </LinearLayout>

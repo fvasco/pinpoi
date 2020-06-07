@@ -1,6 +1,6 @@
 package io.github.fvasco.pinpoi.importer
 
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
@@ -38,7 +38,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
         val pc = PlacemarkCollection()
         pc.name = resource
         val resourceUrl = javaClass.getResource(resource)
-        pc.source = if (resourceUrl == null) resource else resourceUrl.toString()
+        pc.source = resourceUrl?.toString() ?: resource
         placemarkCollectionDao.insert(pc)
         return pc
     }

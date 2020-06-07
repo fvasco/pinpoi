@@ -13,6 +13,7 @@ import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.PlacemarkDistanceComparator
 import io.github.fvasco.pinpoi.util.distanceTo
 import java.util.*
+import kotlin.math.roundToInt
 
 /**
  * Dao for [io.github.fvasco.pinpoi.model.Placemark]
@@ -237,12 +238,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
          * *
          * @return db coordinates
          */
-        private fun coordinateToInt(f: Float): Int {
-            return Math.round(f * COORDINATE_MULTIPLIER)
-        }
+        private fun coordinateToInt(f: Float): Int = coordinateToInt(f.toDouble())
 
         private fun coordinateToInt(f: Double): Int {
-            return Math.round(f * COORDINATE_MULTIPLIER).toInt()
+            return (f * COORDINATE_MULTIPLIER).roundToInt()
         }
 
         /**

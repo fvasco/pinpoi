@@ -1,38 +1,38 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto"
-      xmlns:tools="http://schemas.android.com/tools"
-      tools:context="io.github.fvasco.pinpoi.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="io.github.fvasco.pinpoi.MainActivity">
     <item
-            android:id="@+id/action_placemark_collections"
-            android:title="@string/action_placemark_collections"
-            app:showAsAction="ifRoom"/>
+        android:id="@+id/action_placemark_collections"
+        android:title="@string/action_placemark_collections"
+        app:showAsAction="ifRoom" />
     <item android:title="@string/menu_backup">
         <menu>
             <item
-                    android:id="@+id/restore_backup"
-                    android:title="@string/action_restore_backup"
-                    app:showAsAction="never"/>
+                android:id="@+id/restore_backup"
+                android:title="@string/action_restore_backup"
+                app:showAsAction="never" />
             <item
-                    android:id="@+id/create_backup"
-                    android:title="@string/action_create_backup"
-                    app:showAsAction="never"/>
+                android:id="@+id/create_backup"
+                android:title="@string/action_create_backup"
+                app:showAsAction="never" />
         </menu>
     </item>
     <item
-            android:id="@+id/menu_debug"
-            android:title="Debug">
+        android:id="@+id/menu_debug"
+        android:title="Debug">
         <menu>
             <item
-                    android:id="@+id/debug_create_db"
-                    android:title="Use debug data (recreate DB)"
-                    app:showAsAction="never"/>
+                android:id="@+id/debug_create_db"
+                android:title="Use debug data (recreate DB)"
+                app:showAsAction="never" />
             <item
-                    android:id="@+id/debug_import_collection"
-                    android:title="Test collection import"
-                    app:showAsAction="never"/>
+                android:id="@+id/debug_import_collection"
+                android:title="Test collection import"
+                app:showAsAction="never" />
         </menu>
     </item>
     <item
-            android:id="@+id/action_web_site"
-            android:title="@string/web_site"/>
+        android:id="@+id/action_web_site"
+        android:title="@string/web_site" />
 </menu>

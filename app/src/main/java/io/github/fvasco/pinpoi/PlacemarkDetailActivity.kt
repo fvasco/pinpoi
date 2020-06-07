@@ -4,16 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.util.OnSwipeTouchListener
-import io.github.fvasco.pinpoi.util.Util
 import kotlinx.android.synthetic.main.activity_placemark_detail.*
 
 /**
@@ -27,6 +25,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     private lateinit var fragment: PlacemarkDetailFragment
     private lateinit var placemarkDao: PlacemarkDao
     private lateinit var preferences: SharedPreferences
+
     /**
      * Placemark id for swipe
      */
@@ -34,7 +33,6 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.init()
         setContentView(R.layout.activity_placemark_detail)
         placemarkDao = PlacemarkDao(applicationContext)
         placemarkDao.open()
@@ -123,10 +121,8 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
-                return true
-            }
+            navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
+            return true
         }
         return super.onOptionsItemSelected(item)
     }

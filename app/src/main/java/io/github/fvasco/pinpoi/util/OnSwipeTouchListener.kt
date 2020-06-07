@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import kotlin.math.abs
 
 /**
  * Detects left and right swipes across a view.
@@ -23,7 +24,7 @@ class OnSwipeTouchListener(private val swipeTouchListener: OnSwipeTouchListener.
         if (e1 != null && e2 != null) {
             val distanceX = e2.x - e1.x
             val distanceY = e2.y - e1.y
-            if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+            if (abs(distanceX) > abs(distanceY) && abs(distanceX) > SWIPE_DISTANCE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                 swipeTouchListener.onSwipe(if (distanceX > 0) SWIPE_RIGHT else SWIPE_LEFT)
                 return true
             }
@@ -36,8 +37,8 @@ class OnSwipeTouchListener(private val swipeTouchListener: OnSwipeTouchListener.
     }
 
     companion object {
-        val SWIPE_LEFT = false
-        val SWIPE_RIGHT = true
+        const val SWIPE_LEFT = false
+        const val SWIPE_RIGHT = true
         private const val SWIPE_DISTANCE_THRESHOLD = 100
         private const val SWIPE_VELOCITY_THRESHOLD = 100
     }

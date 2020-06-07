@@ -5,7 +5,7 @@ PinPoi imports thousand points of interest for your GPS navigator in your Androi
 
 You can import Google **KML** and **KMZ**, TomTom **OV2**, simple GeoRSS, Garmin **GPX**, Navigon ASC, **CSV** and zipped collections directly into your phone and organize them in collections.
 
-PinPoi searches using your GPS position or a custom location (location address, Open Location Code or MapCode), you can choose your destination from a map and open it with your preferred app.
+PinPoi searches using your GPS position or a custom location (location address or Plus Code), you can choose your destination from a map and open it with your preferred app.
 
 [![Main screen](https://fvasco.github.io/pinpoi/main.png)](https://fvasco.github.io/pinpoi/main.png)
 [![POI map](https://fvasco.github.io/pinpoi/poi-list-map.png)](https://fvasco.github.io/pinpoi/poi-list-map.png)

@@ -4,18 +4,16 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
-import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.tryDismiss
 
 /**
@@ -29,7 +27,6 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.init()
         setContentView(R.layout.activity_placemarkcollection_detail)
 
         val toolbar = findViewById<Toolbar>(R.id.detailToolbar)
@@ -75,11 +72,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 //
                 // http://developer.android.com/design/patterns/navigation.html#up-vs-back
                 //
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
-                    return true
-                }
-                renameCollection()
+                navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
                 return true
             }
             R.id.action_rename -> {
@@ -104,15 +97,13 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 fragment.openFileChooser(view)
             } else {
                 // request permission
-                ActivityCompat.requestPermissions(this, arrayOf(permission), Companion.PERMISSION_CHOOSE_FILE)
+                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_CHOOSE_FILE)
             }
         }
     }
 
     fun pasteUrl(view: View?) {
-        fragment?.let { fragment ->
-            fragment.pasteUrl(view)
-        }
+        fragment?.pasteUrl(view)
     }
 
     /**
@@ -127,7 +118,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 fragment.updatePlacemarkCollection()
             } else {
                 // request permission
-                ActivityCompat.requestPermissions(this, arrayOf(permission), Companion.PERMISSION_UPDATE)
+                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_UPDATE)
             }
         }
     }
@@ -136,8 +127,8 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                                             permissions: Array<String>, grantResults: IntArray) {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
-                Companion.PERMISSION_UPDATE -> updatePlacemarkCollection(null)
-                Companion.PERMISSION_CHOOSE_FILE -> openFileChooser(null)
+                PERMISSION_UPDATE -> updatePlacemarkCollection(null)
+                PERMISSION_CHOOSE_FILE -> openFileChooser(null)
             }
         }
     }

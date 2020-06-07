@@ -14,9 +14,10 @@ import io.github.fvasco.pinpoi.util.assertDebug
 abstract class AbstractDao(private val context: Context) {
     var database: SQLiteDatabase? = null
         protected set
+
     @Volatile
     private var openCount: Int = 0
-    protected var sqLiteOpenHelper: SQLiteOpenHelper = createSqLiteOpenHelper(context)
+    private var sqLiteOpenHelper: SQLiteOpenHelper = createSqLiteOpenHelper(context)
 
     protected abstract fun createSqLiteOpenHelper(context: Context): SQLiteOpenHelper
 

@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi.importer
 
-import android.app.ProgressDialog
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -9,33 +8,24 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.isUri
-import io.github.fvasco.pinpoi.util.openInputStream
-import io.github.fvasco.pinpoi.util.tryDismiss
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.runOnUiThread
+import io.github.fvasco.pinpoi.util.*
 import java.io.IOException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ExecutionException
-import kotlin.apply
 
 /**
- * Importer facade for:
+ * Import [Placemark] and update [PlacemarkCollectionDao]
  *
+ * Importer facade for:
  *  * KML
  *  * KMZ
  *  * GPX
  *  * RSS
  *  * OV2 Tomtom
  *  * ASC, CSV files
- *
- *
- *
- * Import [Placemark] and update [PlacemarkCollectionDao]
-
  * @author Francesco Vasco
  */
-class ImporterFacade(private val context: Context) {
+class ImporterFacade(context: Context) {
 
     private val placemarkDao: PlacemarkDao
     private val placemarkCollectionDao: PlacemarkCollectionDao
@@ -76,11 +66,9 @@ class ImporterFacade(private val context: Context) {
                 ?: throw IOException("Cannot import $resource")
         placemarkCollectionDao.open()
         try {
-            progressDialog?.apply {
-                context.runOnUiThread {
-                    setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                    isIndeterminate = true
-                    this@apply.show()
+            progressDialog?.also { pd ->
+                runOnUiThread {
+                    pd.show()
                 }
             }
             // insert new placemark
@@ -114,7 +102,6 @@ class ImporterFacade(private val context: Context) {
                         ++placemarkCount
                         if (progressDialog != null && progressDialogMessageFormat != null) {
                             val message = String.format(progressDialogMessageFormat!!, placemarkCount)
-                            context.runOnUiThread { progressDialog?.setMessage(message) }
                         }
                     } else {
                         // discard (duplicate?) placemark
@@ -125,9 +112,6 @@ class ImporterFacade(private val context: Context) {
                     placemarkEvent = placemarkQueue.take()
                 }
                 if (placemarkEvent is PlacemarkEvent.ParseError) throw placemarkEvent.throwable
-                progressDialog?.let {
-                    context.runOnUiThread { it.isIndeterminate = true }
-                }
                 // wait import and check exception
                 importFuture.get()
                 if (placemarkCount > 0) {
@@ -154,7 +138,7 @@ class ImporterFacade(private val context: Context) {
             try {
                 placemarkCollectionDao.close()
             } finally {
-                if (progressDialog != null) context.runOnUiThread { progressDialog?.tryDismiss() }
+                if (progressDialog != null) runOnUiThread { progressDialog?.tryDismiss() }
             }
         }
     }
@@ -181,8 +165,7 @@ class ImporterFacade(private val context: Context) {
 
             var res: AbstractImporter? = null
             if (path.length >= 3) {
-                val end = path.substringAfterLast('.').toLowerCase()
-                when (end) {
+                when (path.substringAfterLast('.').toLowerCase()) {
                     in FileFormatFilter.KML.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
                     "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res = GeoRssImporter()
@@ -203,7 +186,7 @@ class ImporterFacade(private val context: Context) {
             }
             res?.fileFormatFilter = fileFormatFilter
             Log.d(ImporterFacade::class.java.simpleName,
-                    "Importer for " + resource + " is " + if (res == null) null else res.javaClass.simpleName)
+                    "Importer for " + resource + " is " + res?.javaClass?.simpleName)
             return res
         }
     }

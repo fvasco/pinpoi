@@ -9,10 +9,9 @@ import android.net.Uri
 import android.util.Log
 import io.github.fvasco.pinpoi.PlacemarkDetailActivity
 import io.github.fvasco.pinpoi.model.PlacemarkBase
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 import java.io.*
 import java.util.*
+import kotlin.math.min
 
 /**
  * Location related utility
@@ -24,7 +23,7 @@ class LocationUtil(private val context: Context) {
     /**
      * Store resolved address
      */
-    private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(Companion.ADDRESS_CACHE_SIZE * 2, .75f, true)
+    private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
     private val addressCacheFile by lazy { File(context.cacheDir, "addressCache") }
 
     // avoid geocoder cache to reset it on initialization error
@@ -39,7 +38,7 @@ class LocationUtil(private val context: Context) {
      */
     fun getAddressStringAsync(
             coordinates: Coordinates,
-            addressConsumer: ((String?) -> Unit)?) = coordinates.doAsync {
+            addressConsumer: ((String?) -> Unit)?) = doAsync {
         var addressString: String? = synchronized(ADDRESS_CACHE) {
             if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
             ADDRESS_CACHE[coordinates]
@@ -56,7 +55,7 @@ class LocationUtil(private val context: Context) {
                 addressString = toString(addresses.first())
                 // save result in cache
                 synchronized(ADDRESS_CACHE) {
-                    ADDRESS_CACHE.put(coordinates, addressString)
+                    ADDRESS_CACHE[coordinates] = addressString
                     if (Thread.interrupted()) {
                         throw InterruptedException()
                     }
@@ -68,7 +67,7 @@ class LocationUtil(private val context: Context) {
             if (Thread.interrupted()) {
                 throw InterruptedException()
             }
-            uiThread { addressConsumer(addressString) }
+            runOnUiThread { addressConsumer(addressString) }
         }
     }
 
@@ -120,11 +119,11 @@ class LocationUtil(private val context: Context) {
         try {
             DataOutputStream(BufferedOutputStream(FileOutputStream(addressCacheFile))).use { outputStream ->
                 // first item is entry count
-                outputStream.writeShort(Math.min(Companion.ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
+                outputStream.writeShort(min(ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
 
                 val iterator = ADDRESS_CACHE.entries.iterator()
                 // if (ADDRESS_CACHE.size > ADDRESS_CACHE_SIZE) skip entries
-                repeat(ADDRESS_CACHE.size - Companion.ADDRESS_CACHE_SIZE) {
+                repeat(ADDRESS_CACHE.size - ADDRESS_CACHE_SIZE) {
                     iterator.next()
                 }
                 while (iterator.hasNext()) {
@@ -146,7 +145,7 @@ class LocationUtil(private val context: Context) {
         private const val ADDRESS_CACHE_SIZE = 512
 
         fun newLocation(latitude: Double, longitude: Double): Location {
-            val location = Location(Util::class.java.simpleName)
+            val location = Location(LocationUtil::class.java.simpleName)
             location.latitude = latitude
             location.longitude = longitude
             location.accuracy = 0f

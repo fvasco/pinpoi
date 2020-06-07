@@ -7,14 +7,7 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.NavUtils
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -25,18 +18,25 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NavUtils
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
-import org.jetbrains.anko.longToast
-import org.jetbrains.anko.toast
 import java.security.MessageDigest
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*
+import kotlin.math.abs
+import kotlin.math.ln
+import kotlin.math.roundToInt
 
 /**
  * An activity representing a list of Placemarks. This activity
@@ -60,7 +60,6 @@ class PlacemarkListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.init()
         setContentView(R.layout.activity_placemark_list)
         val preference = getPreferences(Context.MODE_PRIVATE)
 
@@ -80,7 +79,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), PERMISSION_SHOW_MAP)
             }
         } else {
-            setupRecyclerView(placemarkList)
+            setupRecyclerView(placemarkList as RecyclerView)
         }
         preference.edit().putBoolean(PREFEFERNCE_SHOW_MAP, showMap).apply()
 
@@ -99,7 +98,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             setupWebView(mapWebView)
         } else {
-            setupRecyclerView(placemarkList)
+            setupRecyclerView(placemarkList as RecyclerView)
         }
     }
 
@@ -116,7 +115,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             // to navigate up one level in the application structure. For
             // more details, see the Navigation pattern on Android Design:
             //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            // https://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
             NavUtils.navigateUpFromSameTask(this)
             return true
@@ -141,17 +140,18 @@ class PlacemarkListActivity : AppCompatActivity() {
     private fun setupWebView(mapWebView: WebView) {
         mapWebView.visibility = View.VISIBLE
         mapWebView.addJavascriptInterface(this, "pinpoi")
-        mapWebView.settings.apply {
+        with(mapWebView.settings) {
             javaScriptEnabled = true
             cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+            domStorageEnabled = true
             setGeolocationEnabled(false)
             javaScriptCanOpenWindowsAutomatically = false
             setSupportMultipleWindows(false)
         }
 
         searchPoi { placemarksSearchResult ->
-            val leafletVersion = "1.0.3"
-            val zoom: Int = ((Math.log((40_000_000.0 / range)) / Math.log(2.0)).toInt()).coerceIn(0, 18)
+            val leafletVersion = "1.6.0"
+            val zoom: Int = ((ln((40_000_000.0 / range)) / ln(2.0)).toInt()).coerceIn(0, 18)
             // map each collection id to color name
             val collectionNameMap: Map<Long, String> =
                     PlacemarkCollectionDao(applicationContext).let { placemarkCollectionDao ->
@@ -189,143 +189,61 @@ class PlacemarkListActivity : AppCompatActivity() {
                     .partition { it.placemark.flagged }
                     .let { it.second + it.first }
 
-            val maptilerMapKey: String? = BuildConfig.MAPTILER_MAP_KEY.takeIf { it.isNotBlank() }
-            val htmlText = StringBuilder(1024 + placemarksSearchResult.size * 256).apply {
-                append("""<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />""")
+            val htmlText = buildString(1024 + placemarksSearchResult.size * 256) {
+                append("""<html><head>""")
                 append("""<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />""")
                 append("""<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />""")
-                append("""<style>
-html, body {padding: 0; margin: 0; height: 100%;}
-#map {position:absolute; top:0; right:0; bottom:0; left:0;}
-</style>""")
-                if (maptilerMapKey == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-
-                    append("""<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.css" />""")
-                    append("""<script src="http://cdn.leafletjs.com/leaflet/v$leafletVersion/leaflet.js"></script>""")
-                    // add tiles fallback https://github.com/ghybs/Leaflet.TileLayer.Fallback
-                    append("""<script src="https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js"></script>""")
-                    // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
-                    append("""<script src="https://leaflet.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js"></script>""")
-                    append("</html>")
-                    append("""<body> <div id="map"></div> <script>""")
-                    append("""var map = L.map('map').setView([$searchCoordinate], $zoom);""")
-                    append("""L.tileLayer.fallback('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                val mapStyle = "position:absolute; top:0; right:0; bottom:0; left:0;"
+                append("""<link rel="stylesheet" href="https://unpkg.com/leaflet@$leafletVersion/dist/leaflet.css" />""")
+                append("""<script src="https://unpkg.com/leaflet@$leafletVersion/dist/leaflet.js"></script>""")
+                // add tiles fallback https://github.com/ghybs/Leaflet.TileLayer.Fallback
+                append("""<script src="https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js"></script>""")
+                // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
+                append("""<script src="https://leaflet.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js"></script>""")
+                append("</html>")
+                append("""<body> <div id="map" style="$mapStyle"></div> <script>""")
+                append("""var map = L.map('map').setView([$searchCoordinate], $zoom);""")
+                append("""L.tileLayer.fallback('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);""")
-                    // search center marker
-                    append("L.circle([$searchCoordinate], 1, {color: 'red', fillOpacity: 1}).addTo(map);")
-                    // search limit circle
-                    append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
-                    append("L.circle([$searchCoordinate], ${range / 2}, {color: 'orange',fillOpacity: 0}).addTo(map);\n")
+                // search center marker
+                append("L.circle([$searchCoordinate], 1, {color: 'red', fillOpacity: 1}).addTo(map);")
+                // search limit circle
+                append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
+                append("L.circle([$searchCoordinate], ${range / 2}, {color: 'orange',fillOpacity: 0}).addTo(map);\n")
 
-                    val collectionColors = HashMap<String, String>()
-                    for (marker in markers) {
-                        val markerColor = collectionColors.getOrPut(marker.collectionName) { colorFor(collectionColors.size) }
-                        val glyph = StringBuilder().apply {
-                            if (marker.placemark.hasNote) append("<i>")
-                            if (marker.placemark.flagged) append("<b>")
-                            append(marker.index)
-                            if (marker.placemark.flagged) append("</b>")
-                            if (marker.placemark.hasNote) append("</i>")
-                        }
-
-                        append("L.marker([${marker.placemark.coordinates}],{")
-                        append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'})")
-                        append("""}).addTo(map).bindPopup("""")
-                        append("<a href='javascript:pinpoi.openPlacemark(${marker.placemark.id})'>")
+                val collectionColors = HashMap<String, String>()
+                for (marker in markers) {
+                    val markerColor = collectionColors.getOrPut(marker.collectionName) { colorFor(collectionColors.size) }
+                    val glyph = StringBuilder().apply {
                         if (marker.placemark.hasNote) append("<i>")
                         if (marker.placemark.flagged) append("<b>")
-                        append(escapeJavascript(marker.placemark.name))
+                        append(marker.index)
                         if (marker.placemark.flagged) append("</b>")
                         if (marker.placemark.hasNote) append("</i>")
-                        append("</a>")
-                        append("<br>${marker.distance}&nbsp;m - ")
-                        append(escapeJavascript(marker.collectionName))
-                        append("\");\n")
                     }
-                } else {
-                    append("""<style>.mapboxgl-marker {
- cursor:pointer;
- font-family: monospace;
- background-color: rgba(255, 255, 255, 0.8);
- border-radius:50%;
- border: 1px solid black;
- width: 4ex;
- height: 4ex;
- line-height: 4ex;
- vertical-align: middle;
- text-align: center;
-}</style>""")
-                    append("""<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.3.0/mapbox-gl.js"></script>""")
-                    append("""<script src="https://cdn.klokantech.com/openmaptiles-language/v1.0/openmaptiles-language.js"></script>""")
-                    append("""<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.3.0/mapbox-gl.css" rel="stylesheet" />""")
-                    append("</html>")
-                    append("""<body> <div id="map"></div> <script>""")
-                    val markerHeight = 50
-                    val markerRadius = 10
-                    val linearOffset = 25
-                    append("""
-var map = new mapboxgl.Map({
-  container: 'map',
-  center: [${searchCoordinate.longitude},${searchCoordinate.latitude}],
-  zoom: ${zoom - 1},
-  style: 'https://api.maptiler.com/maps/0e4dbb1d-3fe4-4b6e-9b56-210fe9e31d3c/style.json?key=$maptilerMapKey',
-  attribution: '<a href="http://www.openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="http://www.openstreetmap.org/about/" target="_blank">© OpenStreetMap contributors</a>'
-});
-map.autodetectLanguage();
 
-var markerCenter = document.createElement('div');
-markerCenter.innerText = "◉";
-markerCenter.style.borderWidth = '0';
-new mapboxgl.Marker(markerCenter)
- .setLngLat([${searchCoordinate.longitude},${searchCoordinate.latitude}])
- .addTo(map);
-
-var popupOffsets = {
- 'top': [0, 0],
- 'top-left': [0,0],
- 'top-right': [0,0],
- 'bottom': [0, -$markerHeight],
- 'bottom-left': [$linearOffset, ${-(markerHeight - markerRadius + linearOffset)}],
- 'bottom-right': [-$linearOffset, ${-(markerHeight - markerRadius + linearOffset)}],
- 'left': [$markerRadius, ${-(markerHeight - markerRadius)}],
- 'right': [-$markerRadius, ${-(markerHeight - markerRadius)}]
- };
-""")
-                    for (marker in markers) {
-                        append("""
-var markerEl${marker.index} = document.createElement('div');
-        markerEl${marker.index}.innerHTML = '${marker.index}';
-        markerEl${marker.index}.style.borderColor = '#${stringToColorCode(marker.collectionName)}';
-""")
-                        if (marker.placemark.flagged) {
-                            append("""markerEl${marker.index}.style.borderWidth = '2px';""")
-                        }
-
-                        if (marker.placemark.hasNote) {
-                            append("""markerEl${marker.index}.style.borderStyle = 'dashed';""")
-                        }
-
-                        append("""
-new mapboxgl.Marker(markerEl${marker.index})
-  .setLngLat([${marker.placemark.coordinates.longitude},${marker.placemark.coordinates.latitude}])
-  .setPopup(new mapboxgl.Popup({offset:popupOffsets}).setHTML("""")
-                        append("<a href='javascript:pinpoi.openPlacemark(${marker.placemark.id})'>")
-                        if (marker.placemark.flagged) append("<b>")
-                        append(escapeJavascript(marker.placemark.name))
-                        if (marker.placemark.flagged) append("</b>")
-                        append("</a>")
-                        append("<br>${marker.distance}&nbsp;m - ")
-                        append(escapeJavascript(marker.collectionName))
-                        append("\"))")
-                        append(".addTo(map);\n")
-                    }
+                    append("L.marker([${marker.placemark.coordinates}],{")
+                    append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'})")
+                    append("""}).addTo(map).bindPopup("""")
+                    append("<a href='javascript:pinpoi.openPlacemark(${marker.placemark.id})'>")
+                    if (marker.placemark.hasNote) append("<i>")
+                    if (marker.placemark.flagged) append("<b>")
+                    append(escapeJavascript(marker.placemark.name))
+                    if (marker.placemark.flagged) append("</b>")
+                    if (marker.placemark.hasNote) append("</i>")
+                    append("</a>")
+                    append("<br>${marker.distance}&nbsp;m - ")
+                    append(escapeJavascript(marker.collectionName))
+                    append("\");\n")
                 }
                 append("</script> </body> </html>")
-            }.toString()
+            }
 
-            if (BuildConfig.DEBUG)
-                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML $htmlText")
+            if (BuildConfig.DEBUG) {
+                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML")
+                for (chunk in htmlText.chunked(4_000)) Log.i(PlacemarkListActivity::class.java.simpleName, chunk)
+            }
 
             runOnUiThread {
                 try {
@@ -359,7 +277,8 @@ new mapboxgl.Marker(markerEl${marker.index})
 
         // read collections id or parse from preference
         val collectionIds = intent.getLongArrayExtra(ARG_COLLECTION_IDS)?.toSet()
-                ?: preferences.getStringSet(ARG_COLLECTION_IDS, setOf()).map(String::toLong)
+                ?: preferences.getStringSet(ARG_COLLECTION_IDS, setOf())?.map(String::toLong)
+                ?: emptySet()
 
         // save parameters in preferences
         preferences.edit()
@@ -370,21 +289,21 @@ new mapboxgl.Marker(markerEl${marker.index})
                 .putStringSet(ARG_COLLECTION_IDS, collectionIds.map(Long::toString).toSet())
                 .apply()
 
-        showProgressDialog(getString(R.string.title_placemark_list), null, this) {
+        showProgressDialog(getString(R.string.title_placemark_list), this) {
             val placemarkDao = PlacemarkDao(applicationContext)
             placemarkDao.open()
             try {
                 val placemarks = placemarkDao.findAllPlacemarkNear(searchCoordinate,
                         range.toDouble(), collectionIds, nameFilter, favourite)
                 Log.d(PlacemarkListActivity::class.java.simpleName, "searchPoi progress placemarks.size()=${placemarks.size}")
-                runOnUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size)) }
+                runOnUiThread { toast(getString(R.string.n_placemarks_found, placemarks.size), applicationContext) }
                 placemarksConsumer(placemarks)
 
                 // set up placemark id list for left/right swipe in placemark detail
                 placemarkIdArray = placemarks.map { it.id }.toLongArray()
             } catch (e: Exception) {
                 Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                runOnUiThread { longToast(getString(R.string.error_search, e.message)) }
+                runOnUiThread { longToast(getString(R.string.error_search, e.message), applicationContext) }
             } finally {
                 placemarkDao.close()
             }
@@ -461,7 +380,7 @@ new mapboxgl.Marker(markerEl${marker.index})
                     floatArray)
             val distance = floatArray[0]
             // calculate index for arrow
-            var arrowIndex = Math.round(floatArray[1] + 45f / 2f)
+            var arrowIndex = (floatArray[1] + 45f / 2f).roundToInt()
             if (arrowIndex < 0) {
                 arrowIndex += 360
             }
@@ -473,12 +392,12 @@ new mapboxgl.Marker(markerEl${marker.index})
             stringBuilder.setLength(0)
             stringBuilder.append(position + 1).append(") ")
             if (distance < 1000f) {
-                stringBuilder.append(Integer.toString(distance.toInt())).append(" m")
+                stringBuilder.append(distance.toInt().toString()).append(" m")
             } else {
                 stringBuilder.append(if (distance < 10000f)
                     decimalFormat.format((distance / 1000f).toDouble())
                 else
-                    Integer.toString(distance.toInt() / 1000)).append(" ㎞")
+                    (distance.toInt() / 1000).toString()).append(" ㎞")
             }
             stringBuilder.append(' ')
                     .append(if (distance <= 1F) CENTER else ARROWS[arrowIndex])
@@ -517,13 +436,15 @@ new mapboxgl.Marker(markerEl${marker.index})
         const val ARG_SHOW_MAP = "showMap"
         private const val PREFEFERNCE_SHOW_MAP = "showMap"
         private const val PERMISSION_SHOW_MAP = 1
+
         // clockwise arrow
         private val ARROWS = charArrayOf(/*N*/ '\u2191', /*NE*/ '\u2197', /*E*/ '\u2192', /*SE*/ '\u2198', /*S*/ '\u2193', /*SW*/ '\u2199', /*W*/ '\u2190', /*NW*/ '\u2196')
+
         // white flag
-        private val CENTER = '\u2690'
+        private const val CENTER = '\u2690'
         private val markerColors = arrayOf("white", "orange", "cyan", "red", "yellow", "black", "magenta", "lime", "pink")
 
-        private fun colorFor(value: Int) = markerColors[Math.abs(value) % markerColors.size]
+        private fun colorFor(value: Int) = markerColors[abs(value) % markerColors.size]
 
         private fun stringToColorCode(txt: String): String =
                 MessageDigest.getInstance("MD5").digest(txt.toByteArray()).let { a ->

@@ -1,7 +1,7 @@
 package io.github.fvasco.pinpoi.importer
 
 import android.content.Context
-import android.support.test.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry
 import io.github.fvasco.pinpoi.model.Placemark
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

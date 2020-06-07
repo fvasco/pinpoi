@@ -12,9 +12,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -23,20 +20,21 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.openlocationcode.OpenLocationCode
-import com.mapcode.MapcodeCodec
-import com.mapcode.Territory
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.longToast
 import java.io.File
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Future
 import java.util.regex.Pattern
+import kotlin.math.min
 
 class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
     private var selectedPlacemarkCategory: String = ""
@@ -48,7 +46,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.init()
         setContentView(R.layout.activity_main)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         locationUtil = LocationUtil(applicationContext)
@@ -73,7 +70,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null))
         favouriteCheck.isChecked = preference.getBoolean(PREFEFERNCE_FAVOURITE, false)
         showMapCheck.isChecked = preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)
-        rangeSeek.progress = Math.min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
+        rangeSeek.progress = min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
         setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, "") ?: "")
         setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
 
@@ -268,42 +265,17 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                         val coordinateMatcherResult = """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex().matchEntire(address)
                         if (coordinateMatcherResult == null) {
                             try {
-                                try {
-                                    // check OLC
-                                    var olc = OpenLocationCode(address)
-                                    // if required try to recover location
-                                    runCatching {
-                                        olc = olc.recover(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                        // ignore error
-                                    }
-                                    val codeArea = olc.decode()
-                                    onLocationChanged(LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude))
-                                } catch (e: Exception) {
-                                    // check MapCode
-                                    // try to guess territory from edited location
-                                    val territory = try {
-                                        MapcodeCodec.encode(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                                .first()
-                                                .territory
-                                    } catch (e: Exception) {
-                                        // try to guess territory from last gps location
-                                        lastLocation?.let {
-                                            try {
-                                                MapcodeCodec.encode(it.latitude, it.longitude)
-                                                        .first()
-                                                        .territory
-                                            } catch (e: Exception) {
-                                                Territory.AAA
-                                            }
-                                        }
-                                    }
-                                    preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
-                                    val point = MapcodeCodec.decode(address, territory)
-                                    switchGps.isChecked = false
-                                    onLocationChanged(LocationUtil.newLocation(point.latDeg, point.lonDeg))
+                                // check OLC
+                                var olc = OpenLocationCode(address)
+                                // if required try to recover location
+                                runCatching {
+                                    olc = olc.recover(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
+                                    // ignore error
                                 }
+                                val codeArea = olc.decode()
+                                onLocationChanged(LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude))
                             } catch (e: Exception) {
-                                showProgressDialog(address, null, context) {
+                                showProgressDialog(address, context) {
                                     val addresses =
                                             locationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
                                                     ?: listOf()
@@ -332,7 +304,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun chooseAddress(addresses: List<Address>, context: Context) {
         try {
             if (addresses.isEmpty()) {
-                longToast(getString(R.string.error_no_address_found))
+                longToast(getString(R.string.error_no_address_found), context)
             } else {
                 val options = addresses.map { LocationUtil.toString(it) }.toTypedArray()
                 AlertDialog.Builder(context).setItems(options) { dialog, which ->
@@ -343,7 +315,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         } catch (e: IOException) {
             Log.e(MainActivity::class.java.simpleName, "searchAddress", e)
-            longToast(getString(R.string.error_network))
+            longToast(getString(R.string.error_network), context)
         }
     }
 
@@ -367,7 +339,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
             Log.d(MainActivity::class.java.simpleName, "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds")
             if (collectionsIds.isEmpty()) {
-                longToast(getString(R.string.n_placemarks_found, 0))
+                longToast(getString(R.string.n_placemarks_found, 0), view.context)
                 onManagePlacemarkCollections()
             } else {
                 val context = view.context
@@ -393,7 +365,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 context.startActivity(intent)
             }
         } catch (e: Exception) {
-            longToast(R.string.validation_error)
+            longToast(R.string.validation_error, view.context)
             Log.e(MainActivity::class.java.simpleName, "onSearchPoi", e)
         }
 
@@ -417,9 +389,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     private fun createBackup() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            showProgressDialog(
-                    getString(R.string.action_create_backup),
-                    getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), this) {
+            showProgressDialog(getString(R.string.action_create_backup), this) {
                 try {
                     val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
                     backupManager.create(BackupManager.DEFAULT_BACKUP_FILE)
@@ -454,8 +424,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     private fun restoreBackup(file: File) {
-        showProgressDialog(getString(R.string.action_restore_backup),
-                getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath), this) {
+        showProgressDialog(getString(R.string.action_restore_backup), this) {
             try {
                 val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
                 backupManager.restore(file)
@@ -581,10 +550,12 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         private const val PERMISSION_GPS_ON = 1
         private const val PERMISSION_CREATE_BACKUP = 10
         private const val PERMISSION_RESTORE_BACKUP = 11
+
         /**
          * Smallest searchable range
          */
         private const val RANGE_MIN = 5
+
         /**
          * Greatest [.rangeSeek] value,
          * searchable range value is this plus [.RANGE_MIN]

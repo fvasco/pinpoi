@@ -1,6 +1,6 @@
 package io.github.fvasco.pinpoi.importer
 
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.fvasco.pinpoi.util.Coordinates
 import org.junit.Assert.assertEquals
 import org.junit.Test

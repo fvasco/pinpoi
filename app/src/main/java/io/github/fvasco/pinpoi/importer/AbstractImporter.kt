@@ -14,6 +14,7 @@ abstract class AbstractImporter {
     var consumer: ((Placemark) -> Unit)? = null
     var collectionId: Long = 0
     var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
+
     /**
      * Import data
      *
@@ -58,8 +59,6 @@ abstract class AbstractImporter {
      * Read datas, use [importPlacemark] to persistence it
 
      * @param inputStream data source
-     * *
-     * @throws IOException error during reading
      */
     abstract fun importImpl(inputStream: InputStream)
 }

@@ -8,21 +8,20 @@ import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.NavUtils
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NavUtils
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
-import io.github.fvasco.pinpoi.util.Util
 import io.github.fvasco.pinpoi.util.showToast
 import io.github.fvasco.pinpoi.util.tryDismiss
 import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
@@ -42,14 +41,15 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
      * device.
      */
     private var mTwoPane: Boolean = false
+
     /* only for two pane view */
     private var fragment: PlacemarkCollectionDetailFragment? = null
+
     /* only for two pane view */
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Util.init()
         setContentView(R.layout.activity_placemarkcollection_list)
         placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
@@ -134,11 +134,13 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         val input = EditText(this)
         if (sourceUri != null) {
             var fileName = sourceUri.lastPathSegment
-            val extension = MimeTypeMap.getFileExtensionFromUrl(sourceUri.toString())
-            if (!extension.isNullOrEmpty()) {
-                fileName = fileName.substring(0, fileName.length - extension.length - 1)
+            if (fileName != null) {
+                val extension = MimeTypeMap.getFileExtensionFromUrl(sourceUri.toString())
+                if (!extension.isNullOrEmpty()) {
+                    fileName = fileName.substring(0, fileName.length - extension.length - 1)
+                }
+                input.setText(fileName)
             }
-            input.setText(fileName)
         }
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.title_placemarkcollection_detail))
@@ -179,9 +181,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     fun pasteUrl(view: View?) {
-        fragment?.let { fragment ->
-            fragment.pasteUrl(view)
-        }
+        fragment?.pasteUrl(view)
     }
 
     fun updatePlacemarkCollection() {
