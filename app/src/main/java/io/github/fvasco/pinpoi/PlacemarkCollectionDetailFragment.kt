@@ -42,10 +42,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         val arguments = arguments
         placemarkCollection = if (arguments?.containsKey(ARG_PLACEMARK_COLLECTION_ID) == true) {
             placemarkCollectionDao.findPlacemarkCollectionById(
-                    if (savedInstanceState == null)
-                        arguments.getLong(ARG_PLACEMARK_COLLECTION_ID)
-                    else
-                        savedInstanceState.getLong(ARG_PLACEMARK_COLLECTION_ID))
+                    savedInstanceState?.getLong(ARG_PLACEMARK_COLLECTION_ID)
+                            ?: arguments.getLong(ARG_PLACEMARK_COLLECTION_ID))
                     ?: PlacemarkCollection()
         } else {
             PlacemarkCollection()
@@ -212,14 +210,12 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun pasteUrl(view: View?) {
-        (context?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+        val item = (context?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
                 ?.takeIf { it.hasPrimaryClip() }
                 ?.primaryClip
                 ?.takeIf { it.itemCount > 0 }
                 ?.getItemAt(0)
-                ?.let {
-                    sourceText.setText(it.text)
-                }
+        if (item != null) sourceText.setText(item.text)
     }
 
     companion object {

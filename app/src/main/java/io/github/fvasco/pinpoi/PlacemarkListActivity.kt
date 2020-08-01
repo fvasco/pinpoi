@@ -37,6 +37,7 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 /**
  * An activity representing a list of Placemarks. This activity
@@ -169,26 +170,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                         }
                     }
 
-            val floatArray = FloatArray(1)
             val integerFormat = NumberFormat.getIntegerInstance()
-            val markers = placemarksSearchResult.withIndex().map { (index, psr) ->
-                Location.distanceBetween(searchCoordinate.latitude.toDouble(), searchCoordinate.longitude.toDouble(),
-                        psr.coordinates.latitude.toDouble(), psr.coordinates.longitude.toDouble(),
-                        floatArray)
-                val distance = floatArray[0].toInt()
-                Marker(
-                        index = index + 1,
-                        placemark = psr,
-                        collectionName = collectionNameMap[psr.collectionId] ?: "",
-                        distance = integerFormat.format(distance.toLong())
-                )
-            }
-                    // reversed: "1" on top
-                    .asReversed()
-                    // flagged on top
-                    .partition { it.placemark.flagged }
-                    .let { it.second + it.first }
-
             val htmlText = buildString(1024 + placemarksSearchResult.size * 256) {
                 append("""<html><head>""")
                 append("""<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />""")
@@ -201,6 +183,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                 // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
                 append("""<script src="https://leaflet.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js"></script>""")
                 append("</html>")
+
                 append("""<body> <div id="map" style="$mapStyle"></div> <script>""")
                 append("""var map = L.map('map').setView([$searchCoordinate], $zoom);""")
                 append("""L.tileLayer.fallback('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -213,30 +196,39 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
                 append("L.circle([$searchCoordinate], ${range / 2}, {color: 'orange',fillOpacity: 0}).addTo(map);\n")
 
                 val collectionColors = HashMap<String, String>()
-                for (marker in markers) {
-                    val markerColor = collectionColors.getOrPut(marker.collectionName) { colorFor(collectionColors.size) }
-                    val glyph = StringBuilder().apply {
-                        if (marker.placemark.hasNote) append("<i>")
-                        if (marker.placemark.flagged) append("<b>")
-                        append(marker.index)
-                        if (marker.placemark.flagged) append("</b>")
-                        if (marker.placemark.hasNote) append("</i>")
+                placemarksSearchResult.forEachIndexed { index, placemark ->
+                    val collectionName = collectionNameMap[placemark.collectionId] ?: ""
+                    val markerColor = collectionColors.getOrPut(collectionName) { colorFor(collectionColors.size) }
+                    val distance = searchCoordinate.distanceTo(placemark.coordinates).roundToLong()
+
+                    val zIndex =
+                            (if (placemark.flagged) 2 * placemarksSearchResult.size else 0) +
+                                    (if (placemark.hasNote) placemarksSearchResult.size else 0) +
+                                    (placemarksSearchResult.size - index - 1)
+
+                    val glyph = buildString {
+                        if (placemark.hasNote) append("<i>")
+                        if (placemark.flagged) append("<b>")
+                        append(index + 1)
+                        if (placemark.flagged) append("</b>")
+                        if (placemark.hasNote) append("</i>")
                     }
 
-                    append("L.marker([${marker.placemark.coordinates}],{")
-                    append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'})")
+                    append("L.marker([${placemark.coordinates}],{")
+                    append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'}), zIndexOffset:$zIndex")
                     append("""}).addTo(map).bindPopup("""")
-                    append("<a href='javascript:pinpoi.openPlacemark(${marker.placemark.id})'>")
-                    if (marker.placemark.hasNote) append("<i>")
-                    if (marker.placemark.flagged) append("<b>")
-                    append(escapeJavascript(marker.placemark.name))
-                    if (marker.placemark.flagged) append("</b>")
-                    if (marker.placemark.hasNote) append("</i>")
+                    append("<a href='javascript:pinpoi.openPlacemark(${placemark.id})'>")
+                    if (placemark.hasNote) append("<i>")
+                    if (placemark.flagged) append("<b>")
+                    append(escapeJavascript(placemark.name))
+                    if (placemark.flagged) append("</b>")
+                    if (placemark.hasNote) append("</i>")
                     append("</a>")
-                    append("<br>${marker.distance}&nbsp;m - ")
-                    append(escapeJavascript(marker.collectionName))
+                    append("<br>${integerFormat.format(distance)}&nbsp;m - ")
+                    append(escapeJavascript(collectionName))
                     append("\");\n")
                 }
+
                 append("</script> </body> </html>")
             }
 
@@ -255,13 +247,6 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
             }
         }
     }
-
-    private data class Marker(
-            val index: Int,
-            val placemark: PlacemarkSearchResult,
-            val collectionName: String,
-            val distance: String
-    )
 
     private fun searchPoi(placemarksConsumer: (Collection<PlacemarkSearchResult>) -> Unit) {
         // load parameters
