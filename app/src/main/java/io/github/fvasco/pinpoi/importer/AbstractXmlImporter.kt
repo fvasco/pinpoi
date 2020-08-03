@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer
 
+import android.content.ContentResolver
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.util.assertDebug
 import org.xmlpull.v1.XmlPullParser

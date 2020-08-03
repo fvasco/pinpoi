@@ -13,41 +13,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-fun openFileChooser(dir: File, context: Context, fileConsumer: (File) -> Unit) {
-    val parentDir = dir.parentFile
-    if (parentDir == null || dir.isDirectory && dir.canRead()) {
-        val files = dir.listFiles { pathname ->
-            pathname.canRead()
-                    && !pathname.name.startsWith(".")
-                    && (pathname.isFile || pathname.list()?.isEmpty() == false)
-        } ?: emptyArray()
-        val fileNames = ArrayList<String>(files.size + 1)
-        // check permission/readability of parent file
-        if (parentDir?.list()?.isEmpty() == false) {
-            fileNames += ".."
-        }
-        for (file in files) {
-            fileNames +=
-                    if (file.isDirectory)
-                        file.name + '/'
-                    else
-                        file.name
-        }
-        fileNames.sort()
-        AlertDialog.Builder(context).setTitle(dir.absolutePath).setItems(fileNames.toTypedArray()) { dialog, which ->
-            dialog.tryDismiss()
-            val file = File(dir, fileNames[which]).absoluteFile.canonicalFile
-            if (file.isDirectory) {
-                openFileChooser(file, context, fileConsumer)
-            } else {
-                fileConsumer(file)
-            }
-        }.show()
-    } else {
-        openFileChooser(parentDir, context, fileConsumer)
-    }
-}
-
 /**
  * Show indeterminate progress dialog and execute runnable in background
  * @param title    progress dialog title

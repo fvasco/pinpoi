@@ -2,6 +2,7 @@ package io.github.fvasco.pinpoi
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -26,11 +27,15 @@ import androidx.core.content.ContextCompat
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.placemarkcollection_detail.*
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.*
 import java.util.concurrent.Future
 import java.util.regex.Pattern
@@ -51,8 +56,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         locationUtil = LocationUtil(applicationContext)
 
         // widget
-        switchGps.setOnCheckedChangeListener(this)
-        switchGps.isEnabled = !locationManager.allProviders.isEmpty()
+        switchGps.isEnabled = locationManager.allProviders.isNotEmpty()
         if (locationUtil.geocoder == null) {
             searchAddressButton.visibility = View.GONE
         }
@@ -64,15 +68,15 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
         // restore preference
         val preference = getPreferences(Context.MODE_PRIVATE)
-        switchGps.isChecked = preference.getBoolean(PREFEFERNCE_GPS, false)
-        latitudeText.setText(preference.getString(PREFEFERNCE_LATITUDE, "50"))
-        longitudeText.setText(preference.getString(PREFEFERNCE_LONGITUDE, "10"))
-        nameFilterText.setText(preference.getString(PREFEFERNCE_NAME_FILTER, null))
-        favouriteCheck.isChecked = preference.getBoolean(PREFEFERNCE_FAVOURITE, false)
-        showMapCheck.isChecked = preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)
-        rangeSeek.progress = min(preference.getInt(PREFEFERNCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
-        setPlacemarkCategory(preference.getString(PREFEFERNCE_CATEGORY, "") ?: "")
-        setPlacemarkCollection(preference.getLong(PREFEFERNCE_COLLECTION, 0))
+        switchGps.isChecked = preference.getBoolean(PREFERENCE_GPS, false)
+        latitudeText.setText(preference.getString(PREFERENCE_LATITUDE, "50"))
+        longitudeText.setText(preference.getString(PREFERENCE_LONGITUDE, "10"))
+        nameFilterText.setText(preference.getString(PREFERENCE_NAME_FILTER, null))
+        favouriteCheck.isChecked = preference.getBoolean(PREFERENCE_FAVOURITE, false)
+        showMapCheck.isChecked = preference.getBoolean(PREFERENCE_SHOW_MAP, false)
+        rangeSeek.progress = min(preference.getInt(PREFERENCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
+        setPlacemarkCategory(preference.getString(PREFERENCE_CATEGORY, "") ?: "")
+        setPlacemarkCollection(preference.getLong(PREFERENCE_COLLECTION, 0))
 
         // load intent parameters for geo scheme (if present)
         intent.data
@@ -98,13 +102,14 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     override fun onResume() {
+        switchGps.setOnCheckedChangeListener(this)
         setUseLocationManagerListener(switchGps.isChecked && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         super.onResume()
     }
 
     override fun onPause() {
         setUseLocationManagerListener(false)
-        getPreferences(Context.MODE_PRIVATE).edit().putBoolean(PREFEFERNCE_GPS, switchGps.isChecked).putString(PREFEFERNCE_LATITUDE, latitudeText.text.toString()).putString(PREFEFERNCE_LONGITUDE, longitudeText.text.toString()).putString(PREFEFERNCE_NAME_FILTER, nameFilterText.text.toString()).putBoolean(PREFEFERNCE_FAVOURITE, favouriteCheck.isChecked).putBoolean(PREFEFERNCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFEFERNCE_RANGE, rangeSeek.progress).putString(PREFEFERNCE_CATEGORY, selectedPlacemarkCategory).putLong(PREFEFERNCE_COLLECTION, if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id).apply()
+        getPreferences(Context.MODE_PRIVATE).edit().putBoolean(PREFERENCE_GPS, switchGps.isChecked).putString(PREFERENCE_LATITUDE, latitudeText.text.toString()).putString(PREFERENCE_LONGITUDE, longitudeText.text.toString()).putString(PREFERENCE_NAME_FILTER, nameFilterText.text.toString()).putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked).putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFERENCE_RANGE, rangeSeek.progress).putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory).putLong(PREFERENCE_COLLECTION, if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id).apply()
         super.onPause()
     }
 
@@ -235,7 +240,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     fun onSearchAddress(view: View) {
         val preference = getPreferences(Context.MODE_PRIVATE)
-        openSearchAddress(view.context, preference.getString(PREFEFERNCE_ADDRESS, ""))
+        openSearchAddress(view.context, preference.getString(PREFERENCE_ADDRESS, ""))
     }
 
     private fun openSearchAddress(context: Context, suggestedText: String?) {
@@ -260,7 +265,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     // search new location;
                     val address = editText.text.toString()
                     if (address.isNotBlank()) {
-                        preference.edit().putString(PREFEFERNCE_ADDRESS, address).apply()
+                        preference.edit().putString(PREFERENCE_ADDRESS, address).apply()
                         // check if is a coordinate text, WGS84 or geo uri
                         val coordinateMatcherResult = """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex().matchEntire(address)
                         if (coordinateMatcherResult == null) {
@@ -376,63 +381,61 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     private fun showCreateBackupConfirm() {
-        AlertDialog.Builder(this)
-                .setTitle(getString(R.string.action_create_backup))
-                .setMessage(getString(R.string.backup_file, BackupManager.DEFAULT_BACKUP_FILE.absolutePath))
-                .setPositiveButton(R.string.ok) { dialogInterface, _ ->
-                    dialogInterface.tryDismiss()
-                    createBackup()
-                }
-                .setNegativeButton(R.string.cancel, DismissOnClickListener)
-                .show()
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            type = "*/*"
+            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        }
+        startActivityForResult(intent, BACKUP_CREATE_RESULT_ID)
     }
 
-    private fun createBackup() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            showProgressDialog(getString(R.string.action_create_backup), this) {
-                try {
-                    val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
-                    backupManager.create(BackupManager.DEFAULT_BACKUP_FILE)
-                } catch (e: Exception) {
-                    Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
-                    showToast(e)
-                }
+    private fun createBackup(outputStream: OutputStream) {
+        showProgressDialog(getString(R.string.action_create_backup), this) {
+            try {
+                val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
+                backupManager.create(outputStream)
+            } catch (e: Exception) {
+                Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
+                showToast(e)
             }
-        } else {
-            // request permission
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), PERMISSION_CREATE_BACKUP)
         }
     }
 
     private fun showRestoreBackupConfirm() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            openFileChooser(BackupManager.DEFAULT_BACKUP_FILE, this) { file ->
-                AlertDialog.Builder(this@MainActivity)
-                        .setTitle(getString(R.string.action_restore_backup))
-                        .setMessage(getString(R.string.backup_file, file.absolutePath))
-                        .setPositiveButton(R.string.ok) { dialogInterface, _ ->
-                            dialogInterface.tryDismiss()
-                            restoreBackup(file)
-                        }
-                        .setNegativeButton(R.string.cancel, DismissOnClickListener)
-                        .show()
-            }
-        } else {
-            // request permission
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), PERMISSION_RESTORE_BACKUP)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            type = "*/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+        startActivityForResult(intent, BACKUP_RESTORE_RESULT_ID)
     }
 
-    private fun restoreBackup(file: File) {
+    private fun restoreBackup(inputStream: InputStream) {
         showProgressDialog(getString(R.string.action_restore_backup), this) {
             try {
                 val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
-                backupManager.restore(file)
+                backupManager.restore(inputStream)
                 runOnUiThread { setPlacemarkCollection(null) }
             } catch (e: Exception) {
                 Log.w(MainActivity::class.java.simpleName, "restore backup failed", e)
                 showToast(e)
             }
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != Activity.RESULT_OK) return
+
+        if (requestCode == BACKUP_CREATE_RESULT_ID) {
+            val uri = data?.data ?: return
+            val outputStream = contentResolver?.openOutputStream(uri) ?: return
+             createBackup(outputStream)
+        }
+
+        if (requestCode == BACKUP_RESTORE_RESULT_ID) {
+            val uri = data?.data ?: return
+            val outputStream = contentResolver?.openInputStream(uri) ?: return
+            restoreBackup(outputStream)
         }
     }
 
@@ -500,8 +503,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 switchGps.isChecked = granted
                 setUseLocationManagerListener(granted)
             }
-            PERMISSION_CREATE_BACKUP -> if (granted) createBackup()
-            PERMISSION_RESTORE_BACKUP -> if (granted) showRestoreBackupConfirm()
         }
     }
 
@@ -537,19 +538,21 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     companion object {
         private const val LOCATION_RANGE_ACCURACY = 100
         private const val LOCATION_TIME_ACCURACY = 2 * 60000
-        private const val PREFEFERNCE_LATITUDE = "latitude"
-        private const val PREFEFERNCE_LONGITUDE = "longitude"
-        private const val PREFEFERNCE_NAME_FILTER = "nameFilter"
-        private const val PREFEFERNCE_RANGE = "range"
-        private const val PREFEFERNCE_FAVOURITE = "favourite"
-        private const val PREFEFERNCE_CATEGORY = "category"
-        private const val PREFEFERNCE_COLLECTION = "collection"
-        private const val PREFEFERNCE_GPS = "gps"
-        private const val PREFEFERNCE_ADDRESS = "address"
-        private const val PREFEFERNCE_SHOW_MAP = "showMap"
+
+        private const val PREFERENCE_LATITUDE = "latitude"
+        private const val PREFERENCE_LONGITUDE = "longitude"
+        private const val PREFERENCE_NAME_FILTER = "nameFilter"
+        private const val PREFERENCE_RANGE = "range"
+        private const val PREFERENCE_FAVOURITE = "favourite"
+        private const val PREFERENCE_CATEGORY = "category"
+        private const val PREFERENCE_COLLECTION = "collection"
+        private const val PREFERENCE_GPS = "gps"
+        private const val PREFERENCE_ADDRESS = "address"
+        private const val PREFERENCE_SHOW_MAP = "showMap"
         private const val PERMISSION_GPS_ON = 1
-        private const val PERMISSION_CREATE_BACKUP = 10
-        private const val PERMISSION_RESTORE_BACKUP = 11
+
+        private const val BACKUP_CREATE_RESULT_ID = 2
+        private const val BACKUP_RESTORE_RESULT_ID = 3
 
         /**
          * Smallest searchable range
@@ -557,8 +560,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         private const val RANGE_MIN = 5
 
         /**
-         * Greatest [.rangeSeek] value,
-         * searchable range value is this plus [.RANGE_MIN]
+         * Greatest [rangeSeek] value,
+         * searchable range value is this plus [RANGE_MIN]
          */
         private const val RANGE_MAX_SHIFT = 195
     }

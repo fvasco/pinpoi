@@ -71,8 +71,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         // Show the Up button in the action bar.
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP, intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false)))
-                ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFEFERNCE_SHOW_MAP, false))
+        showMap = savedInstanceState?.getBoolean(ARG_SHOW_MAP, intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFERENCE_SHOW_MAP, false)))
+                ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFERENCE_SHOW_MAP, false))
         if (showMap) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
                 setupWebView(mapWebView)
@@ -82,7 +82,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         } else {
             setupRecyclerView(placemarkList as RecyclerView)
         }
-        preference.edit().putBoolean(PREFEFERNCE_SHOW_MAP, showMap).apply()
+        preference.edit().putBoolean(PREFERENCE_SHOW_MAP, showMap).apply()
 
         if (findViewById<FrameLayout>(R.id.placemarkDetailContainer) != null) {
             // The detail container view will be present only in the
@@ -208,9 +208,9 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
 
                     val glyph = buildString {
                         if (placemark.hasNote) append("<i>")
-                        if (placemark.flagged) append("<b>")
+                        if (placemark.flagged) append("<u><b>")
                         append(index + 1)
-                        if (placemark.flagged) append("</b>")
+                        if (placemark.flagged) append("</b></u>")
                         if (placemark.hasNote) append("</i>")
                     }
 
@@ -419,7 +419,7 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
         const val ARG_COLLECTION_IDS = "collectionIds"
         const val ARG_NAME_FILTER = "nameFilter"
         const val ARG_SHOW_MAP = "showMap"
-        private const val PREFEFERNCE_SHOW_MAP = "showMap"
+        private const val PREFERENCE_SHOW_MAP = "showMap"
         private const val PERMISSION_SHOW_MAP = 1
 
         // clockwise arrow

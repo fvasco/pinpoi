@@ -169,15 +169,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     fun openFileChooser(view: View?) {
-        fragment?.let { fragment ->
-            val permission = Manifest.permission.READ_EXTERNAL_STORAGE
-            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-                fragment.openFileChooser(view)
-            } else {
-                // request permission
-                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_CHOOSE_FILE)
-            }
-        }
+        fragment?.openFileChooser()
     }
 
     fun pasteUrl(view: View?) {
@@ -201,7 +193,6 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
                 PERMISSION_UPDATE -> updatePlacemarkCollection()
-                PERMISSION_CHOOSE_FILE -> openFileChooser(null)
             }
         }
     }
@@ -297,6 +288,5 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
 
     companion object {
         private const val PERMISSION_UPDATE = 1
-        private const val PERMISSION_CHOOSE_FILE = 2
     }
 }

@@ -1,14 +1,10 @@
 package io.github.fvasco.pinpoi.util
 
-import android.os.Environment
 import android.util.Log
 import io.github.fvasco.pinpoi.dao.AbstractDao
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.*
 import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /**
@@ -19,10 +15,9 @@ import java.util.zip.ZipOutputStream
 class BackupManager(private vararg val daos: AbstractDao) {
 
     @Throws(IOException::class)
-    fun create(file: File) {
-        Log.i(BackupManager::class.java.simpleName, "Create backup " + file.absolutePath)
-        val zipOutputStream = ZipOutputStream(FileOutputStream(file))
-        try {
+    fun create(outputStream: OutputStream) {
+        Log.i(BackupManager::class.java.simpleName, "Create backup $outputStream")
+        ZipOutputStream(outputStream).use { zipOutputStream ->
             for (dao in daos) {
                 synchronized(dao) {
                     val databaseFile: File
@@ -50,48 +45,42 @@ class BackupManager(private vararg val daos: AbstractDao) {
                     zipOutputStream.closeEntry()
                 }
             }
-        } finally {
-            zipOutputStream.close()
         }
-        Log.i(BackupManager::class.java.simpleName, "Created backup " + file.absolutePath + " size=" + file.length())
     }
 
     @Throws(IOException::class)
-    fun restore(file: File) {
-        Log.i(BackupManager::class.java.simpleName, "Restore backup " + file.absolutePath + " size=" + file.length())
-        ZipFile(file).use { zipFile ->
-            for (dao in daos) {
-                synchronized(dao) {
-                    val databasePath: File
-                    dao.open()
-                    val database = dao.database!!
-                    try {
-                        databasePath = File(database.path)
-                    } finally {
-                        database.close()
-                        dao.close()
-                    }
-                    try {
-                        val databaseName = databasePath.name
-                        Log.i(BackupManager::class.java.simpleName, "restore database " + databaseName)
-                        val zipEntry = zipFile.getEntry(databaseName)
-                        val databaseOutputStream = FileOutputStream(databasePath)
+    fun restore(fileInputStream: InputStream) {
+        Log.i(BackupManager::class.java.simpleName, "Restore backup $fileInputStream")
+        ZipInputStream(fileInputStream).use { zipInputStream ->
+            var zipEntry = zipInputStream.nextEntry
+            while (zipEntry != null) {
+                for (dao in daos) {
+                    synchronized(dao) {
+                        val databasePath: File
+                        dao.open()
+                        val database = dao.database!!
                         try {
-                            dao.lock()
-                            zipFile.getInputStream(zipEntry).copyTo(databaseOutputStream)
+                            databasePath = File(database.path)
                         } finally {
-                            databaseOutputStream.close()
+                            database.close()
+                            dao.close()
                         }
-                    } finally {
-                        dao.reset()
+                        val databaseName = databasePath.name
+                        if (databaseName == zipEntry.name) {
+                            try {
+                                Log.i(BackupManager::class.java.simpleName, "restore database $databaseName")
+                                FileOutputStream(databasePath).use { databaseOutputStream ->
+                                    dao.lock()
+                                    ZipGuardInputStream(zipInputStream).copyTo(databaseOutputStream)
+                                }
+                            } finally {
+                                dao.reset()
+                            }
+                        }
                     }
                 }
+                zipEntry = zipInputStream.nextEntry
             }
         }
-        Log.i(BackupManager::class.java.simpleName, "Restored backup " + file.absolutePath)
-    }
-
-    companion object {
-        val DEFAULT_BACKUP_FILE = File(Environment.getExternalStorageDirectory(), "pinpoi.backup")
     }
 }

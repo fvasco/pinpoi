@@ -7,9 +7,6 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- use gps to find location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <!-- backup and restore -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <!-- Some Chromebooks don't support touch. It's very important to explicitly have this. -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>

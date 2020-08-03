@@ -1,5 +1,6 @@
 package io.github.fvasco.pinpoi.importer
 
+import android.content.ContentResolver
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.model.Placemark

@@ -133,7 +133,6 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        shareButton.setOnClickListener { onShare() }
         // By default these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
         placemark = placemarkDao.getPlacemark(preferences?.getLong(ARG_PLACEMARK_ID, 0) ?: 0)
@@ -141,6 +140,7 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        shareButton.setOnClickListener { onShare() }
         resetStarFabIcon(activity!!.findViewById(R.id.fabStar) as FloatingActionButton)
     }
 

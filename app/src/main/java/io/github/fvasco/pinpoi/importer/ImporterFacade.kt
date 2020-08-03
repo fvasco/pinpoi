@@ -10,8 +10,9 @@ import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import java.io.IOException
+import java.io.InputStream
+import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.ExecutionException
 
 /**
  * Import [Placemark] and update [PlacemarkCollectionDao]
@@ -29,7 +30,6 @@ class ImporterFacade(context: Context) {
 
     private val placemarkDao: PlacemarkDao
     private val placemarkCollectionDao: PlacemarkCollectionDao
-    private val placemarkQueue = ArrayBlockingQueue<PlacemarkEvent>(256)
     private var progressDialog: ProgressDialog? = null
     private var progressDialogMessageFormat: String? = null
     var fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
@@ -56,27 +56,31 @@ class ImporterFacade(context: Context) {
      * Import a generic resource into data base, this action refresh collection.
      * If imported count is 0 no modification is done.
      * **Side effect** update and save placermak collection
-
      * @return imported [io.github.fvasco.pinpoi.model.Placemark]
      */
     @Throws(IOException::class)
     fun importPlacemarks(placemarkCollection: PlacemarkCollection): Int {
         val resource = placemarkCollection.source
-        val importer = createImporter(resource, fileFormatFilter)
+        val (mimeType, inputStream) = openInputStream(resource)
+        val importer = createImporter(resource, mimeType, fileFormatFilter)
                 ?: throw IOException("Cannot import $resource")
+        return importPlacemarks(placemarkCollection, importer, inputStream)
+    }
+
+    fun importPlacemarks(placemarkCollection: PlacemarkCollection, importer: AbstractImporter, inputStream: InputStream): Int {
         placemarkCollectionDao.open()
+        val placemarkQueue = ArrayBlockingQueue<PlacemarkEvent>(256)
         try {
             progressDialog?.also { pd ->
                 runOnUiThread {
                     pd.show()
                 }
             }
-            // insert new placemark
+            // insert new placemarks
             val importFuture = doAsync {
                 try {
-                    openInputStream(resource).use { inputStream ->
+                    inputStream.use { inputStream ->
                         try {
-
                             importer.collectionId = placemarkCollection.id
                             importer.consumer = { placemarkQueue.put(PlacemarkEvent.NewPlacemark(it)) }
                             importer.importPlacemarks(inputStream)
@@ -93,7 +97,7 @@ class ImporterFacade(context: Context) {
             val placemarkDaoDatabase = placemarkDao.database!!
             placemarkDaoDatabase.beginTransaction()
             try {
-                // remove old placemark
+                // remove old placemarks
                 placemarkDao.deleteByCollectionId(placemarkCollection.id)
                 var placemarkEvent = placemarkQueue.take()
                 while (placemarkEvent is PlacemarkEvent.NewPlacemark) {
@@ -120,12 +124,8 @@ class ImporterFacade(context: Context) {
                     placemarkDaoDatabase.setTransactionSuccessful()
                 }
                 return placemarkCount
-            } catch (e: InterruptedException) {
+            } catch (e: Exception) {
                 throw IOException("Error importing placemarks", e)
-            } catch (e: RuntimeException) {
-                throw IOException("Error importing placemarks", e)
-            } catch (e: ExecutionException) {
-                throw IOException("Error importing placemarks", e.cause)
             } finally {
                 importFuture.cancel(true)
                 placemarkDaoDatabase.endTransaction()
@@ -141,56 +141,76 @@ class ImporterFacade(context: Context) {
     }
 
     companion object {
-        internal fun createImporter(resource: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
-            var path: String?
-            try {
-                if (resource.isUri()) {
-                    val segments = Uri.parse(resource).pathSegments
-                    path = null
-                    var i = segments.size - 1
-                    while (i >= 0 && path.isNullOrEmpty()) {
-                        path = segments[i]
-                        --i
-                    }
-                } else {
-                    path = resource
-                }
-            } catch (e: Exception) {
-                path = resource
-            }
-            if (path == null) return null
-
+        internal fun createImporter(resource: String, mimeType: String?, fileFormatFilter: FileFormatFilter): AbstractImporter? {
             var res: AbstractImporter? = null
-            if (path.length >= 3) {
+
+            if (mimeType != null) res = createImporterFromMimeType(mimeType)
+
+            if (res == null) {
+                val path = try {
+                    if (resource.isUri()) Uri.parse(resource).pathSegments.lastOrNull() ?: resource
+                    else resource
+                } catch (e: Exception) {
+                    resource
+                }
+
                 when (path.substringAfterLast('.').toLowerCase()) {
-                    in FileFormatFilter.KML.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
+                    in FileFormatFilter.KML.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
                     "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res = GeoRssImporter()
-                    in FileFormatFilter.GPX.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res = GpxImporter()
-                    in FileFormatFilter.OV2.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res = Ov2Importer()
-                    in FileFormatFilter.CSV_LAT_LON.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LAT_LON) res = TextImporter()
-                    in FileFormatFilter.CSV_LON_LAT.validExtension -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) res = TextImporter()
+                    in FileFormatFilter.GPX.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res = GpxImporter()
+                    in FileFormatFilter.OV2.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res = Ov2Importer()
+                    in FileFormatFilter.CSV_LAT_LON.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LAT_LON) res = TextImporter()
+                    in FileFormatFilter.CSV_LON_LAT.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) res = TextImporter()
                 }
             }
-            if (res == null) {
-                res = when (fileFormatFilter) {
+
+            if (res == null) res = fileFormatFilter.toAbstractImporter()
+
+            res?.fileFormatFilter = fileFormatFilter
+            Log.d(ImporterFacade::class.java.simpleName,
+                    "Importer for " + resource + " is " + res?.javaClass?.simpleName)
+            return res
+        }
+
+        fun createImporterFromMimeType(mimeType: String): AbstractImporter? {
+            if (mimeType.startsWith("text/")) return FileFormatFilter.CSV_LAT_LON.toAbstractImporter()
+
+            val type = mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
+            when (type) {
+                "kmz", "zip" -> return ZipImporter()
+                "xml", "rss" -> return GeoRssImporter()
+            }
+            for (filter in FileFormatFilter.values()) {
+                if (type in filter.validExtensions) return filter.toAbstractImporter()
+            }
+
+            return null
+        }
+
+        private fun FileFormatFilter.toAbstractImporter(): AbstractImporter? =
+                when (this) {
                     FileFormatFilter.NONE -> null
                     FileFormatFilter.CSV_LAT_LON, FileFormatFilter.CSV_LON_LAT -> TextImporter()
                     FileFormatFilter.GPX -> GpxImporter()
                     FileFormatFilter.KML -> KmlImporter()
                     FileFormatFilter.OV2 -> Ov2Importer()
                 }
-            }
-            res?.fileFormatFilter = fileFormatFilter
-            Log.d(ImporterFacade::class.java.simpleName,
-                    "Importer for " + resource + " is " + res?.javaClass?.simpleName)
-            return res
-        }
-    }
 
-    private sealed class PlacemarkEvent {
-        class NewPlacemark(val placemark: Placemark) : PlacemarkEvent()
-        object End : PlacemarkEvent()
-        class ParseError(val throwable: Throwable) : PlacemarkEvent()
+        private fun openInputStream(resource: String): Source {
+            val connection = URL(httpToHttps(resource)).openConnection()
+            connection.connect()
+            val mimeType: String? = connection.getHeaderField("Content-Type")
+            val inputStream: InputStream = connection.getInputStream()
+            return Source(mimeType, inputStream)
+        }
+
+        private data class Source(val mimeType: String?, val inputStream: InputStream)
+
+        private sealed class PlacemarkEvent {
+            class NewPlacemark(val placemark: Placemark) : PlacemarkEvent()
+            object End : PlacemarkEvent()
+            class ParseError(val throwable: Throwable) : PlacemarkEvent()
+        }
     }
 }

@@ -1,6 +1,8 @@
 package io.github.fvasco.pinpoi.util
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import io.github.fvasco.pinpoi.BuildConfig
 import java.io.BufferedInputStream
 import java.io.File
@@ -53,21 +55,11 @@ fun escapeJavascript(text: CharSequence) = buildString(text.length + text.length
 }
 
 /**
- * Open an input stream for the [resource].
- *
- * Use HTTPS connection.
+ * Switch a HTTP URL to HTTPS protocol
  */
-fun openInputStream(resource: String): InputStream =
-        if (resource.startsWith("/")) {
-            val file = File(resource)
-            BufferedInputStream(FileInputStream(file))
-        } else {
-            HttpURLConnection.setFollowRedirects(true)
-            val url =
-                    if (resource.startsWith("http://")) "https${resource.substring(4)}"
-                    else resource
-            URL(url).openConnection().inputStream
-        }
+fun httpToHttps(url: String) =
+        if (url.startsWith("http://")) "https${url.substring(4)}"
+        else url
 
 /**
  * Append text (if present) to string builder using a separator (if present)
