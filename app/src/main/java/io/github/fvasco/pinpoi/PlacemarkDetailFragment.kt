@@ -41,7 +41,8 @@ class PlacemarkDetailFragment : Fragment() {
             field = value
             Log.i(PlacemarkDetailFragment::class.java.simpleName, "open placemark ${value?.id}")
             placemarkAnnotation = if (value == null) null else placemarkDao.loadPlacemarkAnnotation(value)
-            val placemarkCollection = if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
+            val placemarkCollection =
+                if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
             if (value != null) {
                 preferences?.edit()?.putLong(ARG_PLACEMARK_ID, value.id)?.apply()
             }
@@ -60,12 +61,17 @@ class PlacemarkDetailFragment : Fragment() {
             coordinatesText.text = if (value == null)
                 null
             else
-                getString(R.string.location,
-                        Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
-                        Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES))
+                getString(
+                    R.string.location,
+                    Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
+                    Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES)
+                )
             plusCodeText.visibility = View.GONE
             if (value != null) {
-                val plusCode = OpenLocationCode.encode(value.coordinates.latitude.toDouble(), value.coordinates.longitude.toDouble())
+                val plusCode = OpenLocationCode.encode(
+                    value.coordinates.latitude.toDouble(),
+                    value.coordinates.longitude.toDouble()
+                )
                 plusCodeText.text = "Plus Code: $plusCode"
                 plusCodeText.visibility = View.VISIBLE
             }
@@ -103,15 +109,18 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        preferences = activity?.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
+        preferences =
+            activity?.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
         placemarkDao = PlacemarkDao(context!!)
         placemarkCollectionDao = PlacemarkCollectionDao(context!!)
         placemarkDao.open()
         placemarkCollectionDao.open()
 
         val id = savedInstanceState?.getLong(ARG_PLACEMARK_ID)
-                ?: arguments?.getLong(ARG_PLACEMARK_ID, preferences?.getLong(ARG_PLACEMARK_ID, 0)
-                        ?: 0) ?: 0
+            ?: arguments?.getLong(
+                ARG_PLACEMARK_ID, preferences?.getLong(ARG_PLACEMARK_ID, 0)
+                    ?: 0
+            ) ?: 0
         preferences?.edit()?.putLong(ARG_PLACEMARK_ID, id)?.apply()
     }
 
@@ -126,8 +135,10 @@ class PlacemarkDetailFragment : Fragment() {
         super.onDestroy()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return inflater.inflate(R.layout.placemark_detail, container, false)
     }
 
@@ -167,9 +178,24 @@ class PlacemarkDetailFragment : Fragment() {
         places.add(addressText.text?.toString())
         with(placemark.coordinates) {
             places.add(this.toString())
-            places.add(Location.convert(latitude.toDouble(), Location.FORMAT_DEGREES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES))
-            places.add(Location.convert(latitude.toDouble(), Location.FORMAT_MINUTES) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES))
-            places.add(Location.convert(latitude.toDouble(), Location.FORMAT_SECONDS) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS))
+            places.add(
+                Location.convert(
+                    latitude.toDouble(),
+                    Location.FORMAT_DEGREES
+                ) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES)
+            )
+            places.add(
+                Location.convert(
+                    latitude.toDouble(),
+                    Location.FORMAT_MINUTES
+                ) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES)
+            )
+            places.add(
+                Location.convert(
+                    latitude.toDouble(),
+                    Location.FORMAT_SECONDS
+                ) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS)
+            )
             places.add(OpenLocationCode.encode(latitude.toDouble(), longitude.toDouble()))
         }
         // remove empty lines
@@ -177,22 +203,22 @@ class PlacemarkDetailFragment : Fragment() {
 
         // open chooser and share
         AlertDialog.Builder(view.context)
-                .setTitle(getString(R.string.share))
-                .setItems(places.toTypedArray()) { dialog, which ->
-                    dialog.tryDismiss()
-                    try {
-                        val text = places[which]
-                        var intent = Intent(Intent.ACTION_SEND)
-                        intent.type = "text/plain"
-                        intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
-                        intent = Intent.createChooser(intent, text)
-                        context!!.startActivity(intent)
-                    } catch (e: Exception) {
-                        Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
-                        context?.showToast(e)
-                    }
+            .setTitle(getString(R.string.share))
+            .setItems(places.toTypedArray()) { dialog, which ->
+                dialog.tryDismiss()
+                try {
+                    val text = places[which]
+                    var intent = Intent(Intent.ACTION_SEND)
+                    intent.type = "text/plain"
+                    intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
+                    intent = Intent.createChooser(intent, text)
+                    context!!.startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
+                    context?.showToast(e)
                 }
-                .show()
+            }
+            .show()
     }
 
     fun resetStarFabIcon(starFab: FloatingActionButton) {

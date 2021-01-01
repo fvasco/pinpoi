@@ -63,11 +63,15 @@ class ImporterFacade(context: Context) {
         val resource = placemarkCollection.source
         val (mimeType, inputStream) = openInputStream(resource)
         val importer = createImporter(resource, mimeType, fileFormatFilter)
-                ?: throw IOException("Cannot import $resource")
+            ?: throw IOException("Cannot import $resource")
         return importPlacemarks(placemarkCollection, importer, inputStream)
     }
 
-    fun importPlacemarks(placemarkCollection: PlacemarkCollection, importer: AbstractImporter, inputStream: InputStream): Int {
+    fun importPlacemarks(
+        placemarkCollection: PlacemarkCollection,
+        importer: AbstractImporter,
+        inputStream: InputStream
+    ): Int {
         placemarkCollectionDao.open()
         val placemarkQueue = ArrayBlockingQueue<PlacemarkEvent>(256)
         try {
@@ -141,7 +145,11 @@ class ImporterFacade(context: Context) {
     }
 
     companion object {
-        internal fun createImporter(resource: String, mimeType: String?, fileFormatFilter: FileFormatFilter): AbstractImporter? {
+        internal fun createImporter(
+            resource: String,
+            mimeType: String?,
+            fileFormatFilter: FileFormatFilter
+        ): AbstractImporter? {
             var res: AbstractImporter? = null
 
             if (mimeType != null) res = createImporterFromMimeType(mimeType)
@@ -155,21 +163,28 @@ class ImporterFacade(context: Context) {
                 }
 
                 when (path.substringAfterLast('.').toLowerCase()) {
-                    in FileFormatFilter.KML.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res = KmlImporter()
+                    in FileFormatFilter.KML.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res =
+                        KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
                     "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res = GeoRssImporter()
-                    in FileFormatFilter.GPX.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res = GpxImporter()
-                    in FileFormatFilter.OV2.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res = Ov2Importer()
-                    in FileFormatFilter.CSV_LAT_LON.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LAT_LON) res = TextImporter()
-                    in FileFormatFilter.CSV_LON_LAT.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) res = TextImporter()
+                    in FileFormatFilter.GPX.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res =
+                        GpxImporter()
+                    in FileFormatFilter.OV2.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res =
+                        Ov2Importer()
+                    in FileFormatFilter.CSV_LAT_LON.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LAT_LON) res =
+                        TextImporter()
+                    in FileFormatFilter.CSV_LON_LAT.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) res =
+                        TextImporter()
                 }
             }
 
             if (res == null) res = fileFormatFilter.toAbstractImporter()
 
             res?.fileFormatFilter = fileFormatFilter
-            Log.d(ImporterFacade::class.java.simpleName,
-                    "Importer for " + resource + " is " + res?.javaClass?.simpleName)
+            Log.d(
+                ImporterFacade::class.java.simpleName,
+                "Importer for " + resource + " is " + res?.javaClass?.simpleName
+            )
             return res
         }
 
@@ -189,13 +204,13 @@ class ImporterFacade(context: Context) {
         }
 
         private fun FileFormatFilter.toAbstractImporter(): AbstractImporter? =
-                when (this) {
-                    FileFormatFilter.NONE -> null
-                    FileFormatFilter.CSV_LAT_LON, FileFormatFilter.CSV_LON_LAT -> TextImporter()
-                    FileFormatFilter.GPX -> GpxImporter()
-                    FileFormatFilter.KML -> KmlImporter()
-                    FileFormatFilter.OV2 -> Ov2Importer()
-                }
+            when (this) {
+                FileFormatFilter.NONE -> null
+                FileFormatFilter.CSV_LAT_LON, FileFormatFilter.CSV_LON_LAT -> TextImporter()
+                FileFormatFilter.GPX -> GpxImporter()
+                FileFormatFilter.KML -> KmlImporter()
+                FileFormatFilter.OV2 -> Ov2Importer()
+            }
 
         private fun openInputStream(resource: String): Source {
             val connection = URL(httpToHttps(resource)).openConnection()

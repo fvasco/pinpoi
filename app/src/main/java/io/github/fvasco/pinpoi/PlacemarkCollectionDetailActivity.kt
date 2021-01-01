@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi
 
-import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -48,8 +47,10 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             val arguments = Bundle()
-            arguments.putLong(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
-                    intent.getLongExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, 0))
+            arguments.putLong(
+                PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
+                intent.getLongExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, 0)
+            )
             fragment = PlacemarkCollectionDetailFragment().apply {
                 this.arguments = arguments
             }
@@ -115,8 +116,10 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
                 PERMISSION_UPDATE -> updatePlacemarkCollection(null)
@@ -129,28 +132,28 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
             val editText = EditText(baseContext)
             editText.setText(fragment.placemarkCollection.name)
             AlertDialog.Builder(this)
-                    .setTitle(R.string.action_rename)
-                    .setView(editText).setPositiveButton(R.string.ok) { dialog, _ ->
-                        dialog.tryDismiss()
-                        fragment.renamePlacemarkCollection(editText.text.toString())
-                    }
-                    .setNegativeButton(R.string.cancel, DismissOnClickListener)
-                    .show()
+                .setTitle(R.string.action_rename)
+                .setView(editText).setPositiveButton(R.string.ok) { dialog, _ ->
+                    dialog.tryDismiss()
+                    fragment.renamePlacemarkCollection(editText.text.toString())
+                }
+                .setNegativeButton(R.string.cancel, DismissOnClickListener)
+                .show()
         }
     }
 
     private fun deleteCollection() {
         fragment?.let { fragment ->
             AlertDialog.Builder(this)
-                    .setTitle(R.string.action_delete)
-                    .setMessage(R.string.delete_placemark_collection_confirm)
-                    .setPositiveButton(R.string.ok) { dialog, _ ->
-                        dialog.tryDismiss()
-                        fragment.deletePlacemarkCollection()
-                        onBackPressed()
-                    }
-                    .setNegativeButton(R.string.cancel, DismissOnClickListener)
-                    .show()
+                .setTitle(R.string.action_delete)
+                .setMessage(R.string.delete_placemark_collection_confirm)
+                .setPositiveButton(R.string.ok) { dialog, _ ->
+                    dialog.tryDismiss()
+                    fragment.deletePlacemarkCollection()
+                    onBackPressed()
+                }
+                .setNegativeButton(R.string.cancel, DismissOnClickListener)
+                .show()
         }
     }
 

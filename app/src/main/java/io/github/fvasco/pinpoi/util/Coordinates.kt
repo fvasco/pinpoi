@@ -25,6 +25,12 @@ data class Coordinates(val latitude: Float, val longitude: Float) {
 
 fun Coordinates.distanceTo(other: Coordinates): Float {
     val result = FloatArray(1)
-    Location.distanceBetween(latitude.toDouble(), longitude.toDouble(), other.latitude.toDouble(), other.longitude.toDouble(), result)
+    Location.distanceBetween(
+        latitude.toDouble(),
+        longitude.toDouble(),
+        other.latitude.toDouble(),
+        other.longitude.toDouble(),
+        result
+    )
     return result[0]
 }

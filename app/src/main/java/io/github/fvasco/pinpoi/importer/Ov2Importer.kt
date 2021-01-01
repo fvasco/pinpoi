@@ -44,7 +44,8 @@ class Ov2Importer : AbstractImporter() {
                     val longitudeInt = readIntLE(dataInputStream)
                     val latitudeInt = readIntLE(dataInputStream)
                     if (longitudeInt < -18000000 || longitudeInt > 18000000
-                            || latitudeInt < -9000000 || latitudeInt > 9000000) {
+                        || latitudeInt < -9000000 || latitudeInt > 9000000
+                    ) {
                         throw IOException("Wrong coordinates $longitudeInt,$latitudeInt")
                     }
 

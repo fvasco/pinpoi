@@ -33,7 +33,11 @@ abstract class AbstractImporterTestCase {
      * *
      * @return list of imported placemark
      */
-    fun importPlacemark(importer: AbstractImporter, resource: String, fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE): List<Placemark> {
+    fun importPlacemark(
+        importer: AbstractImporter,
+        resource: String,
+        fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
+    ): List<Placemark> {
         checkNotNull(javaClass.getResourceAsStream(resource)).use {
             return importPlacemark(importer, it, fileFormatFilter)
         }
@@ -42,7 +46,11 @@ abstract class AbstractImporterTestCase {
     /**
      * Execute import
      */
-    fun importPlacemark(importer: AbstractImporter, input: InputStream, fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE): List<Placemark> {
+    fun importPlacemark(
+        importer: AbstractImporter,
+        input: InputStream,
+        fileFormatFilter: FileFormatFilter = FileFormatFilter.NONE
+    ): List<Placemark> {
         val list = ArrayList<Placemark>()
         importer.collectionId = 1
         importer.consumer = { list.add(it) }

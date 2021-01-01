@@ -4,7 +4,6 @@ import android.util.Log
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.httpToHttps
 import java.io.IOException
-import java.io.InputStream
 import java.net.URL
 
 /**
@@ -47,8 +46,10 @@ class KmlImporter : AbstractXmlImporter() {
                 "Placemark" -> {
                     if (coordinateCount > 0) {
                         // set placemark to center
-                        p.coordinates = Coordinates((latitude / coordinateCount.toDouble()).toFloat(),
-                                (longitude / coordinateCount.toDouble()).toFloat())
+                        p.coordinates = Coordinates(
+                            (latitude / coordinateCount.toDouble()).toFloat(),
+                            (longitude / coordinateCount.toDouble()).toFloat()
+                        )
                         importPlacemark()
                     } else placemark = null
                 }
@@ -58,7 +59,7 @@ class KmlImporter : AbstractXmlImporter() {
                     for (line in text.trim { it <= ' ' }.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }) {
                         // format: longitude, latitude, altitude
                         val coordinates = line.split(',', limit = 3).takeIf { it.size in 2..3 }
-                                ?: continue
+                            ?: continue
                         val lat = coordinates[0].toDoubleOrNull() ?: continue
                         val lon = coordinates[1].toDoubleOrNull() ?: continue
                         longitude += lat

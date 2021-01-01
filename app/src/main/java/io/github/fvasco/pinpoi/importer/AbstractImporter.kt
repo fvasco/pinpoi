@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi.importer
 
-import android.content.ContentResolver
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.model.Placemark
@@ -31,7 +30,8 @@ abstract class AbstractImporter {
     fun importPlacemark(placemark: Placemark) {
         val (latitude, longitude) = placemark.coordinates
         if (latitude >= -90f && latitude <= 90f
-                && longitude >= -180f && longitude <= 180f) {
+            && longitude >= -180f && longitude <= 180f
+        ) {
             val name = placemark.name.trim()
             var description: String = placemark.description.trim()
             if (description == name) description = ""

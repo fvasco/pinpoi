@@ -1,15 +1,6 @@
 package io.github.fvasco.pinpoi.util
 
-import android.content.ContentResolver
-import android.content.Context
-import android.net.Uri
 import io.github.fvasco.pinpoi.BuildConfig
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.regex.Pattern
 
 private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
@@ -58,8 +49,8 @@ fun escapeJavascript(text: CharSequence) = buildString(text.length + text.length
  * Switch a HTTP URL to HTTPS protocol
  */
 fun httpToHttps(url: String) =
-        if (url.startsWith("http://")) "https${url.substring(4)}"
-        else url
+    if (url.startsWith("http://")) "https${url.substring(4)}"
+    else url
 
 /**
  * Append text (if present) to string builder using a separator (if present)

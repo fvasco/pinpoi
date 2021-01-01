@@ -56,7 +56,10 @@ fun setUpDebugDatabase(context: Context) {
                             pci == 0 -> placemark.name + "<u>beautiful</u> description"
                             else -> placemark.name + " description"
                         }
-                        placemark.coordinates = Coordinates((lat + sin((lat + pci).toDouble())).toFloat(), (lon + sin((lon - pci).toDouble())).toFloat())
+                        placemark.coordinates = Coordinates(
+                            (lat + sin((lat + pci).toDouble())).toFloat(),
+                            (lon + sin((lon - pci).toDouble())).toFloat()
+                        )
                         placemark.collectionId = placemarkCollection.id
                         placemarkDao.insert(placemark)
 

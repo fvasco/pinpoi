@@ -30,8 +30,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun findAllPlacemarkByCollectionId(collectionId: Long): List<Placemark> {
-        database!!.query("PLACEMARK", null,
-                "collection_id=$collectionId", null, null, null, "_ID").use { cursor ->
+        database!!.query(
+            "PLACEMARK", null,
+            "collection_id=$collectionId", null, null, null, "_ID"
+        ).use { cursor ->
             val res = ArrayList<Placemark>()
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
@@ -50,11 +52,11 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
      * @param collectionIds collection id filter
      */
     fun findAllPlacemarkNear(
-            coordinates: Coordinates,
-            range: Double,
-            collectionIds: Collection<Long>,
-            nameFilter: String? = null,
-            onlyFavourite: Boolean = false
+        coordinates: Coordinates,
+        range: Double,
+        collectionIds: Collection<Long>,
+        nameFilter: String? = null,
+        onlyFavourite: Boolean = false
     ): SortedSet<PlacemarkSearchResult> {
         require(collectionIds.isNotEmpty()) { "collection empty" }
         require(range > 0) { "range not valid $range" }
@@ -63,9 +65,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         // sql clause
         // collection ids
         val sql = StringBuilder(
-                "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag,pa.note,collection_id FROM PLACEMARK p" +
-                        " LEFT OUTER JOIN PLACEMARK_ANNOTATION pa USING(latitude,longitude)" +
-                        " WHERE p.collection_id in (")
+            "SELECT p._ID,p.latitude,p.longitude,p.name,pa.flag,pa.note,collection_id FROM PLACEMARK p" +
+                    " LEFT OUTER JOIN PLACEMARK_ANNOTATION pa USING(latitude,longitude)" +
+                    " WHERE p.collection_id in ("
+        )
         val whereArgs = ArrayList<String>()
         val iterator = collectionIds.iterator()
         sql.append(iterator.next().toString())
@@ -91,7 +94,11 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             var maxDistance = range
             while (!cursor.isAfterLast) {
                 val p = cursorToPlacemarkSearchResult(cursor)
-                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter.isNullOrBlank() || p.name.contains(nameFilter, true))) {
+                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter.isNullOrBlank() || p.name.contains(
+                        nameFilter,
+                        true
+                    ))
+                ) {
                     res.add(p)
                     // ensure size limit, discard farest
                     if (res.size > MAX_NEAR_RESULT) {
@@ -109,8 +116,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
     fun getPlacemark(id: Long): Placemark? {
         if (id <= 0) return null
-        database!!.query("PLACEMARK", null,
-                "_ID=$id", null, null, null, null).use { cursor ->
+        database!!.query(
+            "PLACEMARK", null,
+            "_ID=$id", null, null, null, null
+        ).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) null else cursorToPlacemark(cursor)
         }
@@ -124,9 +133,11 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     fun loadPlacemarkAnnotation(placemark: PlacemarkBase): PlacemarkAnnotation {
         val latitude = placemark.coordinates.latitude
         val longitude = placemark.coordinates.longitude
-        database!!.query("PLACEMARK_ANNOTATION", null,
-                "latitude=" + coordinateToInt(latitude) + " AND longitude=" + coordinateToInt(longitude), null,
-                null, null, null).use { cursor ->
+        database!!.query(
+            "PLACEMARK_ANNOTATION", null,
+            "latitude=" + coordinateToInt(latitude) + " AND longitude=" + coordinateToInt(longitude), null,
+            null, null, null
+        ).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) {
                 PlacemarkAnnotation(coordinates = Coordinates(latitude, longitude))
@@ -137,11 +148,15 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun update(placemarkAnnotation: PlacemarkAnnotation) {
-        val whereClause = "latitude=${coordinateToInt(placemarkAnnotation.coordinates.latitude)} AND longitude=${coordinateToInt(placemarkAnnotation.coordinates.longitude)}"
+        val whereClause = "latitude=${coordinateToInt(placemarkAnnotation.coordinates.latitude)} AND longitude=${
+            coordinateToInt(placemarkAnnotation.coordinates.longitude)
+        }"
         if (placemarkAnnotation.note.isBlank() && !placemarkAnnotation.flagged) {
-            database!!.delete("PLACEMARK_ANNOTATION",
-                    whereClause,
-                    null)
+            database!!.delete(
+                "PLACEMARK_ANNOTATION",
+                whereClause,
+                null
+            )
         } else {
             val contentValues = placemarkAnnotationToContentValues(placemarkAnnotation)
             val count = database!!.update("PLACEMARK_ANNOTATION", contentValues, whereClause, null)
@@ -182,31 +197,31 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     private fun cursorToPlacemark(cursor: Cursor) =
-            Placemark(
-                    id = cursor.getLong(0),
-                    coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
-                    name = cursor.getString(3),
-                    description = cursor.getString(4),
-                    collectionId = cursor.getLong(5)
-            )
+        Placemark(
+            id = cursor.getLong(0),
+            coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+            name = cursor.getString(3),
+            description = cursor.getString(4),
+            collectionId = cursor.getLong(5)
+        )
 
     private fun cursorToPlacemarkSearchResult(cursor: Cursor) =
-            PlacemarkSearchResult(
-                    id = cursor.getLong(0),
-                    coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
-                    name = cursor.getString(3),
-                    flagged = cursor.getInt(4) != 0,
-                    hasNote = !cursor.getString(5).isNullOrEmpty(),
-                    collectionId = cursor.getLong(6)
-            )
+        PlacemarkSearchResult(
+            id = cursor.getLong(0),
+            coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+            name = cursor.getString(3),
+            flagged = cursor.getInt(4) != 0,
+            hasNote = !cursor.getString(5).isNullOrEmpty(),
+            collectionId = cursor.getLong(6)
+        )
 
     private fun cursorToPlacemarkAnnotation(cursor: Cursor) =
-            PlacemarkAnnotation(
-                    // column 0 is id (ignored)
-                    coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
-                    note = cursor.getString(3),
-                    flagged = cursor.getInt(4) != 0
-            )
+        PlacemarkAnnotation(
+            // column 0 is id (ignored)
+            coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+            note = cursor.getString(3),
+            flagged = cursor.getInt(4) != 0
+        )
 
     companion object {
 
@@ -247,7 +262,12 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         /**
          * Append coordinates filter in stringBuilder sql clause
          */
-        private fun createWhereFilter(coordinates: Coordinates, range: Double, table: String, stringBuilder: StringBuilder) {
+        private fun createWhereFilter(
+            coordinates: Coordinates,
+            range: Double,
+            table: String,
+            stringBuilder: StringBuilder
+        ) {
             // calculate "square" of search
             val shiftY = coordinates.copy(latitude = coordinates.latitude + if (coordinates.latitude > 0) -1 else 1)
             val scaleY = coordinates.distanceTo(shiftY)
@@ -255,17 +275,23 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             val scaleX = coordinates.distanceTo(shiftX)
 
             // latitude
-            stringBuilder.append(table).append(".latitude between ").append(coordinateToInt(coordinates.latitude - range / scaleY).toString()).append(" AND ").append(coordinateToInt(coordinates.latitude + range / scaleY).toString())
+            stringBuilder.append(table).append(".latitude between ")
+                .append(coordinateToInt(coordinates.latitude - range / scaleY).toString()).append(" AND ")
+                .append(coordinateToInt(coordinates.latitude + range / scaleY).toString())
 
             // longitude
             val longitudeMin = coordinates.longitude - range / scaleX
             val longitudeMax = coordinates.longitude + range / scaleX
-            stringBuilder.append(" AND (").append(table).append(".longitude between ").append(coordinateToInt(longitudeMin).toString()).append(" AND ").append(coordinateToInt(longitudeMax).toString())
+            stringBuilder.append(" AND (").append(table).append(".longitude between ")
+                .append(coordinateToInt(longitudeMin).toString()).append(" AND ")
+                .append(coordinateToInt(longitudeMax).toString())
             // fix for meridian 180
             if (longitudeMin < -180.0) {
-                stringBuilder.append(" OR ").append(table).append(".longitude >=").append(coordinateToInt(longitudeMin + 360.0).toString())
+                stringBuilder.append(" OR ").append(table).append(".longitude >=")
+                    .append(coordinateToInt(longitudeMin + 360.0).toString())
             } else if (longitudeMax > 180.0) {
-                stringBuilder.append(" OR ").append(table).append(".longitude <=").append(coordinateToInt(longitudeMax - 360.0).toString())
+                stringBuilder.append(" OR ").append(table).append(".longitude <=")
+                    .append(coordinateToInt(longitudeMax - 360.0).toString())
             }
             stringBuilder.append(')')
         }

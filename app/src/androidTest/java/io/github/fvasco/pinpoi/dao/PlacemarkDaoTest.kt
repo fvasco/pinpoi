@@ -152,9 +152,12 @@ class PlacemarkDaoTest {
                 p.collectionId = 1
                 dao.insert(p)
 
-                val referenceLocation = Coordinates((lat + 4 * cos(lon.toDouble())).toFloat(), (lon + 3 * cos(lat.toDouble())).toFloat())
-                val placemarks = dao.findAllPlacemarkNear(referenceLocation,
-                        referenceLocation.distanceTo(p.coordinates).toDouble(), setOf(1L))
+                val referenceLocation =
+                    Coordinates((lat + 4 * cos(lon.toDouble())).toFloat(), (lon + 3 * cos(lat.toDouble())).toFloat())
+                val placemarks = dao.findAllPlacemarkNear(
+                    referenceLocation,
+                    referenceLocation.distanceTo(p.coordinates).toDouble(), setOf(1L)
+                )
                 assertEquals("Error on $name", 1, placemarks.size)
                 val psr = placemarks.first()
                 assertEquals(name, psr.name)

@@ -6,13 +6,14 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 /**
  * @author Francesco Vasco
@@ -52,7 +53,7 @@ class BackupManagerTest {
     @Test
     fun testBackup() {
         // create
-        backupManager.create(backupFile)
+        backupManager.create(FileOutputStream(backupFile))
         assertTrue(backupFile.length() > 0)
 
         // restore
@@ -81,7 +82,7 @@ class BackupManagerTest {
         placemarkCollectionDao.close()
         placemarkDao.close()
 
-        backupManager.restore(backupFile)
+        backupManager.restore(FileInputStream(backupFile))
 
         placemarkCollectionDao.open()
         placemarkDao.open()

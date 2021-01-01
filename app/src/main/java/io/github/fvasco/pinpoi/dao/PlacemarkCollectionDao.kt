@@ -20,24 +20,30 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
     }
 
     fun findPlacemarkCollectionById(id: Long): PlacemarkCollection? {
-        database!!.query("PLACEMARK_COLLECTION",
-                null, "_ID=" + id, null, null, null, null).use { cursor ->
+        database!!.query(
+            "PLACEMARK_COLLECTION",
+            null, "_ID=" + id, null, null, null, null
+        ).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) null else cursorToPlacemarkCollection(cursor)
         }
     }
 
     fun findPlacemarkCollectionByName(name: String): PlacemarkCollection? {
-        database!!.query("PLACEMARK_COLLECTION",
-                null, "NAME=?", arrayOf(name), null, null, null).use { cursor ->
+        database!!.query(
+            "PLACEMARK_COLLECTION",
+            null, "NAME=?", arrayOf(name), null, null, null
+        ).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) null else cursorToPlacemarkCollection(cursor)
         }
     }
 
     fun findAllPlacemarkCollectionCategory(): List<String> {
-        database!!.query(true, "PLACEMARK_COLLECTION",
-                arrayOf("CATEGORY"), "length(CATEGORY)>0", null, "CATEGORY", null, "CATEGORY", null).use { cursor ->
+        database!!.query(
+            true, "PLACEMARK_COLLECTION",
+            arrayOf("CATEGORY"), "length(CATEGORY)>0", null, "CATEGORY", null, "CATEGORY", null
+        ).use { cursor ->
             val res = ArrayList<String>()
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
@@ -49,8 +55,10 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
     }
 
     fun findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory: String): List<PlacemarkCollection> {
-        database!!.query("PLACEMARK_COLLECTION",
-                null, "CATEGORY=?", arrayOf(selectedPlacemarkCategory), null, null, "NAME").use { cursor ->
+        database!!.query(
+            "PLACEMARK_COLLECTION",
+            null, "CATEGORY=?", arrayOf(selectedPlacemarkCategory), null, null, "NAME"
+        ).use { cursor ->
             val res = ArrayList<PlacemarkCollection>()
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
@@ -62,8 +70,10 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
     }
 
     fun findAllPlacemarkCollection(): List<PlacemarkCollection> {
-        database!!.query("PLACEMARK_COLLECTION",
-                null, null, null, null, null, "CATEGORY,NAME").use { cursor ->
+        database!!.query(
+            "PLACEMARK_COLLECTION",
+            null, null, null, null, null, "CATEGORY,NAME"
+        ).use { cursor ->
             val res = ArrayList<PlacemarkCollection>()
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
@@ -109,8 +119,10 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
         pc.category = cursor.getString(4)
         pc.lastUpdate = cursor.getLong(5)
         pc.poiCount = cursor.getInt(6)
-        pc.fileFormatFilter = FileFormatFilter.valueOf(cursor.getString(7)
-                ?: FileFormatFilter.NONE.toString())
+        pc.fileFormatFilter = FileFormatFilter.valueOf(
+            cursor.getString(7)
+                ?: FileFormatFilter.NONE.toString()
+        )
         return pc
     }
 }

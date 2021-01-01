@@ -42,8 +42,10 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         placemarkDetailContainer.setOnTouchListener(OnSwipeTouchListener(this, placemarkDetailContainer.context))
 
         preferences = getPreferences(Context.MODE_PRIVATE)
-        placemarkId = intent.getLongExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID,
-                preferences.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, 0))
+        placemarkId = intent.getLongExtra(
+            PlacemarkDetailFragment.ARG_PLACEMARK_ID,
+            preferences.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, 0)
+        )
         preferences.edit().putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId).apply()
         placemarkIdArray = intent.getLongArrayExtra(ARG_PLACEMARK_LIST_ID)
 
@@ -81,8 +83,10 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        placemarkId = savedInstanceState.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID,
-                preferences.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, 0))
+        placemarkId = savedInstanceState.getLong(
+            PlacemarkDetailFragment.ARG_PLACEMARK_ID,
+            preferences.getLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, 0)
+        )
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

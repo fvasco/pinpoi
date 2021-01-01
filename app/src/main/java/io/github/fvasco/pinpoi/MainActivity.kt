@@ -27,12 +27,10 @@ import androidx.core.content.ContextCompat
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
-import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.placemarkcollection_detail.*
-import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -41,7 +39,8 @@ import java.util.concurrent.Future
 import java.util.regex.Pattern
 import kotlin.math.min
 
-class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
+class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener,
+    LocationListener {
     private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
     private lateinit var locationManager: LocationManager
@@ -80,36 +79,52 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
         // load intent parameters for geo scheme (if present)
         intent.data
-                ?.takeIf { it.scheme == "geo" }
-                ?.let { intentUri ->
-                    Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
-                    val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+)[, ]([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-                    val paramQ: String? = (if (intentUri.isHierarchical) intentUri else Uri.parse(intentUri.toString().replaceFirst("geo:", "geo://"))).getQueryParameter("q")
+            ?.takeIf { it.scheme == "geo" }
+            ?.let { intentUri ->
+                Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
+                val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+)[, ]([+-]?\\d+\\.\\d+)(?:\\D.*)?")
+                val paramQ: String? = (if (intentUri.isHierarchical) intentUri else Uri.parse(
+                    intentUri.toString().replaceFirst("geo:", "geo://")
+                )).getQueryParameter("q")
 
-                    val matcher =
-                            paramQ?.let { coordinatePattern.matcher(it) }
-                                    ?: intentUri.host?.let { coordinatePattern.matcher(it) }
-                                    ?: Pattern.compile("""geo:(?://)?([+-]?\d+\.\d+),([+-]?\d+\.\d+)(?:\D.*)?""")
-                                            .matcher(intentUri.toString())
+                val matcher =
+                    paramQ?.let { coordinatePattern.matcher(it) }
+                        ?: intentUri.host?.let { coordinatePattern.matcher(it) }
+                        ?: Pattern.compile("""geo:(?://)?([+-]?\d+\.\d+),([+-]?\d+\.\d+)(?:\D.*)?""")
+                            .matcher(intentUri.toString())
 
-                    if (matcher.matches()) {
-                        switchGps.isChecked = false
-                        latitudeText.setText(matcher.group(1))
-                        longitudeText.setText(matcher.group(2))
-                    } else if (paramQ != null)
-                        openSearchAddress(this, paramQ)
-                }
+                if (matcher.matches()) {
+                    switchGps.isChecked = false
+                    latitudeText.setText(matcher.group(1))
+                    longitudeText.setText(matcher.group(2))
+                } else if (paramQ != null)
+                    openSearchAddress(this, paramQ)
+            }
     }
 
     override fun onResume() {
         switchGps.setOnCheckedChangeListener(this)
-        setUseLocationManagerListener(switchGps.isChecked && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        setUseLocationManagerListener(
+            switchGps.isChecked && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
         super.onResume()
     }
 
     override fun onPause() {
         setUseLocationManagerListener(false)
-        getPreferences(Context.MODE_PRIVATE).edit().putBoolean(PREFERENCE_GPS, switchGps.isChecked).putString(PREFERENCE_LATITUDE, latitudeText.text.toString()).putString(PREFERENCE_LONGITUDE, longitudeText.text.toString()).putString(PREFERENCE_NAME_FILTER, nameFilterText.text.toString()).putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked).putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFERENCE_RANGE, rangeSeek.progress).putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory).putLong(PREFERENCE_COLLECTION, if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id).apply()
+        getPreferences(Context.MODE_PRIVATE).edit().putBoolean(PREFERENCE_GPS, switchGps.isChecked)
+            .putString(PREFERENCE_LATITUDE, latitudeText.text.toString())
+            .putString(PREFERENCE_LONGITUDE, longitudeText.text.toString())
+            .putString(PREFERENCE_NAME_FILTER, nameFilterText.text.toString())
+            .putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked)
+            .putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFERENCE_RANGE, rangeSeek.progress)
+            .putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory).putLong(
+            PREFERENCE_COLLECTION,
+            if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id
+        ).apply()
         super.onPause()
     }
 
@@ -185,12 +200,12 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         try {
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
             AlertDialog.Builder(view.context)
-                    .setTitle(getString(R.string.collection))
-                    .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray())) { dialog, which ->
-                        dialog.tryDismiss()
-                        setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
-                    }
-                    .show()
+                .setTitle(getString(R.string.collection))
+                .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray())) { dialog, which ->
+                    dialog.tryDismiss()
+                    setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
+                }
+                .show()
         } finally {
             placemarkCollectionDao.close()
         }
@@ -211,10 +226,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 if (placemarkCollection.poiCount > 0) {
                     placemarkCollections.add(placemarkCollection)
                     placemarkCollectionNames.add(
-                            if (selectedPlacemarkCategory == placemarkCollection.category)
-                                placemarkCollection.name
-                            else
-                                placemarkCollection.category + " / " + placemarkCollection.name)
+                        if (selectedPlacemarkCategory == placemarkCollection.category)
+                            placemarkCollection.name
+                        else
+                            placemarkCollection.category + " / " + placemarkCollection.name
+                    )
                 }
             }
             if (selectedPlacemarkCategory.isEmpty() && placemarkCollections.isEmpty()) {
@@ -225,13 +241,14 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 placemarkCollections.add(0, null)
                 placemarkCollectionNames.add(0, getString(R.string.any_filter))
                 AlertDialog.Builder(view.context)
-                        .setTitle(getString(R.string.collection))
-                        .setItems(placemarkCollectionNames.toTypedArray()) { dialog, which ->
-                            dialog.tryDismiss()
-                            setPlacemarkCollection(
-                                    if (which == 0) null else placemarkCollections[which])
-                        }
-                        .show()
+                    .setTitle(getString(R.string.collection))
+                    .setItems(placemarkCollectionNames.toTypedArray()) { dialog, which ->
+                        dialog.tryDismiss()
+                        setPlacemarkCollection(
+                            if (which == 0) null else placemarkCollections[which]
+                        )
+                    }
+                    .show()
             }
         } finally {
             placemarkCollectionDao.close()
@@ -255,49 +272,60 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         editText.selectAll()
 
         AlertDialog.Builder(context)
-                .setMessage(R.string.insert_address)
-                .setView(editText)
-                .setPositiveButton(R.string.search) { dialog, _ ->
-                    dialog.tryDismiss()
-                    switchGps.isChecked = false
-                    // clear old coordinates
-                    onLocationChanged(null)
-                    // search new location;
-                    val address = editText.text.toString()
-                    if (address.isNotBlank()) {
-                        preference.edit().putString(PREFERENCE_ADDRESS, address).apply()
-                        // check if is a coordinate text, WGS84 or geo uri
-                        val coordinateMatcherResult = """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex().matchEntire(address)
-                        if (coordinateMatcherResult == null) {
-                            try {
-                                // check OLC
-                                var olc = OpenLocationCode(address)
-                                // if required try to recover location
-                                runCatching {
-                                    olc = olc.recover(latitudeText.text.toString().toDouble(), longitudeText.text.toString().toDouble())
-                                    // ignore error
-                                }
-                                val codeArea = olc.decode()
-                                onLocationChanged(LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude))
-                            } catch (e: Exception) {
-                                showProgressDialog(address, context) {
-                                    val addresses =
-                                            locationUtil.geocoder?.getFromLocationName(address, 25)?.filter { it.hasLatitude() && it.hasLongitude() }
-                                                    ?: listOf()
-                                    runOnUiThread {
-                                        chooseAddress(addresses, context)
-                                    }
+            .setMessage(R.string.insert_address)
+            .setView(editText)
+            .setPositiveButton(R.string.search) { dialog, _ ->
+                dialog.tryDismiss()
+                switchGps.isChecked = false
+                // clear old coordinates
+                onLocationChanged(null)
+                // search new location;
+                val address = editText.text.toString()
+                if (address.isNotBlank()) {
+                    preference.edit().putString(PREFERENCE_ADDRESS, address).apply()
+                    // check if is a coordinate text, WGS84 or geo uri
+                    val coordinateMatcherResult =
+                        """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex()
+                            .matchEntire(address)
+                    if (coordinateMatcherResult == null) {
+                        try {
+                            // check OLC
+                            var olc = OpenLocationCode(address)
+                            // if required try to recover location
+                            runCatching {
+                                olc = olc.recover(
+                                    latitudeText.text.toString().toDouble(),
+                                    longitudeText.text.toString().toDouble()
+                                )
+                                // ignore error
+                            }
+                            val codeArea = olc.decode()
+                            onLocationChanged(
+                                LocationUtil.newLocation(
+                                    codeArea.centerLatitude,
+                                    codeArea.centerLongitude
+                                )
+                            )
+                        } catch (e: Exception) {
+                            showProgressDialog(address, context) {
+                                val addresses =
+                                    locationUtil.geocoder?.getFromLocationName(address, 25)
+                                        ?.filter { it.hasLatitude() && it.hasLongitude() }
+                                        ?: listOf()
+                                runOnUiThread {
+                                    chooseAddress(addresses, context)
                                 }
                             }
-                        } else {
-                            // parse coordinate
-                            latitudeText.setText(coordinateMatcherResult.groupValues[1])
-                            longitudeText.setText(coordinateMatcherResult.groupValues[2])
                         }
+                    } else {
+                        // parse coordinate
+                        latitudeText.setText(coordinateMatcherResult.groupValues[1])
+                        longitudeText.setText(coordinateMatcherResult.groupValues[2])
                     }
                 }
-                .setNegativeButton(R.string.close, DismissOnClickListener)
-                .show()
+            }
+            .setNegativeButton(R.string.close, DismissOnClickListener)
+            .show()
         editText.post {
             editText.requestFocusFromTouch()
             with(this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager) {
@@ -342,7 +370,10 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             } else {
                 collectionsIds = longArrayOf(selectedPlacemarkCollection!!.id)
             }
-            Log.d(MainActivity::class.java.simpleName, "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds")
+            Log.d(
+                MainActivity::class.java.simpleName,
+                "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds"
+            )
             if (collectionsIds.isEmpty()) {
                 showLongToast(getString(R.string.n_placemarks_found, 0), view.context)
                 onManagePlacemarkCollections()
@@ -350,13 +381,19 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 val context = view.context
                 val intent = Intent(context, PlacemarkListActivity::class.java).apply {
                     try {
-                        putExtra(PlacemarkListActivity.ARG_LATITUDE, latitudeText.text.toString().replace(',', '.').toFloat())
+                        putExtra(
+                            PlacemarkListActivity.ARG_LATITUDE,
+                            latitudeText.text.toString().replace(',', '.').toFloat()
+                        )
                     } catch (e: Exception) {
                         latitudeText.requestFocus()
                         throw e
                     }
                     try {
-                        putExtra(PlacemarkListActivity.ARG_LONGITUDE, longitudeText.text.toString().replace(',', '.').toFloat())
+                        putExtra(
+                            PlacemarkListActivity.ARG_LONGITUDE,
+                            longitudeText.text.toString().replace(',', '.').toFloat()
+                        )
                     } catch (e: Exception) {
                         longitudeText.requestFocus()
                         throw e
@@ -391,7 +428,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun createBackup(outputStream: OutputStream) {
         showProgressDialog(getString(R.string.action_create_backup), this) {
             try {
-                val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
+                val backupManager =
+                    BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
                 backupManager.create(outputStream)
             } catch (e: Exception) {
                 Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
@@ -411,7 +449,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun restoreBackup(inputStream: InputStream) {
         showProgressDialog(getString(R.string.action_restore_backup), this) {
             try {
-                val backupManager = BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
+                val backupManager =
+                    BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
                 backupManager.restore(inputStream)
                 runOnUiThread { setPlacemarkCollection(null) }
             } catch (e: Exception) {
@@ -429,7 +468,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         if (requestCode == BACKUP_CREATE_RESULT_ID) {
             val uri = data?.data ?: return
             val outputStream = contentResolver?.openOutputStream(uri) ?: return
-             createBackup(outputStream)
+            createBackup(outputStream)
         }
 
         if (requestCode == BACKUP_RESTORE_RESULT_ID) {
@@ -442,7 +481,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun debugImportCollection() {
         if (!BuildConfig.DEBUG) throw AssertionError()
 
-        val uri = Uri.Builder().scheme("http").authority("my.poi.server").appendEncodedPath("/dir/subdir/poisource.ov2").appendQueryParameter("q", "customValue").build()
+        val uri = Uri.Builder().scheme("http").authority("my.poi.server").appendEncodedPath("/dir/subdir/poisource.ov2")
+            .appendQueryParameter("q", "customValue").build()
         val intent = Intent(Intent.ACTION_VIEW, uri)
         startActivity(intent)
     }
@@ -470,18 +510,31 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         var locationManagerListenerEnabled = false
         try {
             if (on) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
                     onLocationChanged(null)
                     for (provider in locationManager.allProviders) {
                         Log.i(MainActivity::class.java.simpleName, "provider $provider")
                         // search updated location
                         onLocationChanged(locationManager.getLastKnownLocation(provider))
-                        locationManager.requestLocationUpdates(provider, LOCATION_TIME_ACCURACY.toLong(), LOCATION_RANGE_ACCURACY.toFloat(), this)
+                        locationManager.requestLocationUpdates(
+                            provider,
+                            LOCATION_TIME_ACCURACY.toLong(),
+                            LOCATION_RANGE_ACCURACY.toFloat(),
+                            this
+                        )
                         locationManagerListenerEnabled = true
                     }
                 } else {
                     // request permission
-                    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_GPS_ON)
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        PERMISSION_GPS_ON
+                    )
                 }
             } else {
                 locationManager.removeUpdates(this)
@@ -490,13 +543,18 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             showToast(se)
         }
 
-        Log.i(MainActivity::class.java.simpleName, "setUseLocationManagerListener.status $locationManagerListenerEnabled")
+        Log.i(
+            MainActivity::class.java.simpleName,
+            "setUseLocationManagerListener.status $locationManagerListenerEnabled"
+        )
         latitudeText.isEnabled = !locationManagerListenerEnabled
         longitudeText.isEnabled = !locationManagerListenerEnabled
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
         val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
         when (requestCode) {
             PERMISSION_GPS_ON -> {
@@ -520,8 +578,9 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         } else {
             val minTime = System.currentTimeMillis() - LOCATION_TIME_ACCURACY
             if (location.time >= minTime && (location.accuracy <= LOCATION_RANGE_ACCURACY
-                            || lastLocation == null || lastLocation!!.time <= minTime
-                            || lastLocation!!.accuracy < location.accuracy)) {
+                        || lastLocation == null || lastLocation!!.time <= minTime
+                        || lastLocation!!.accuracy < location.accuracy)
+            ) {
                 lastLocation = location
                 latitudeText.setText(location.latitude.toString())
                 longitudeText.setText(location.longitude.toString())

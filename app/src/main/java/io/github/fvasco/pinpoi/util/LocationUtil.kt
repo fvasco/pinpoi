@@ -37,8 +37,9 @@ class LocationUtil(private val context: Context) {
      * Get address and call optional addressConsumer in main looper
      */
     fun getAddressStringAsync(
-            coordinates: Coordinates,
-            addressConsumer: ((String?) -> Unit)?) = doAsync {
+        coordinates: Coordinates,
+        addressConsumer: ((String?) -> Unit)?
+    ) = doAsync {
         var addressString: String? = synchronized(ADDRESS_CACHE) {
             if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
             ADDRESS_CACHE[coordinates]
@@ -46,7 +47,7 @@ class LocationUtil(private val context: Context) {
         if (addressString == null) {
             val addresses = try {
                 geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
-                        ?: listOf()
+                    ?: listOf()
             } catch (e: Exception) {
                 listOf<Address>()
             }
@@ -81,7 +82,8 @@ class LocationUtil(private val context: Context) {
     fun openExternalMap(placemark: PlacemarkBase, forceAppChooser: Boolean) {
         try {
             // use simple intent (no description) for max compatibility
-            var intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${placemark.coordinates}"))
+            var intent =
+                Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${placemark.coordinates}"))
             if (forceAppChooser) {
                 intent = Intent.createChooser(intent, placemark.name)
             }

@@ -53,11 +53,12 @@ class TextImporter : AbstractImporter() {
             if (matcher.matches()) {
                 try {
                     val placemark = Placemark(
-                            // remove double double-quotes
-                            name = matcher.group(7).replace("\"\"", "\""),
-                            coordinates = Coordinates(
-                                    matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 5 else 2).toFloat(),
-                                    matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 2 else 5).toFloat())
+                        // remove double double-quotes
+                        name = matcher.group(7).replace("\"\"", "\""),
+                        coordinates = Coordinates(
+                            matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 5 else 2).toFloat(),
+                            matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 2 else 5).toFloat()
+                        )
                     )
                     importPlacemark(placemark)
                 } catch (nfe: NumberFormatException) {
@@ -73,7 +74,8 @@ class TextImporter : AbstractImporter() {
 
     companion object {
 
-        private val LINE_PATTERN = Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\s*\\1([,;\\s])\\s*(\"?)([+-]?\\d+\\.\\d+)\\4\\s*\\3\\s*(\"?)(.*)\\6\\s*")
+        private val LINE_PATTERN =
+            Pattern.compile("\\s*(\"?)([+-]?\\d+\\.\\d+)\\s*\\1([,;\\s])\\s*(\"?)([+-]?\\d+\\.\\d+)\\4\\s*\\3\\s*(\"?)(.*)\\6\\s*")
         private val UTF_8_DECODER = Charsets.UTF_8.newDecoder()
         private val LATIN1_DECODER = Charsets.ISO_8859_1.newDecoder()
 
@@ -86,10 +88,10 @@ class TextImporter : AbstractImporter() {
          * Decode text, if UTF-8 fails then use ISO-8859-1
          */
         fun toString(byteBuffer: ByteArray, start: Int, len: Int): String =
-                try {
-                    UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
-                } catch (e: CharacterCodingException) {
-                    LATIN1_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
-                }
+            try {
+                UTF_8_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
+            } catch (e: CharacterCodingException) {
+                LATIN1_DECODER.decode(ByteBuffer.wrap(byteBuffer, start, len)).toString()
+            }
     }
 }
