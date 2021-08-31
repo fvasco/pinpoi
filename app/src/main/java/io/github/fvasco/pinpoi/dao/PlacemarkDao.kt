@@ -84,7 +84,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
 
         if (SQL_INSTR_PRESENT && !nameFilter.isNullOrBlank()) {
             sql.append(" AND instr(upper(name),?)>0")
-            whereArgs.add(nameFilter.toUpperCase())
+            whereArgs.add(nameFilter.uppercase())
         }
 
         val locationComparator = PlacemarkDistanceComparator(coordinates)

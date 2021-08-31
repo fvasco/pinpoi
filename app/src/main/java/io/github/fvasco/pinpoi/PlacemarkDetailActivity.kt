@@ -134,15 +134,9 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     override fun onSwipe(direction: Boolean) {
         placemarkIdArray?.let { placemarkIdArray ->
             var i = 0
-            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.size) {
-                ++i
-            }
+            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.size) ++i
             //noinspection PointlessBooleanExpression
-            if (direction == OnSwipeTouchListener.SWIPE_LEFT) {
-                ++i
-            } else {
-                --i
-            }
+            if (direction == OnSwipeTouchListener.SWIPE_LEFT) ++i else --i
             if (i >= 0 && i < placemarkIdArray.size) {
                 placemarkId = placemarkIdArray[i]
                 fragment.placemark = placemarkDao.getPlacemark(placemarkId)

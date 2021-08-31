@@ -79,12 +79,13 @@ class PlacemarkDetailFragment : Fragment() {
             addressText.text = null
             addressText.visibility = View.GONE
             if (value != null) {
-                searchAddressFuture = LocationUtil(context!!).getAddressStringAsync(value.coordinates) { address ->
-                    if (!address.isNullOrEmpty()) {
-                        addressText?.visibility = View.VISIBLE
-                        addressText?.text = address
+                searchAddressFuture =
+                    LocationUtil(requireContext()).getAddressStringAsync(value.coordinates) { address ->
+                        if (!address.isNullOrEmpty()) {
+                            addressText?.visibility = View.VISIBLE
+                            addressText?.text = address
+                        }
                     }
-                }
             }
             if (placemarkCollection == null) {
                 collectionDescriptionTitle.visibility = View.GONE
@@ -97,7 +98,7 @@ class PlacemarkDetailFragment : Fragment() {
             }
         }
     val longClickListener: View.OnLongClickListener = View.OnLongClickListener { view ->
-        LocationUtil(context!!).openExternalMap(placemark!!, true)
+        LocationUtil(requireContext()).openExternalMap(placemark!!, true)
         true
     }
     private lateinit var placemarkDao: PlacemarkDao
@@ -107,12 +108,12 @@ class PlacemarkDetailFragment : Fragment() {
     private var preferences: SharedPreferences? = null
     private var searchAddressFuture: Future<Unit>? = null
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         preferences =
             activity?.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
-        placemarkDao = PlacemarkDao(context!!)
-        placemarkCollectionDao = PlacemarkCollectionDao(context!!)
+        placemarkDao = PlacemarkDao(requireContext())
+        placemarkCollectionDao = PlacemarkCollectionDao(requireContext())
         placemarkDao.open()
         placemarkCollectionDao.open()
 
@@ -152,7 +153,7 @@ class PlacemarkDetailFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         shareButton.setOnClickListener { onShare() }
-        resetStarFabIcon(activity!!.findViewById(R.id.fabStar) as FloatingActionButton)
+        resetStarFabIcon(requireActivity().findViewById(R.id.fabStar) as FloatingActionButton)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -164,7 +165,7 @@ class PlacemarkDetailFragment : Fragment() {
 
     fun onMapClick(view: View) {
         placemark?.apply {
-            LocationUtil(context!!).openExternalMap(this, false)
+            LocationUtil(requireContext()).openExternalMap(this, false)
         }
     }
 
@@ -212,7 +213,7 @@ class PlacemarkDetailFragment : Fragment() {
                     intent.type = "text/plain"
                     intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
                     intent = Intent.createChooser(intent, text)
-                    context!!.startActivity(intent)
+                    requireContext().startActivity(intent)
                 } catch (e: Exception) {
                     Log.e(PlacemarkDetailActivity::class.java.simpleName, "Error on map click", e)
                     context?.showToast(e)

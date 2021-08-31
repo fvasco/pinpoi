@@ -152,7 +152,7 @@ class ImporterFacade(context: Context) {
         ): AbstractImporter? {
             var res: AbstractImporter? = null
 
-            if (mimeType != null) res = createImporterFromMimeType(mimeType)
+            if (mimeType != null) res = createImporterFromMimeType(mimeType, fileFormatFilter)
 
             if (res == null) {
                 val path = try {
@@ -162,7 +162,7 @@ class ImporterFacade(context: Context) {
                     resource
                 }
 
-                when (path.substringAfterLast('.').toLowerCase()) {
+                when (path.substringAfterLast('.').lowercase()) {
                     in FileFormatFilter.KML.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res =
                         KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
@@ -188,19 +188,17 @@ class ImporterFacade(context: Context) {
             return res
         }
 
-        fun createImporterFromMimeType(mimeType: String): AbstractImporter? {
+        fun createImporterFromMimeType(mimeType: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
             if (mimeType.startsWith("text/")) return FileFormatFilter.CSV_LAT_LON.toAbstractImporter()
 
             val type = mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
             when (type) {
-                "kmz", "zip" -> return ZipImporter()
+                "kmz", "zip", "zip-compressed", "x-zip-compressed" -> return ZipImporter()
                 "xml", "rss" -> return GeoRssImporter()
             }
-            for (filter in FileFormatFilter.values()) {
-                if (type in filter.validExtensions) return filter.toAbstractImporter()
-            }
 
-            return null
+            return (FileFormatFilter.values().find { type in it.validExtensions } ?: fileFormatFilter)
+                .toAbstractImporter()
         }
 
         private fun FileFormatFilter.toAbstractImporter(): AbstractImporter? =

@@ -13,6 +13,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -30,11 +31,9 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.placemarkcollection_detail.*
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.*
 import java.util.concurrent.Future
 import java.util.regex.Pattern
 import kotlin.math.min
@@ -122,9 +121,9 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             .putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked)
             .putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFERENCE_RANGE, rangeSeek.progress)
             .putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory).putLong(
-            PREFERENCE_COLLECTION,
-            if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id
-        ).apply()
+                PREFERENCE_COLLECTION,
+                if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id
+            ).apply()
         super.onPause()
     }
 
@@ -267,8 +266,10 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
         val editText = EditText(context)
         editText.maxLines = 6
-        editText.setText(suggestedText)
+        editText.inputType = InputType.TYPE_CLASS_TEXT
+        editText.isFocusable = true
         editText.isFocusableInTouchMode = true
+        editText.setText(suggestedText)
         editText.selectAll()
 
         AlertDialog.Builder(context)
@@ -326,12 +327,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
             .setNegativeButton(R.string.close, DismissOnClickListener)
             .show()
-        editText.post {
-            editText.requestFocusFromTouch()
+
+        editText.postDelayed({
+            editText.requestFocus()
             with(this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager) {
                 showSoftInput(editText, 0)
             }
-        }
+        }, 250)
     }
 
     private fun chooseAddress(addresses: List<Address>, context: Context) {

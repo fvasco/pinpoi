@@ -103,7 +103,7 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
         cv.put("name", pc.name.trim())
         cv.put("description", pc.description.trim())
         cv.put("source", pc.source.trim())
-        cv.put("category", pc.category.trim().toUpperCase())
+        cv.put("category", pc.category.trim().uppercase(Locale.getDefault()))
         cv.put("fileFormatFilter", pc.fileFormatFilter.toString())
         cv.put("last_update", pc.lastUpdate)
         cv.put("poi_count", pc.poiCount)

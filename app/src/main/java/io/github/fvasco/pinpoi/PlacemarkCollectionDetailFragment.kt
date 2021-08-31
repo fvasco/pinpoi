@@ -37,9 +37,9 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     lateinit var placemarkCollection: PlacemarkCollection
         private set
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        placemarkCollectionDao = PlacemarkCollectionDao(context!!)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        placemarkCollectionDao = PlacemarkCollectionDao(requireContext())
         placemarkCollectionDao.open()
 
         val arguments = arguments
@@ -65,7 +65,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         super.onStart()
         categoryText.setAdapter(
             ArrayAdapter(
-                context!!,
+                requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 placemarkCollectionDao.findAllPlacemarkCollectionCategory()
             )
@@ -144,7 +144,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         }
 
     fun updatePlacemarkCollection() {
-        val progressDialog = ProgressDialog(context!!)
+        val progressDialog = ProgressDialog(requireContext())
         doAsync { updatePlacemarkCollectionImpl(progressDialog) }
     }
 
@@ -156,17 +156,21 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             progressDialog.setTitle(getString(R.string.update, placemarkCollection.name))
             savePlacemarkCollection()
             val oldCount = placemarkCollection.poiCount
-            val importerFacade = ImporterFacade(checkNotNull(context))
+            val importerFacade = ImporterFacade(requireContext())
             importerFacade.setProgressDialog(progressDialog)
             importerFacade.setProgressDialogMessageFormat(getString(R.string.poi_count))
             importerFacade.fileFormatFilter = placemarkCollection.fileFormatFilter
             val count =
-                if (importerAndInputStream == null) importerFacade.importPlacemarks(placemarkCollection)
-                else importerFacade.importPlacemarks(
-                    placemarkCollection,
-                    importerAndInputStream.first,
-                    importerAndInputStream.second
-                )
+                if (importerAndInputStream == null) {
+                    importerFacade.importPlacemarks(placemarkCollection)
+                } else {
+                    importerFacade
+                        .importPlacemarks(
+                            placemarkCollection,
+                            importerAndInputStream.first,
+                            importerAndInputStream.second
+                        )
+                }
 
             runOnUiThread {
                 if (count == 0) {
@@ -218,7 +222,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun deletePlacemarkCollection() {
-        val placemarkDao = PlacemarkDao(context!!)
+        val placemarkDao = PlacemarkDao(requireContext())
         placemarkDao.open()
         try {
             placemarkDao.deleteByCollectionId(placemarkCollection.id)
@@ -265,22 +269,17 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         if (requestCode == CHOOSE_FILE_RESULT_ID) {
             val uri = data?.data ?: return
             val inputStream = context?.contentResolver?.openInputStream(uri) ?: return
+            val type = context?.contentResolver?.getType(uri)
+            Log.d(PlacemarkCollectionDetailFragment::class.java.simpleName, "Import detected type: $type")
             val importer =
-                context?.contentResolver?.getType(uri)
-                    ?.let { ImporterFacade.createImporterFromMimeType(it) }
+                type?.let { ImporterFacade.createImporterFromMimeType(it, placemarkCollection.fileFormatFilter) }
             if (importer == null) {
                 AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
-                    .setMessage(
-                        getString(
-                            R.string.error_update,
-                            placemarkCollection.name,
-                            "Mime-Type: " + context?.contentResolver?.getType(uri)
-                        )
-                    )
+                    .setMessage(getString(R.string.error_update, placemarkCollection.name, "Mime-Type: $type"))
                     .show()
             } else {
                 sourceText.setText("")
-                val progressDialog = ProgressDialog(context!!)
+                val progressDialog = ProgressDialog(requireContext())
                 doAsync {
                     updatePlacemarkCollectionImpl(progressDialog, importer to inputStream)
                 }
