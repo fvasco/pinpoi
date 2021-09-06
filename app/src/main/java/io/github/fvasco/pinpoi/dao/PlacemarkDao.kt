@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteOpenHelper
-import android.os.Build
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.model.PlacemarkBase
@@ -82,7 +81,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             sql.append(" AND pa.flag=1")
         }
 
-        if (SQL_INSTR_PRESENT && !nameFilter.isNullOrBlank()) {
+        if (!nameFilter.isNullOrBlank()) {
             sql.append(" AND instr(upper(name),?)>0")
             whereArgs.add(nameFilter.uppercase())
         }
@@ -94,13 +93,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             var maxDistance = range
             while (!cursor.isAfterLast) {
                 val p = cursorToPlacemarkSearchResult(cursor)
-                if (coordinates.distanceTo(p.coordinates) <= maxDistance && (SQL_INSTR_PRESENT || nameFilter.isNullOrBlank() || p.name.contains(
-                        nameFilter,
-                        true
-                    ))
-                ) {
+                if (coordinates.distanceTo(p.coordinates) <= maxDistance) {
                     res.add(p)
-                    // ensure size limit, discard farest
+                    // ensure size limit, discard the most distant
                     if (res.size > MAX_NEAR_RESULT) {
                         val placemarkToDiscard = res.last()
                         res.remove(placemarkToDiscard)
@@ -229,8 +224,6 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
          * Max result for [.findAllPlacemarkNear]
          */
         private const val MAX_NEAR_RESULT = 1_000
-
-        private val SQL_INSTR_PRESENT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 
         // 2^20
         private const val COORDINATE_MULTIPLIER = 1048576f

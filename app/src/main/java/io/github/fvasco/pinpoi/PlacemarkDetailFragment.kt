@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.text.method.LinkMovementMethod
@@ -227,12 +226,7 @@ class PlacemarkDetailFragment : Fragment() {
             R.drawable.ic_bookmark_white
         else
             R.drawable.ic_bookmark_border_white
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            starFab.setImageDrawable(resources.getDrawable(drawable, activity!!.baseContext.theme))
-        } else {
-            //noinspection deprecation
-            starFab.setImageDrawable(resources.getDrawable(drawable))
-        }
+        starFab.setImageDrawable(resources.getDrawable(drawable, activity!!.baseContext.theme))
     }
 
     fun onStarClick(starFab: FloatingActionButton) {
