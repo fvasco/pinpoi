@@ -11,7 +11,6 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import java.io.IOException
 import java.io.InputStream
-import java.net.URL
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
@@ -211,7 +210,7 @@ class ImporterFacade(context: Context) {
             }
 
         private fun openInputStream(resource: String): Source {
-            val connection = URL(httpToHttps(resource)).openConnection()
+            val connection = makeURL(resource).openConnection()
             connection.connect()
             val mimeType: String? = connection.getHeaderField("Content-Type")
             val inputStream: InputStream = connection.getInputStream()

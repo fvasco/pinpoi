@@ -2,9 +2,8 @@ package io.github.fvasco.pinpoi.importer
 
 import android.util.Log
 import io.github.fvasco.pinpoi.util.Coordinates
-import io.github.fvasco.pinpoi.util.httpToHttps
+import io.github.fvasco.pinpoi.util.makeURL
 import java.io.IOException
-import java.net.URL
 
 /**
  * KML importer
@@ -34,7 +33,7 @@ class KmlImporter : AbstractXmlImporter() {
             if ("href" == tag && checkCurrentPath("kml", "Document", "NetworkLink", "Url")) {
                 val href = text
                 Log.e(KmlImporter::class.java.simpleName, "NetworkLink href $href")
-                URL(httpToHttps(href)).openStream().use { inputStream ->
+                makeURL(href).openStream().use { inputStream ->
                     val delegateImporter = KmlImporter()
                     delegateImporter.configureFrom(this)
                     delegateImporter.importPlacemarks(inputStream)

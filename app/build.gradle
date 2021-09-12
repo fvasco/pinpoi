@@ -8,8 +8,8 @@ android {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 74
-        versionName '1.7.2'
+        versionCode 75
+        versionName '1.7.3'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -52,7 +52,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'com.google.android.material:material:1.4.0'
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-core:3.12.1'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
     androidTestImplementation 'androidx.annotation:annotation:1.2.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
 }

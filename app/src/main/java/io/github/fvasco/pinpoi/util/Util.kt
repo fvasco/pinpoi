@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi.util
 
 import io.github.fvasco.pinpoi.BuildConfig
+import java.net.URL
 import java.util.regex.Pattern
 
 private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
@@ -28,6 +29,18 @@ fun CharSequence?.isUri(): Boolean {
 }
 
 /**
+ * Append text (if present) to string builder using a separator (if present)
+ */
+fun append(text: CharSequence?, separator: CharSequence?, stringBuilder: StringBuilder) {
+    if (!text.isNullOrEmpty()) {
+        if (stringBuilder.isNotEmpty() && separator != null) {
+            stringBuilder.append(separator)
+        }
+        stringBuilder.append(text)
+    }
+}
+
+/**
  * Escape text for Javascript
  */
 fun escapeJavascript(text: CharSequence) = buildString(text.length + text.length / 3) {
@@ -46,20 +59,13 @@ fun escapeJavascript(text: CharSequence) = buildString(text.length + text.length
 }
 
 /**
- * Switch a HTTP URL to HTTPS protocol
+ * Create a usable URL
  */
-fun httpToHttps(url: String) =
-    if (url.startsWith("http://")) "https${url.substring(4)}"
-    else url
-
-/**
- * Append text (if present) to string builder using a separator (if present)
- */
-fun append(text: CharSequence?, separator: CharSequence?, stringBuilder: StringBuilder) {
-    if (!text.isNullOrEmpty()) {
-        if (stringBuilder.isNotEmpty() && separator != null) {
-            stringBuilder.append(separator)
-        }
-        stringBuilder.append(text)
+fun makeURL(url: String): URL {
+    val spec = when {
+        url.startsWith("/") -> "file://$url"
+        url.startsWith("http://") -> "https${url.substring(4)}"
+        else -> url
     }
+    return URL(spec)
 }
