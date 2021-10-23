@@ -17,6 +17,7 @@
     <string name="update_collection_success">%1$s を更新しました。 %2$,d POI をインポートしました (%3$s)</string>
     <string name="fileFormatFilter">ファイルフォーマットフィルター</string>
     <string name="error_update">更新エラー %1$s: %2$s</string>
+    <string name="error_file_type_unknown">ファイル形式を選択してください</string>
     <string name="error_search">検索エラー: %1$s</string>
     <string name="n_placemarks_found">%1$,d POI が見つかりました</string>
     <string name="action_placemark_collections">コレクションの管理</string>

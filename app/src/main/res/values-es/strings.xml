@@ -17,6 +17,7 @@
     <string name="update_collection_success">actualizar éxito%1$s, %2$,d PdI importados (%3$s)</string>
     <string name="fileFormatFilter">Filtro de formato de archivo</string>
     <string name="error_update">Error de actualización %1$s: %2$s</string>
+    <string name="error_file_type_unknown">Seleccione un formato de archivo</string>
     <string name="error_search">Error de búsqueda: %1$s</string>
     <string name="n_placemarks_found">%1$,d PdI encontrado</string>
     <string name="action_placemark_collections">gestión de colección</string>

@@ -302,10 +302,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                             }
                             val codeArea = olc.decode()
                             onLocationChanged(
-                                LocationUtil.newLocation(
-                                    codeArea.centerLatitude,
-                                    codeArea.centerLongitude
-                                )
+                                LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude)
                             )
                         } catch (e: Exception) {
                             showProgressDialog(address, context) {
@@ -512,10 +509,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         var locationManagerListenerEnabled = false
         try {
             if (on) {
-                if (ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED
                 ) {
                     onLocationChanged(null)
                     for (provider in locationManager.allProviders) {

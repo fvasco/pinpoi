@@ -167,7 +167,7 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun deleteByCollectionId(collectionId: Long) {
-        database!!.delete("PLACEMARK", "collection_id=" + collectionId, null)
+        database!!.delete("PLACEMARK", "collection_id=$collectionId", null)
     }
 
     private fun placemarkToContentValues(p: Placemark): ContentValues {

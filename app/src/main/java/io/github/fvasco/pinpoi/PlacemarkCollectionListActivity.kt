@@ -12,6 +12,7 @@ import android.webkit.MimeTypeMap
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
@@ -36,7 +37,7 @@ import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
 class PlacemarkCollectionListActivity : AppCompatActivity() {
 
     /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
+     * Whether the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private var mTwoPane: Boolean = false
@@ -93,7 +94,6 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         return true
     }
 
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
@@ -145,8 +145,10 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             .setTitle(getString(R.string.title_placemarkcollection_detail))
             .setMessage(getString(R.string.placemark_collection_name))
             .setView(input).setPositiveButton(R.string.ok) { dialog, _ ->
-                try {
-                    val placemarkCollectionName = input.text.toString()
+                val placemarkCollectionName = input.text.toString().trim()
+                if (placemarkCollectionName.isBlank()) {
+                    Toast.makeText(context, R.string.validation_error, Toast.LENGTH_SHORT).show()
+                } else try {
                     val placemarkCollection = PlacemarkCollection()
                     placemarkCollection.name = placemarkCollectionName
                     placemarkCollection.source = sourceUri?.toString() ?: ""

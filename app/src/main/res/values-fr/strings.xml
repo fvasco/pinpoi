@@ -17,6 +17,7 @@
     <string name="update_collection_success">%1$s mis à jour avec succès, %2$,d POI importés (%3$s)</string>
     <string name="fileFormatFilter">Filtre format de fichier</string>
     <string name="error_update">Erreur de mise à jour %1$s : %2$s</string>
+    <string name="error_file_type_unknown">Veuillez sélectionner un format de fichier</string>
     <string name="error_search">Erreur de recherche : %1$s</string>
     <string name="n_placemarks_found">%1$,d POI trouvés</string>
     <string name="action_placemark_collections">Gérer collections</string>

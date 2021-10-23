@@ -164,12 +164,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 if (importerAndInputStream == null) {
                     importerFacade.importPlacemarks(placemarkCollection)
                 } else {
-                    importerFacade
-                        .importPlacemarks(
-                            placemarkCollection,
-                            importerAndInputStream.first,
-                            importerAndInputStream.second
-                        )
+                    val (importer, inputStream) = importerAndInputStream
+                    importerFacade.importPlacemarks(placemarkCollection, importer, inputStream)
                 }
 
             runOnUiThread {
@@ -206,9 +202,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun renamePlacemarkCollection(newPlacemarkCollectionName: String) {
-        if (newPlacemarkCollectionName.isNotEmpty() && placemarkCollectionDao.findPlacemarkCollectionByName(
-                newPlacemarkCollectionName
-            ) == null
+        if (newPlacemarkCollectionName.isNotEmpty()
+            && placemarkCollectionDao.findPlacemarkCollectionByName(newPlacemarkCollectionName) == null
         ) {
             placemarkCollection.name = newPlacemarkCollectionName
             try {
@@ -274,9 +269,14 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             val importer =
                 type?.let { ImporterFacade.createImporterFromMimeType(it, placemarkCollection.fileFormatFilter) }
             if (importer == null) {
-                AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
-                    .setMessage(getString(R.string.error_update, placemarkCollection.name, "Mime-Type: $type"))
-                    .show()
+                if (placemarkCollection.fileFormatFilter == FileFormatFilter.NONE)
+                    AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
+                        .setMessage(getString(R.string.error_file_type_unknown))
+                        .show()
+                else
+                    AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
+                        .setMessage(getString(R.string.error_update, placemarkCollection.name, "Mime-Type: $type"))
+                        .show()
             } else {
                 sourceText.setText("")
                 val progressDialog = ProgressDialog(requireContext())
