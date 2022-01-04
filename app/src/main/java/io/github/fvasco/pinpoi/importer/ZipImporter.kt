@@ -4,6 +4,7 @@ import android.util.Log
 import io.github.fvasco.pinpoi.util.ZipGuardInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
@@ -21,7 +22,7 @@ class ZipImporter : AbstractImporter() {
         while (zipEntry != null) {
             val entryName = zipEntry.name
             val filename = entryName.substringAfterLast('/')
-            val extension = filename.substringAfterLast('.').toLowerCase()
+            val extension = filename.substringAfterLast('.').lowercase()
             if (!zipEntry.isDirectory && !filename.startsWith(".")
                 && (fileFormatFilter == FileFormatFilter.NONE || extension in fileFormatFilter.validExtensions)
             ) {

@@ -19,7 +19,8 @@
         <activity
                 android:name=".MainActivity"
                 android:configChanges="orientation|screenSize|keyboardHidden"
-                android:label="@string/title_activity_main">
+                android:label="@string/title_activity_main"
+                android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -58,7 +59,8 @@
                 android:label="@string/title_placemarkcollection_list"
                 android:parentActivityName=".MainActivity"
                 android:screenOrientation="locked"
-                android:theme="@style/AppTheme.NoActionBar">
+                android:theme="@style/AppTheme.NoActionBar"
+                android:exported="true">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="io.github.fvasco.pinpoi.MainActivity"/>

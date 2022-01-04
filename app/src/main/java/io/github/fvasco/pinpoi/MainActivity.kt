@@ -279,7 +279,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 dialog.tryDismiss()
                 switchGps.isChecked = false
                 // clear old coordinates
-                onLocationChanged(null)
+                clearLocation()
                 // search new location;
                 val address = editText.text.toString()
                 if (address.isNotBlank()) {
@@ -512,11 +512,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED
                 ) {
-                    onLocationChanged(null)
+                    clearLocation()
                     for (provider in locationManager.allProviders) {
                         Log.i(MainActivity::class.java.simpleName, "provider $provider")
                         // search updated location
-                        onLocationChanged(locationManager.getLastKnownLocation(provider))
+                        locationManager.getLastKnownLocation(provider)?.let(::onLocationChanged)
                         locationManager.requestLocationUpdates(
                             provider,
                             LOCATION_TIME_ACCURACY.toLong(),
@@ -552,6 +552,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         requestCode: Int,
         permissions: Array<String>, grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
         when (requestCode) {
             PERMISSION_GPS_ON -> {
@@ -567,22 +568,22 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
      * @param location new location
      */
     @SuppressLint("SetTextI18n")
-    override fun onLocationChanged(location: Location?) {
-        if (location == null) {
-            lastLocation = null
-            latitudeText.text = null
-            longitudeText.text = null
-        } else {
-            val minTime = System.currentTimeMillis() - LOCATION_TIME_ACCURACY
-            if (location.time >= minTime && (location.accuracy <= LOCATION_RANGE_ACCURACY
-                        || lastLocation == null || lastLocation!!.time <= minTime
-                        || lastLocation!!.accuracy < location.accuracy)
-            ) {
-                lastLocation = location
-                latitudeText.setText(location.latitude.toString())
-                longitudeText.setText(location.longitude.toString())
-            }
+    override fun onLocationChanged(location: Location) {
+        val minTime = System.currentTimeMillis() - LOCATION_TIME_ACCURACY
+        if (location.time >= minTime && (location.accuracy <= LOCATION_RANGE_ACCURACY
+                    || lastLocation == null || lastLocation!!.time <= minTime
+                    || lastLocation!!.accuracy < location.accuracy)
+        ) {
+            lastLocation = location
+            latitudeText.setText(location.latitude.toString())
+            longitudeText.setText(location.longitude.toString())
         }
+    }
+
+    private fun clearLocation() {
+        lastLocation = null
+        latitudeText.text = null
+        longitudeText.text = null
     }
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) = Unit

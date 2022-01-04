@@ -96,7 +96,7 @@ class PlacemarkDetailFragment : Fragment() {
                 collectionDescriptionText.text = placemarkCollection.description
             }
         }
-    val longClickListener: View.OnLongClickListener = View.OnLongClickListener { view ->
+    val longClickListener: View.OnLongClickListener = View.OnLongClickListener {
         LocationUtil(requireContext()).openExternalMap(placemark!!, true)
         true
     }
@@ -226,7 +226,7 @@ class PlacemarkDetailFragment : Fragment() {
             R.drawable.ic_bookmark_white
         else
             R.drawable.ic_bookmark_border_white
-        starFab.setImageDrawable(resources.getDrawable(drawable, activity!!.baseContext.theme))
+        starFab.setImageDrawable(resources.getDrawable(drawable, requireActivity().baseContext.theme))
     }
 
     fun onStarClick(starFab: FloatingActionButton) {

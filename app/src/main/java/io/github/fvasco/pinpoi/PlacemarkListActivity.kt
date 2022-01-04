@@ -30,10 +30,8 @@ import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
-import java.security.MessageDigest
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.roundToInt
@@ -104,6 +102,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         requestCode: Int,
         permissions: Array<String>, grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_SHOW_MAP && grantResults.isNotEmpty()
             && grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
@@ -168,10 +167,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                 PlacemarkCollectionDao(applicationContext).let { placemarkCollectionDao ->
                     placemarkCollectionDao.open()
                     try {
-                        placemarkCollectionDao
-                            .findAllPlacemarkCollection()
-                            .map { it.id to it.name }
-                            .toMap()
+                        placemarkCollectionDao.findAllPlacemarkCollection().associate { it.id to it.name }
                     } catch (e: Exception) {
                         Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
                         mapOf()
@@ -418,7 +414,7 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
             }
 
             holder.view.setOnClickListener { openPlacemark(holder.placemark!!.id) }
-            holder.view.setOnLongClickListener { view ->
+            holder.view.setOnLongClickListener {
                 LocationUtil(applicationContext).openExternalMap(holder.placemark!!, false)
                 true
             }
@@ -460,13 +456,5 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
             arrayOf("white", "orange", "cyan", "red", "yellow", "black", "magenta", "lime", "pink")
 
         private fun colorFor(value: Int) = markerColors[abs(value) % markerColors.size]
-
-        private fun stringToColorCode(txt: String): String =
-            MessageDigest.getInstance("MD5").digest(txt.toByteArray()).let { a ->
-                buildString(6) {
-                    for (i in 0..2)
-                        append("%02x".format(a[i]))
-                }
-            }
     }
 }
