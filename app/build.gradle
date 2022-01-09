@@ -8,8 +8,8 @@ android {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 24
         targetSdkVersion 31
-        versionCode 77
-        versionName '1.7.5'
+        versionCode 78
+        versionName '1.7.6'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -38,6 +38,7 @@ buildscript {
     ext.kotlin_version = '1.6.10'
 
     repositories {
+        google()
         mavenCentral()
     }
     dependencies {
@@ -46,7 +47,6 @@ buildscript {
 }
 
 dependencies {
-    // compile fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'

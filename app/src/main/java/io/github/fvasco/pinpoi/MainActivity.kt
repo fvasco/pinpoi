@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         try {
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
             AlertDialog.Builder(view.context)
-                .setTitle(getString(R.string.collection))
+                .setTitle(getString(R.string.category))
                 .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray())) { dialog, which ->
                     dialog.tryDismiss()
                     setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
