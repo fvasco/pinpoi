@@ -27,23 +27,6 @@ internal class PlacemarkCollectionDatabase(context: Context) :
         )
         db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_NAME ON PLACEMARK_COLLECTION (name)")
         db.execSQL("CREATE UNIQUE INDEX IDX_PLACEMARK_COLL_CAT_NAME ON PLACEMARK_COLLECTION (category,name)")
-
-        // insert collection example: UNESCO
-        db.execSQL(
-            "INSERT INTO PLACEMARK_COLLECTION (name," +
-                    "description," +
-                    "source," +
-                    "category," +
-                    "last_update, poi_count," +
-                    "fileFormatFilter)" +
-                    "VALUES" +
-                    "('World Heritage List'," +
-                    "'Terms and Conditions of Use: http://whc.unesco.org/en/syndication/'," +
-                    "'https://whc.unesco.org/en/list/kml/'," +
-                    "''," +
-                    "0, 0," +
-                    "'KML')"
-        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
