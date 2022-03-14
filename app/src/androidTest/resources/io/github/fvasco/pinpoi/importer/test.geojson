@@ -1,0 +1,43 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [1.1,2.1]
+      },
+      "properties": {
+        "name": "Place 0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+           [1.2,2.2],[3.2,4.2],[5.2,6.2]
+        ]
+      },
+      "properties": {
+        "lanes": 1,
+        "name": "Place 1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+           [1.3,2.3],[3.3,4.3],[5.3,6.3]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Place 2",
+        "other": "property"
+      }
+    }
+  ]
+}

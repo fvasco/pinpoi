@@ -182,12 +182,15 @@ class ImporterFacade(context: Context) {
             res?.fileFormatFilter = fileFormatFilter
             Log.d(
                 ImporterFacade::class.java.simpleName,
-                "Importer for " + resource + " is " + res?.javaClass?.simpleName
+                "Importer for " + resource + " (" + mimeType + ") is " + res?.javaClass?.simpleName
             )
             return res
         }
 
         fun createImporterFromMimeType(mimeType: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
+            when (mimeType) {
+                "application/json", "application/geo+json" -> return GeoJsonImporter()
+            }
             if (mimeType.startsWith("text/")) return FileFormatFilter.CSV_LAT_LON.toAbstractImporter()
 
             val type = mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
@@ -204,6 +207,7 @@ class ImporterFacade(context: Context) {
             when (this) {
                 FileFormatFilter.NONE -> null
                 FileFormatFilter.CSV_LAT_LON, FileFormatFilter.CSV_LON_LAT -> TextImporter()
+                FileFormatFilter.GEOJSON -> GeoJsonImporter()
                 FileFormatFilter.GPX -> GpxImporter()
                 FileFormatFilter.KML -> KmlImporter()
                 FileFormatFilter.OV2 -> Ov2Importer()

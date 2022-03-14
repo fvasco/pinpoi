@@ -7,22 +7,19 @@ import java.io.IOException
 
 /**
  * KML importer
-
  * @author Francesco Vasco
  */
 class KmlImporter : AbstractXmlImporter() {
 
-    private var latitude: Double = 0.0
-    private var longitude: Double = 0.0
-    private var coordinateCount: Int = 0
+    private var latitude: Float = Float.NaN
+    private var longitude: Float = Float.NaN
 
     override fun handleStartTag() {
         when (tag) {
             "Placemark" -> {
                 newPlacemark()
-                latitude = 0.0
-                longitude = 0.0
-                coordinateCount = 0
+                latitude = Float.NaN
+                longitude = Float.NaN
             }
         }
     }
@@ -43,14 +40,12 @@ class KmlImporter : AbstractXmlImporter() {
             val p = placemark ?: return
             when (tag) {
                 "Placemark" -> {
-                    if (coordinateCount > 0) {
+                    if (!latitude.isNaN() && !longitude.isNaN()) {
                         // set placemark to center
-                        p.coordinates = Coordinates(
-                            (latitude / coordinateCount.toDouble()).toFloat(),
-                            (longitude / coordinateCount.toDouble()).toFloat()
-                        )
+                        p.coordinates = Coordinates(longitude = longitude, latitude = latitude)
                         importPlacemark()
-                    } else placemark = null
+                    }
+                    placemark = null
                 }
                 "name" -> p.name = text
                 "description" -> p.description = text
@@ -59,11 +54,11 @@ class KmlImporter : AbstractXmlImporter() {
                         // format: longitude, latitude, altitude
                         val coordinates = line.split(',', limit = 3).takeIf { it.size in 2..3 }
                             ?: continue
-                        val lat = coordinates[0].toDoubleOrNull() ?: continue
-                        val lon = coordinates[1].toDoubleOrNull() ?: continue
-                        longitude += lat
-                        latitude += lon
-                        ++coordinateCount
+                        val lon = coordinates[0].toFloatOrNull() ?: continue
+                        val lat = coordinates[1].toFloatOrNull() ?: continue
+                        latitude = lat
+                        longitude = lon
+                        break
                     }
             }
         }

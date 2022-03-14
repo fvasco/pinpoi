@@ -75,10 +75,8 @@ class PlacemarkListActivity : AppCompatActivity() {
         )
             ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFERENCE_SHOW_MAP, false))
         if (showMap) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.INTERNET
-                ) == PackageManager.PERMISSION_GRANTED
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
+                == PackageManager.PERMISSION_GRANTED
             ) {
                 setupWebView(mapWebView)
             } else {
@@ -160,7 +158,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
 
         searchPoi { placemarksSearchResult ->
-            val leafletVersion = "1.6.0"
+            val leafletVersion = "1.7.1"
             val zoom: Int = ((ln((40_000_000.0 / range)) / ln(2.0)).toInt()).coerceIn(0, 18)
             // map each collection id to color name
             val collectionNameMap: Map<Long, String> =

@@ -104,10 +104,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     override fun onResume() {
         switchGps.setOnCheckedChangeListener(this)
         setUseLocationManagerListener(
-            switchGps.isChecked && ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+            switchGps.isChecked && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED
         )
         super.onResume()
     }
@@ -518,19 +516,14 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                         // search updated location
                         locationManager.getLastKnownLocation(provider)?.let(::onLocationChanged)
                         locationManager.requestLocationUpdates(
-                            provider,
-                            LOCATION_TIME_ACCURACY.toLong(),
-                            LOCATION_RANGE_ACCURACY.toFloat(),
-                            this
+                            provider, LOCATION_TIME_ACCURACY.toLong(), LOCATION_RANGE_ACCURACY.toFloat(), this
                         )
                         locationManagerListenerEnabled = true
                     }
                 } else {
                     // request permission
                     ActivityCompat.requestPermissions(
-                        this,
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        PERMISSION_GPS_ON
+                        this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_GPS_ON
                     )
                 }
             } else {

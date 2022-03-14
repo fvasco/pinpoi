@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+﻿<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -50,6 +50,26 @@
         android:padding="@dimen/text_margin"
         tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionDetailFragment" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/text_margin"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".4"
+            android:labelFor="@+id/fileFormatFilterButton"
+            android:text="@string/fileFormatFilter" />
+
+        <Button
+            android:id="@+id/fileFormatFilterButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".6" />
+    </LinearLayout>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -97,25 +117,6 @@
         android:inputType="textUri|textMultiLine"
         android:padding="@dimen/text_margin"
         android:singleLine="true" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight=".4"
-            android:labelFor="@+id/fileFormatFilterButton"
-            android:text="@string/fileFormatFilter" />
-
-        <Button
-            android:id="@+id/fileFormatFilterButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight=".6" />
-    </LinearLayout>
 
 
     <TextView

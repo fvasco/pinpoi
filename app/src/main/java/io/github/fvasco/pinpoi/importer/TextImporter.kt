@@ -62,11 +62,11 @@ class TextImporter : AbstractImporter() {
                     )
                     importPlacemark(placemark)
                 } catch (nfe: NumberFormatException) {
-                    Log.d(TextImporter::class.java.simpleName, "Skip line: " + line, nfe)
+                    Log.d(TextImporter::class.java.simpleName, "Skip line: $line", nfe)
                 }
 
             } else {
-                Log.d(TextImporter::class.java.simpleName, "Skip line: " + line)
+                Log.d(TextImporter::class.java.simpleName, "Skip line: $line")
             }
             line = readLine(inputStream)
         }

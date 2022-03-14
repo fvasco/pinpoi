@@ -6,6 +6,7 @@
     <!-- import placemark -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- use gps to find location -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <!-- Some Chromebooks don't support touch. It's very important to explicitly have this. -->
@@ -73,14 +74,15 @@
                 <data android:scheme="http"/>
                 <data android:scheme="https"/>
                 <data android:host="*"/>
-                <data android:pathPattern="/.*\\.kml"/>
-                <data android:pathPattern="/.*\\.zip"/>
-                <data android:pathPattern="/.*\\.kmz"/>
-                <data android:pathPattern="/.*\\.rss"/>
-                <data android:pathPattern="/.*\\.gpx"/>
-                <data android:pathPattern="/.*\\.ov2"/>
                 <data android:pathPattern="/.*\\.asc"/>
                 <data android:pathPattern="/.*\\.csv"/>
+                <data android:pathPattern="/.*\\.geojson"/>
+                <data android:pathPattern="/.*\\.gpx"/>
+                <data android:pathPattern="/.*\\.kml"/>
+                <data android:pathPattern="/.*\\.kmz"/>
+                <data android:pathPattern="/.*\\.ov2"/>
+                <data android:pathPattern="/.*\\.rss"/>
+                <data android:pathPattern="/.*\\.zip"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -91,12 +93,13 @@
                 <data android:scheme="https"/>
                 <data android:host="*"/>
                 <data android:mimeType="application/vnd.google-earth.kml+xml"/>
-                <data android:mimeType="application/zip"/>
-                <data android:mimeType="application/vnd.google-earth.kmz"/>
-                <data android:mimeType="application/rss+xml"/>
+                <data android:mimeType="application/csv"/>
+                <data android:mimeType="application/geo+json"/>
                 <data android:mimeType="application/gpx"/>
                 <data android:mimeType="application/gpx+xml"/>
-                <data android:mimeType="application/csv"/>
+                <data android:mimeType="application/rss+xml"/>
+                <data android:mimeType="application/vnd.google-earth.kmz"/>
+                <data android:mimeType="application/zip"/>
                 <data android:mimeType="text/csv"/>
                 <data android:mimeType="text/plain"/>
             </intent-filter>
