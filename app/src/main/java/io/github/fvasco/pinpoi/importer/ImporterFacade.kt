@@ -188,7 +188,7 @@ class ImporterFacade(context: Context) {
         }
 
         fun createImporterFromMimeType(mimeType: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
-            when (mimeType) {
+            when (mimeType.substringBefore(';')) {
                 "application/json", "application/geo+json" -> return GeoJsonImporter()
             }
             if (mimeType.startsWith("text/")) return FileFormatFilter.CSV_LAT_LON.toAbstractImporter()
