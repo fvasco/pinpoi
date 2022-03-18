@@ -14,7 +14,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -150,7 +149,6 @@ class PlacemarkListActivity : AppCompatActivity() {
         mapWebView.addJavascriptInterface(this, "pinpoi")
         with(mapWebView.settings) {
             javaScriptEnabled = true
-            cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
             domStorageEnabled = true
             setGeolocationEnabled(false)
             javaScriptCanOpenWindowsAutomatically = false

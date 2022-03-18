@@ -144,7 +144,7 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        // By default these links will appear but not respond to user input.
+        // By default, these links will appear but not respond to user input.
         placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
         placemark = placemarkDao.getPlacemark(preferences?.getLong(ARG_PLACEMARK_ID, 0) ?: 0)
     }
@@ -179,22 +179,19 @@ class PlacemarkDetailFragment : Fragment() {
         with(placemark.coordinates) {
             places.add(this.toString())
             places.add(
-                Location.convert(
-                    latitude.toDouble(),
-                    Location.FORMAT_DEGREES
-                ) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES)
+                Location.convert(latitude.toDouble(), Location.FORMAT_DEGREES)
+                        + ' '
+                        + Location.convert(longitude.toDouble(), Location.FORMAT_DEGREES)
             )
             places.add(
-                Location.convert(
-                    latitude.toDouble(),
-                    Location.FORMAT_MINUTES
-                ) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES)
+                Location.convert(latitude.toDouble(), Location.FORMAT_MINUTES)
+                        + ' '
+                        + Location.convert(longitude.toDouble(), Location.FORMAT_MINUTES)
             )
             places.add(
-                Location.convert(
-                    latitude.toDouble(),
-                    Location.FORMAT_SECONDS
-                ) + ' ' + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS)
+                Location.convert(latitude.toDouble(), Location.FORMAT_SECONDS)
+                        + ' '
+                        + Location.convert(longitude.toDouble(), Location.FORMAT_SECONDS)
             )
             places.add(OpenLocationCode.encode(latitude.toDouble(), longitude.toDouble()))
         }
@@ -210,7 +207,7 @@ class PlacemarkDetailFragment : Fragment() {
                     val text = places[which]
                     var intent = Intent(Intent.ACTION_SEND)
                     intent.type = "text/plain"
-                    intent.putExtra(android.content.Intent.EXTRA_TEXT, text)
+                    intent.putExtra(Intent.EXTRA_TEXT, text)
                     intent = Intent.createChooser(intent, text)
                     requireContext().startActivity(intent)
                 } catch (e: Exception) {
