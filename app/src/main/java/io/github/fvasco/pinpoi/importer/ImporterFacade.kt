@@ -11,6 +11,7 @@ import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import java.io.IOException
 import java.io.InputStream
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
@@ -144,6 +145,14 @@ class ImporterFacade(context: Context) {
     }
 
     companion object {
+
+        private val supportedMimeType: SortedSet<String> =
+            FileFormatFilter.values().flatMap { it.validMimeTypes }
+                .plus("application/vnd.google-earth.kmz")
+                .plus("application/zip").plus("application/x-zip")
+                // mime type sorted ("application/" before "text/")
+                .toSortedSet()
+
         internal fun createImporter(
             resource: String,
             mimeType: String?,
@@ -193,13 +202,13 @@ class ImporterFacade(context: Context) {
             }
             if (mimeType.startsWith("text/")) return FileFormatFilter.CSV_LAT_LON.toAbstractImporter()
 
-            val type = mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
-            when (type) {
+            val primarySubtype = mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
+            when (primarySubtype) {
                 "kmz", "zip", "zip-compressed", "x-zip-compressed" -> return ZipImporter()
                 "xml", "rss" -> return GeoRssImporter()
             }
 
-            return (FileFormatFilter.values().find { type in it.validExtensions } ?: fileFormatFilter)
+            return (FileFormatFilter.values().find { primarySubtype in it.validExtensions } ?: fileFormatFilter)
                 .toAbstractImporter()
         }
 
@@ -211,10 +220,12 @@ class ImporterFacade(context: Context) {
                 FileFormatFilter.GPX -> GpxImporter()
                 FileFormatFilter.KML -> KmlImporter()
                 FileFormatFilter.OV2 -> Ov2Importer()
+                FileFormatFilter.RSS -> GeoJsonImporter()
             }
 
         private fun openInputStream(resource: String): Source {
             val connection = makeURL(resource).openConnection()
+            connection.addRequestProperty("Accept", supportedMimeType.joinToString(postfix = ", */*;q=0.1"))
             connection.connect()
             val mimeType: String? = connection.getHeaderField("Content-Type")
             val inputStream: InputStream = connection.getInputStream()

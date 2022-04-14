@@ -30,7 +30,12 @@ class KmlImporter : AbstractXmlImporter() {
             if ("href" == tag && checkCurrentPath("kml", "Document", "NetworkLink", "Url")) {
                 val href = text
                 Log.e(KmlImporter::class.java.simpleName, "NetworkLink href $href")
-                makeURL(href).openStream().use { inputStream ->
+                val connection = makeURL(href).openConnection()
+                connection.addRequestProperty(
+                    "Accept", FileFormatFilter.KML.validMimeTypes.joinToString(postfix = ", */*;q=0.1")
+                )
+                connection.connect()
+                connection.getInputStream().use { inputStream ->
                     val delegateImporter = KmlImporter()
                     delegateImporter.configureFrom(this)
                     delegateImporter.importPlacemarks(inputStream)
