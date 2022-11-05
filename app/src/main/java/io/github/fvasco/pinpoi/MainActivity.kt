@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -19,15 +20,15 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.CompoundButton
-import android.widget.EditText
-import android.widget.SeekBar
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import io.github.fvasco.pinpoi.dao.use
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -38,8 +39,8 @@ import java.util.concurrent.Future
 import java.util.regex.Pattern
 import kotlin.math.min
 
-class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener,
-    LocationListener {
+class MainActivity
+    : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
     private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
     private lateinit var locationManager: LocationManager
@@ -82,9 +83,13 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             ?.let { intentUri ->
                 Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
                 val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+)[, ]([+-]?\\d+\\.\\d+)(?:\\D.*)?")
-                val paramQ: String? = (if (intentUri.isHierarchical) intentUri else Uri.parse(
-                    intentUri.toString().replaceFirst("geo:", "geo://")
-                )).getQueryParameter("q")
+                val paramQ: String? =
+                    if (intentUri.isHierarchical) {
+                        intentUri
+                    } else {
+                        Uri.parse(intentUri.toString().replaceFirst("geo:", "geo://"))
+                    }
+                        .getQueryParameter("q")
 
                 val matcher =
                     paramQ?.let { coordinatePattern.matcher(it) }
@@ -112,16 +117,17 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     override fun onPause() {
         setUseLocationManagerListener(false)
-        getPreferences(Context.MODE_PRIVATE).edit().putBoolean(PREFERENCE_GPS, switchGps.isChecked)
-            .putString(PREFERENCE_LATITUDE, latitudeText.text.toString())
-            .putString(PREFERENCE_LONGITUDE, longitudeText.text.toString())
-            .putString(PREFERENCE_NAME_FILTER, nameFilterText.text.toString())
-            .putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked)
-            .putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked).putInt(PREFERENCE_RANGE, rangeSeek.progress)
-            .putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory).putLong(
-                PREFERENCE_COLLECTION,
-                if (selectedPlacemarkCollection == null) 0 else selectedPlacemarkCollection!!.id
-            ).apply()
+        getPreferences(Context.MODE_PRIVATE).edit {
+            putBoolean(PREFERENCE_GPS, switchGps.isChecked)
+            putString(PREFERENCE_LATITUDE, latitudeText.text.toString())
+            putString(PREFERENCE_LONGITUDE, longitudeText.text.toString())
+            putString(PREFERENCE_NAME_FILTER, nameFilterText.text.toString())
+            putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked)
+            putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked)
+            putInt(PREFERENCE_RANGE, rangeSeek.progress)
+            putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory)
+            putLong(PREFERENCE_COLLECTION, selectedPlacemarkCollection?.id ?: 0)
+        }
         super.onPause()
     }
 
@@ -142,22 +148,27 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 onManagePlacemarkCollections()
                 return true
             }
+
             R.id.create_backup -> {
                 showCreateBackupConfirm()
                 return true
             }
+
             R.id.restore_backup -> {
                 showRestoreBackupConfirm()
                 return true
             }
+
             R.id.debug_create_db -> {
                 setUpDebugDatabase(this)
                 return true
             }
+
             R.id.debug_import_collection -> {
                 debugImportCollection()
                 return true
             }
+
             R.id.action_web_site -> {
                 // branch gh-pages
                 val intent = Intent(Intent.ACTION_VIEW)
@@ -177,12 +188,8 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     private fun setPlacemarkCollection(placemarkCollectionId: Long) {
-        val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
-        placemarkCollectionDao.open()
-        try {
+        PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
             setPlacemarkCollection(placemarkCollectionDao.findPlacemarkCollectionById(placemarkCollectionId))
-        } finally {
-            placemarkCollectionDao.close()
         }
     }
 
@@ -192,9 +199,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     }
 
     fun openPlacemarkCategoryChooser(view: View) {
-        val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
-        placemarkCollectionDao.open()
-        try {
+        PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
             AlertDialog.Builder(view.context)
                 .setTitle(getString(R.string.category))
@@ -203,15 +208,11 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
                 }
                 .show()
-        } finally {
-            placemarkCollectionDao.close()
         }
     }
 
     fun openPlacemarkCollectionChooser(view: View) {
-        val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
-        placemarkCollectionDao.open()
-        try {
+        PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
             val placemarkCollections = ArrayList<PlacemarkCollection?>()
             val placemarkCollectionNames = ArrayList<String>()
 
@@ -247,8 +248,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                     }
                     .show()
             }
-        } finally {
-            placemarkCollectionDao.close()
         }
     }
 
@@ -267,12 +266,47 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
         editText.inputType = InputType.TYPE_CLASS_TEXT
         editText.isFocusable = true
         editText.isFocusableInTouchMode = true
+        editText.layoutParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
         editText.setText(suggestedText)
         editText.selectAll()
 
+        var pasteButton: Button? = null
+        val clipboardManager = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
+        if (clipboardManager?.hasPrimaryClip() == true) {
+            pasteButton = Button(this)
+            pasteButton.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            )
+            pasteButton.text = "\uD83D\uDCCB"
+            pasteButton.setOnClickListener {
+                val text = clipboardManager.primaryClip?.getItemAt(0)?.text
+                editText.setText(text ?: "")
+            }
+        }
+
+        val dialogView = LinearLayout(context)
+        with(dialogView) {
+            //gravity = Gravity.CENTER
+            layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            orientation = LinearLayout.HORIZONTAL
+            val layoutPadding = 20
+            setPadding(layoutPadding, layoutPadding, layoutPadding, layoutPadding)
+            addView(editText)
+            if (pasteButton != null) addView(pasteButton)
+        }
+
         AlertDialog.Builder(context)
             .setMessage(R.string.insert_address)
-            .setView(editText)
+            .setView(dialogView)
             .setPositiveButton(R.string.search) { dialog, _ ->
                 dialog.tryDismiss()
                 switchGps.isChecked = false
@@ -281,7 +315,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
                 // search new location;
                 val address = editText.text.toString()
                 if (address.isNotBlank()) {
-                    preference.edit().putString(PREFERENCE_ADDRESS, address).apply()
+                    preference.edit { putString(PREFERENCE_ADDRESS, address) }
                     // check if is a coordinate text, WGS84 or geo uri
                     val coordinateMatcherResult =
                         """\s*(?:geo:)?([+-]?\d+\.\d+)(?:,|,?\s+)([+-]?\d+\.\d+)(?:\?.*)?\s*""".toRegex()
@@ -328,7 +362,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             with(this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager) {
                 showSoftInput(editText, 0)
             }
-        }, 250)
+        }, 200)
     }
 
     private fun chooseAddress(addresses: List<Address>, context: Context) {
@@ -351,25 +385,21 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
 
     fun onSearchPoi(view: View) {
         try {
-            val collectionsIds: LongArray
-            if (selectedPlacemarkCollection == null) {
-                val placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
-                placemarkCollectionDao.open()
-                try {
-                    val collections = if (selectedPlacemarkCategory.isEmpty())
-                        placemarkCollectionDao.findAllPlacemarkCollection()
-                    else
-                        placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)
-                    collectionsIds = collections.filter { it.poiCount > 0 }.map { it.id }.toLongArray()
-                } finally {
-                    placemarkCollectionDao.close()
+            val collectionsIds: LongArray =
+                if (selectedPlacemarkCollection == null) {
+                    PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
+                        val collections = if (selectedPlacemarkCategory.isEmpty())
+                            placemarkCollectionDao.findAllPlacemarkCollection()
+                        else
+                            placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)
+                        collections.filter { it.poiCount > 0 }.map { it.id }.toLongArray()
+                    }
+                } else {
+                    longArrayOf(selectedPlacemarkCollection!!.id)
                 }
-            } else {
-                collectionsIds = longArrayOf(selectedPlacemarkCollection!!.id)
-            }
             Log.d(
                 MainActivity::class.java.simpleName,
-                "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=$collectionsIds"
+                "onSearchPoi selectedPlacemarkCategory=$selectedPlacemarkCategory, collectionsIds=${collectionsIds.contentToString()}"
             )
             if (collectionsIds.isEmpty()) {
                 showLongToast(getString(R.string.n_placemarks_found, 0), view.context)
@@ -417,6 +447,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
     private fun showCreateBackupConfirm() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             type = "*/*"
+            putExtra(Intent.EXTRA_TITLE, "pinpoi.backup")
             addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         }
         startActivityForResult(intent, BACKUP_CREATE_RESULT_ID)
@@ -456,7 +487,6 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, Compo
             }
         }
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

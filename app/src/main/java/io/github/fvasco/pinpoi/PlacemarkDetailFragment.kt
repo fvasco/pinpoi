@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.edit
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -43,7 +44,7 @@ class PlacemarkDetailFragment : Fragment() {
             val placemarkCollection =
                 if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
             if (value != null) {
-                preferences?.edit()?.putLong(ARG_PLACEMARK_ID, value.id)?.apply()
+                preferences?.edit { putLong(ARG_PLACEMARK_ID, value.id) }
             }
 
             placemarkNameText.text = value?.name
@@ -54,13 +55,13 @@ class PlacemarkDetailFragment : Fragment() {
                     "<p>${Html.escapeHtml(value.name)}</p>${value.description}".let { html ->
                         Html.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT)
                     }
+
                 else -> "${value.name}\n\n${value.description}"
             }
             noteText.setText(placemarkAnnotation?.note)
-            coordinatesText.text = if (value == null)
-                null
-            else
-                getString(
+            coordinatesText.text =
+                if (value == null) null
+                else getString(
                     R.string.location,
                     Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
                     Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES)
@@ -121,7 +122,7 @@ class PlacemarkDetailFragment : Fragment() {
                 ARG_PLACEMARK_ID, preferences?.getLong(ARG_PLACEMARK_ID, 0)
                     ?: 0
             ) ?: 0
-        preferences?.edit()?.putLong(ARG_PLACEMARK_ID, id)?.apply()
+        preferences?.edit { putLong(ARG_PLACEMARK_ID, id) }
     }
 
     override fun onPause() {

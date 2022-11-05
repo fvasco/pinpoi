@@ -9,6 +9,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.edit
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.util.OnSwipeTouchListener
@@ -134,13 +135,13 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     override fun onSwipe(direction: Boolean) {
         placemarkIdArray?.let { placemarkIdArray ->
             var i = 0
-            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.size) ++i
+            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.lastIndex) ++i
             //noinspection PointlessBooleanExpression
             if (direction == OnSwipeTouchListener.SWIPE_LEFT) ++i else --i
-            if (i >= 0 && i < placemarkIdArray.size) {
+            if (i in placemarkIdArray.indices) {
                 placemarkId = placemarkIdArray[i]
                 fragment.placemark = placemarkDao.getPlacemark(placemarkId)
-                preferences.edit().putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId).apply()
+                preferences.edit { putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId) }
                 resetStarFabIcon()
             }
         }

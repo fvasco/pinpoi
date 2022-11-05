@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import io.github.fvasco.pinpoi.dao.use
 import io.github.fvasco.pinpoi.importer.AbstractImporter
 import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.importer.ImporterFacade
@@ -217,12 +218,8 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun deletePlacemarkCollection() {
-        val placemarkDao = PlacemarkDao(requireContext())
-        placemarkDao.open()
-        try {
+        PlacemarkDao(requireContext()).use { placemarkDao ->
             placemarkDao.deleteByCollectionId(placemarkCollection.id)
-        } finally {
-            placemarkDao.close()
         }
         placemarkCollectionDao.delete(placemarkCollection)
     }

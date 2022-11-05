@@ -22,6 +22,7 @@ import io.github.fvasco.pinpoi.util.tryDismiss
  * in a [PlacemarkCollectionListActivity].
  */
 class PlacemarkCollectionDetailActivity : AppCompatActivity() {
+
     private var fragment: PlacemarkCollectionDetailFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,10 +77,12 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
                 return true
             }
+
             R.id.action_rename -> {
                 renameCollection()
                 return true
             }
+
             R.id.action_delete -> {
                 deleteCollection()
                 return true
@@ -116,10 +119,8 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
                 PERMISSION_UPDATE -> updatePlacemarkCollection(null)

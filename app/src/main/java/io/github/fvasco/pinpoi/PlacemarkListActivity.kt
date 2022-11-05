@@ -22,9 +22,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NavUtils
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.recyclerview.widget.RecyclerView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import io.github.fvasco.pinpoi.dao.use
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
@@ -84,7 +86,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         } else {
             setupRecyclerView(placemarkList as RecyclerView)
         }
-        preference.edit().putBoolean(PREFERENCE_SHOW_MAP, showMap).apply()
+        preference.edit { putBoolean(PREFERENCE_SHOW_MAP, showMap) }
 
         if (findViewById<FrameLayout>(R.id.placemarkDetailContainer) != null) {
             // The detail container view will be present only in the
@@ -156,19 +158,16 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
 
         searchPoi { placemarksSearchResult ->
-            val leafletVersion = "1.7.1"
+            val leafletVersion = "1.9.2"
             val zoom: Int = ((ln((40_000_000.0 / range)) / ln(2.0)).toInt()).coerceIn(0, 18)
             // map each collection id to color name
             val collectionNameMap: Map<Long, String> =
-                PlacemarkCollectionDao(applicationContext).let { placemarkCollectionDao ->
-                    placemarkCollectionDao.open()
+                PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
                     try {
                         placemarkCollectionDao.findAllPlacemarkCollection().associate { it.id to it.name }
                     } catch (e: Exception) {
                         Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
                         mapOf()
-                    } finally {
-                        placemarkCollectionDao.close()
                     }
                 }
 
@@ -270,36 +269,36 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
             ?: emptySet()
 
         // save parameters in preferences
-        preferences.edit()
-            .putFloat(ARG_LATITUDE, latitude)
-            .putFloat(ARG_LONGITUDE, longitude)
-            .putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite)
-            .putString(ARG_NAME_FILTER, nameFilter)
-            .putStringSet(ARG_COLLECTION_IDS, collectionIds.map(Long::toString).toSet())
-            .apply()
+        preferences.edit {
+            putFloat(ARG_LATITUDE, latitude)
+            putFloat(ARG_LONGITUDE, longitude)
+            putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite)
+            putString(ARG_NAME_FILTER, nameFilter)
+            putStringSet(ARG_COLLECTION_IDS, collectionIds.map(Long::toString).toSet())
+        }
 
         showProgressDialog(getString(R.string.title_placemark_list), this) {
-            val placemarkDao = PlacemarkDao(applicationContext)
-            placemarkDao.open()
-            try {
-                val placemarks = placemarkDao.findAllPlacemarkNear(
-                    searchCoordinate,
-                    range.toDouble(), collectionIds, nameFilter, favourite
-                )
-                Log.d(
-                    PlacemarkListActivity::class.java.simpleName,
-                    "searchPoi progress placemarks.size()=${placemarks.size}"
-                )
-                runOnUiThread { showToast(getString(R.string.n_placemarks_found, placemarks.size), applicationContext) }
-                placemarksConsumer(placemarks)
+            PlacemarkDao(applicationContext).use { placemarkDao ->
+                try {
+                    val placemarks = placemarkDao.findAllPlacemarkNear(
+                        searchCoordinate,
+                        range.toDouble(), collectionIds, nameFilter, favourite
+                    )
+                    Log.d(
+                        PlacemarkListActivity::class.java.simpleName,
+                        "searchPoi progress placemarks.size()=${placemarks.size}"
+                    )
+                    runOnUiThread {
+                        showToast(getString(R.string.n_placemarks_found, placemarks.size), applicationContext)
+                    }
+                    placemarksConsumer(placemarks)
 
-                // set up placemark id list for left/right swipe in placemark detail
-                placemarkIdArray = placemarks.map { it.id }.toLongArray()
-            } catch (e: Exception) {
-                Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                runOnUiThread { showLongToast(getString(R.string.error_search, e.message), applicationContext) }
-            } finally {
-                placemarkDao.close()
+                    // set up placemark id list for left/right swipe in placemark detail
+                    placemarkIdArray = placemarks.map { it.id }.toLongArray()
+                } catch (e: Exception) {
+                    Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
+                    runOnUiThread { showLongToast(getString(R.string.error_search, e.message), applicationContext) }
+                }
             }
         }
     }

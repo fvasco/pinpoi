@@ -72,3 +72,12 @@ abstract class AbstractDao(private val context: Context) {
         openCount = 0
     }
 }
+
+inline fun <D : AbstractDao, R> D.use(block: (D) -> R): R {
+    open()
+    try {
+        return block(this)
+    } finally {
+        close()
+    }
+}

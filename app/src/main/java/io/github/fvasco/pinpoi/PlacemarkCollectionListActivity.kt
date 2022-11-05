@@ -107,10 +107,12 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
                 NavUtils.navigateUpFromSameTask(this)
                 return true
             }
+
             R.id.action_rename -> {
                 renameCollection()
                 return true
             }
+
             R.id.action_delete -> {
                 deleteCollection()
                 return true
@@ -192,10 +194,8 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
                 PERMISSION_UPDATE -> updatePlacemarkCollection()

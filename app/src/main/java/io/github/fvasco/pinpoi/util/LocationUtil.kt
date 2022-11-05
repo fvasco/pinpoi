@@ -23,7 +23,7 @@ class LocationUtil(private val context: Context) {
     /**
      * Store resolved address
      */
-    private val ADDRESS_CACHE = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
+    private val addressCache = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
     private val addressCacheFile by lazy { File(context.cacheDir, "addressCache") }
 
     // avoid geocoder cache to reset it on initialization error
@@ -38,16 +38,16 @@ class LocationUtil(private val context: Context) {
      */
     fun getAddressStringAsync(
         coordinates: Coordinates,
-        addressConsumer: ((String?) -> Unit)?
+        addressConsumer: ((String?) -> Unit)
     ) = doAsync {
-        var addressString: String? = synchronized(ADDRESS_CACHE) {
-            if (ADDRESS_CACHE.isEmpty()) restoreAddressCache()
-            ADDRESS_CACHE[coordinates]
+        var addressString: String? = synchronized(addressCache) {
+            if (addressCache.isEmpty()) restoreAddressCache()
+            addressCache[coordinates]
         }
         if (addressString == null) {
             val addresses = try {
                 geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
-                    ?: listOf()
+                    .orEmpty()
             } catch (e: Exception) {
                 listOf<Address>()
             }
@@ -55,21 +55,15 @@ class LocationUtil(private val context: Context) {
             if (addresses.isNotEmpty()) {
                 addressString = toString(addresses.first())
                 // save result in cache
-                synchronized(ADDRESS_CACHE) {
-                    ADDRESS_CACHE[coordinates] = addressString
-                    if (Thread.interrupted()) {
-                        throw InterruptedException()
-                    }
+                synchronized(addressCache) {
+                    addressCache[coordinates] = addressString
                     saveAddressCache()
                 }
             }
         }
-        if (addressConsumer != null) {
-            if (Thread.interrupted()) {
-                throw InterruptedException()
-            }
-            runOnUiThread { addressConsumer(addressString) }
-        }
+
+        if (Thread.interrupted()) throw InterruptedException()
+        runOnUiThread { addressConsumer(addressString) }
     }
 
     /**
@@ -95,7 +89,7 @@ class LocationUtil(private val context: Context) {
     }
 
     private fun restoreAddressCache() {
-        assertDebug(Thread.holdsLock(ADDRESS_CACHE))
+        assertDebug(Thread.holdsLock(addressCache))
         if (addressCacheFile.canRead()) {
             try {
                 DataInputStream(BufferedInputStream(FileInputStream(addressCacheFile))).use { inputStream ->
@@ -104,7 +98,7 @@ class LocationUtil(private val context: Context) {
                         val latitude = inputStream.readFloat()
                         val longitude = inputStream.readFloat()
                         val address = inputStream.readUTF()
-                        ADDRESS_CACHE[Coordinates(latitude, longitude)] = address
+                        addressCache[Coordinates(latitude, longitude)] = address
                     }
                 }
             } catch (e: IOException) {
@@ -117,15 +111,15 @@ class LocationUtil(private val context: Context) {
     }
 
     private fun saveAddressCache() {
-        assertDebug(Thread.holdsLock(ADDRESS_CACHE))
+        assertDebug(Thread.holdsLock(addressCache))
         try {
             DataOutputStream(BufferedOutputStream(FileOutputStream(addressCacheFile))).use { outputStream ->
                 // first item is entry count
-                outputStream.writeShort(min(ADDRESS_CACHE_SIZE, ADDRESS_CACHE.size))
+                outputStream.writeShort(min(ADDRESS_CACHE_SIZE, addressCache.size))
 
-                val iterator = ADDRESS_CACHE.entries.iterator()
-                // if (ADDRESS_CACHE.size > ADDRESS_CACHE_SIZE) skip entries
-                repeat(ADDRESS_CACHE.size - ADDRESS_CACHE_SIZE) {
+                val iterator = addressCache.entries.iterator()
+                // if (ADDRESS_CACHE.size > ADDRESS_CACHE_SIZE) skip oldest entries
+                repeat(addressCache.size - ADDRESS_CACHE_SIZE) {
                     iterator.next()
                 }
                 while (iterator.hasNext()) {
@@ -169,6 +163,7 @@ class LocationUtil(private val context: Context) {
                     }
                     stringBuilder.toString()
                 }
+
                 else -> try {
                     val stringBuilder = StringBuilder()
                     append(address.featureName, separator, stringBuilder)
