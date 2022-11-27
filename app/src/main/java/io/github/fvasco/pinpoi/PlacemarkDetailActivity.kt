@@ -40,7 +40,12 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         val mapFab = findViewById<FloatingActionButton>(R.id.fabMap)
         val toolbar = findViewById<Toolbar>(R.id.detailToolbar)
         setSupportActionBar(toolbar)
-        placemarkDetailContainer.setOnTouchListener(OnSwipeTouchListener(this, placemarkDetailContainer.context))
+        placemarkDetailContainer.setOnTouchListener(
+            OnSwipeTouchListener(
+                this,
+                placemarkDetailContainer.context
+            )
+        )
 
         preferences = getPreferences(Context.MODE_PRIVATE)
         placemarkId = intent.getLongExtra(
@@ -69,7 +74,8 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
             arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
             fragment = PlacemarkDetailFragment()
             fragment.arguments = arguments
-            supportFragmentManager.beginTransaction().add(R.id.placemarkDetailContainer, fragment).commit()
+            supportFragmentManager.beginTransaction().add(R.id.placemarkDetailContainer, fragment)
+                .commit()
         } else {
             fragment = supportFragmentManager.fragments[0] as PlacemarkDetailFragment
         }
@@ -126,7 +132,8 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
+            // navigateUpTo(Intent(this, PlacemarkListActivity::class.java))
+            finish()
             return true
         }
         return super.onOptionsItemSelected(item)

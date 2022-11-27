@@ -129,9 +129,13 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         val latitude = placemark.coordinates.latitude
         val longitude = placemark.coordinates.longitude
         database!!.query(
-            "PLACEMARK_ANNOTATION", null,
-            "latitude=" + coordinateToInt(latitude) + " AND longitude=" + coordinateToInt(longitude), null,
-            null, null, null
+            "PLACEMARK_ANNOTATION",
+            null,
+            "latitude=" + coordinateToInt(latitude) + " AND longitude=" + coordinateToInt(longitude),
+            null,
+            null,
+            null,
+            null
         ).use { cursor ->
             cursor.moveToFirst()
             return if (cursor.isAfterLast) {
@@ -143,9 +147,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     }
 
     fun update(placemarkAnnotation: PlacemarkAnnotation) {
-        val whereClause = "latitude=${coordinateToInt(placemarkAnnotation.coordinates.latitude)} AND longitude=${
-            coordinateToInt(placemarkAnnotation.coordinates.longitude)
-        }"
+        val whereClause =
+            "latitude=${coordinateToInt(placemarkAnnotation.coordinates.latitude)} AND longitude=${
+                coordinateToInt(placemarkAnnotation.coordinates.longitude)
+            }"
         if (placemarkAnnotation.note.isBlank() && !placemarkAnnotation.flagged) {
             database!!.delete(
                 "PLACEMARK_ANNOTATION",
@@ -194,7 +199,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     private fun cursorToPlacemark(cursor: Cursor) =
         Placemark(
             id = cursor.getLong(0),
-            coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+            coordinates = Coordinates(
+                coordinateToFloat(cursor.getInt(1)),
+                coordinateToFloat(cursor.getInt(2))
+            ),
             name = cursor.getString(3),
             description = cursor.getString(4),
             collectionId = cursor.getLong(5)
@@ -203,17 +211,23 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     private fun cursorToPlacemarkSearchResult(cursor: Cursor) =
         PlacemarkSearchResult(
             id = cursor.getLong(0),
-            coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+            coordinates = Coordinates(
+                coordinateToFloat(cursor.getInt(1)),
+                coordinateToFloat(cursor.getInt(2))
+            ),
             name = cursor.getString(3),
+            note = cursor.getString(5)?.takeIf(String::isNotBlank),
             flagged = cursor.getInt(4) != 0,
-            hasNote = !cursor.getString(5).isNullOrEmpty(),
             collectionId = cursor.getLong(6)
         )
 
     private fun cursorToPlacemarkAnnotation(cursor: Cursor) =
         PlacemarkAnnotation(
             // column 0 is id (ignored)
-            coordinates = Coordinates(coordinateToFloat(cursor.getInt(1)), coordinateToFloat(cursor.getInt(2))),
+            coordinates = Coordinates(
+                coordinateToFloat(cursor.getInt(1)),
+                coordinateToFloat(cursor.getInt(2))
+            ),
             note = cursor.getString(3),
             flagged = cursor.getInt(4) != 0
         )
@@ -262,14 +276,17 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
             stringBuilder: StringBuilder
         ) {
             // calculate "square" of search
-            val shiftY = coordinates.copy(latitude = coordinates.latitude + if (coordinates.latitude > 0) -1 else 1)
+            val shiftY =
+                coordinates.copy(latitude = coordinates.latitude + if (coordinates.latitude > 0) -1 else 1)
             val scaleY = coordinates.distanceTo(shiftY)
-            val shiftX = coordinates.copy(longitude = coordinates.longitude + if (coordinates.longitude > 0) -1 else 1)
+            val shiftX =
+                coordinates.copy(longitude = coordinates.longitude + if (coordinates.longitude > 0) -1 else 1)
             val scaleX = coordinates.distanceTo(shiftX)
 
             // latitude
             stringBuilder.append(table).append(".latitude between ")
-                .append(coordinateToInt(coordinates.latitude - range / scaleY).toString()).append(" AND ")
+                .append(coordinateToInt(coordinates.latitude - range / scaleY).toString())
+                .append(" AND ")
                 .append(coordinateToInt(coordinates.latitude + range / scaleY).toString())
 
             // longitude

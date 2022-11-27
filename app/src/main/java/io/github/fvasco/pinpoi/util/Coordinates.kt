@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi.util
 
 import android.location.Location
+import org.osmdroid.util.GeoPoint
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
@@ -34,3 +35,5 @@ fun Coordinates.distanceTo(other: Coordinates): Float {
     )
     return result[0]
 }
+
+fun Coordinates.toGeoPoint() = GeoPoint(latitude.toDouble(), longitude.toDouble())

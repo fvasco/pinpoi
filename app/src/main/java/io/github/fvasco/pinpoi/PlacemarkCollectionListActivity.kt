@@ -3,28 +3,24 @@ package io.github.fvasco.pinpoi
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.webkit.MimeTypeMap
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NavUtils
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.showToast
 import io.github.fvasco.pinpoi.util.tryDismiss
-import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
 
 /**
  * An activity representing a list of Placemark Collections. This activity
@@ -36,16 +32,6 @@ import kotlinx.android.synthetic.main.activity_placemarkcollection_list.*
  */
 class PlacemarkCollectionListActivity : AppCompatActivity() {
 
-    /**
-     * Whether the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
-    private var mTwoPane: Boolean = false
-
-    /* only for two pane view */
-    private var fragment: PlacemarkCollectionDetailFragment? = null
-
-    /* only for two pane view */
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,14 +48,6 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         val actionBar = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        if (findViewById<FrameLayout>(R.id.placemarkcollectionDetailContainer) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
-            mTwoPane = true
-        }
-
         // load intent parameters to create a new collection
         intent.data?.let { intentUri ->
             createPlacemarkCollection(baseContext, intentUri)
@@ -84,41 +62,6 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     override fun onDestroy() {
         placemarkCollectionDao.close()
         super.onDestroy()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (mTwoPane) {
-            // Inflate the menu; this adds items to the action bar if it is present.
-            menuInflater.inflate(R.menu.menu_collection, menu)
-        }
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                // This ID represents the Home or Up button. In the case of this
-                // activity, the Up button is shown. Use NavUtils to allow users
-                // to navigate up one level in the application structure. For
-                // more details, see the Navigation pattern on Android Design:
-                //
-                // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-                //
-                NavUtils.navigateUpFromSameTask(this)
-                return true
-            }
-
-            R.id.action_rename -> {
-                renameCollection()
-                return true
-            }
-
-            R.id.action_delete -> {
-                deleteCollection()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     private fun setupRecyclerView() {
@@ -174,70 +117,6 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             .show()
     }
 
-    fun openFileChooser(view: View?) {
-        fragment?.openFileChooser()
-    }
-
-    fun pasteUrl(view: View?) {
-        fragment?.pasteUrl(view)
-    }
-
-    fun updatePlacemarkCollection() {
-        fragment?.let { fragment ->
-            val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
-            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-                fragment.updatePlacemarkCollection()
-            } else {
-                // request permission
-                ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_UPDATE)
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            when (requestCode) {
-                PERMISSION_UPDATE -> updatePlacemarkCollection()
-            }
-        }
-    }
-
-    private fun renameCollection() {
-        fragment?.let { fragment ->
-            val editText = EditText(baseContext)
-            editText.setText(fragment.placemarkCollection.name)
-            AlertDialog.Builder(this)
-                .setTitle(R.string.action_rename)
-                .setView(editText)
-                .setPositiveButton(R.string.ok) { dialog, _ ->
-                    dialog.tryDismiss()
-                    fragment.renamePlacemarkCollection(editText.text.toString())
-                    setupRecyclerView()
-                }
-                .setNegativeButton(R.string.cancel, DismissOnClickListener)
-                .show()
-        }
-    }
-
-    private fun deleteCollection() {
-        fragment?.let { fragment ->
-            AlertDialog.Builder(this)
-                .setTitle(R.string.action_delete)
-                .setMessage(R.string.delete_placemark_collection_confirm)
-                .setPositiveButton(R.string.ok) { dialog, _ ->
-                    dialog.tryDismiss()
-                    fragment.deletePlacemarkCollection()
-                    fabUpdate.hide()
-                    supportFragmentManager.beginTransaction().remove(fragment).commit()
-                    this.fragment = null
-                    setupRecyclerView()
-                }
-                .setNegativeButton(R.string.cancel, DismissOnClickListener)
-                .show()
-        }
-    }
-
     inner class SimpleItemRecyclerViewAdapter(private val mValues: List<PlacemarkCollection>) :
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
         private val stringBuilder = StringBuilder()
@@ -264,23 +143,10 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             }
 
             holder.view.setOnClickListener { view ->
-                if (mTwoPane) {
-                    val arguments = Bundle()
-                    arguments.putLong(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, pc.id)
-                    fragment = PlacemarkCollectionDetailFragment().apply {
-                        this.arguments = arguments
-                        supportFragmentManager.beginTransaction().replace(R.id.placemarkcollectionDetailContainer, this)
-                            .commit()
-                        this@PlacemarkCollectionListActivity.fabUpdate.setOnClickListener { this.updatePlacemarkCollection() }
-                    }
-                    // show update button
-                    fabUpdate.show()
-                } else {
-                    val context = view.context
-                    val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
-                    intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, holder.mItem!!.id)
-                    context.startActivity(intent)
-                }
+                val context = view.context
+                val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
+                intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, holder.mItem!!.id)
+                context.startActivity(intent)
             }
         }
 

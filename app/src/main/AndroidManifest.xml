@@ -1,117 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          android:installLocation="auto">
+    android:installLocation="auto">
 
     <!-- import placemark -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- use gps to find location -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- osmdroid -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Some Chromebooks don't support touch. It's very important to explicitly have this. -->
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
 
     <application
-            android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.AppCompat">
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AppCompat">
         <activity
-                android:name=".MainActivity"
-                android:configChanges="orientation|screenSize|keyboardHidden"
-                android:label="@string/title_activity_main"
-                android:exported="true">
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:label="@string/title_activity_main">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter android:priority="0">
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="geo"/>
+                <data android:scheme="geo" />
             </intent-filter>
         </activity>
         <activity
-                android:name=".PlacemarkListActivity"
-                android:label="@string/title_placemark_list"
-                android:parentActivityName=".MainActivity"
-                android:configChanges="orientation|screenSize|keyboardHidden"
-                android:theme="@style/AppTheme.NoActionBar">
+            android:name=".PlacemarkListActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/title_placemark_list"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="io.github.fvasco.pinpoi.MainActivity"/>
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="io.github.fvasco.pinpoi.MainActivity" />
         </activity>
         <activity
-                android:name=".PlacemarkDetailActivity"
-                android:label="@string/title_placemark_detail"
-                android:parentActivityName=".PlacemarkListActivity"
-                android:configChanges="orientation|screenSize|keyboardHidden"
-                android:theme="@style/AppTheme.NoActionBar">
+            android:name=".PlacemarkDetailActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/title_placemark_detail"
+            android:parentActivityName=".PlacemarkListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="io.github.fvasco.pinpoi.PlacemarkListActivity"/>
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="io.github.fvasco.pinpoi.PlacemarkListActivity" />
         </activity>
         <activity
-                android:name=".PlacemarkCollectionListActivity"
-                android:label="@string/title_placemarkcollection_list"
-                android:parentActivityName=".MainActivity"
-                android:screenOrientation="locked"
-                android:theme="@style/AppTheme.NoActionBar"
-                android:exported="true">
+            android:name=".PlacemarkCollectionListActivity"
+            android:exported="true"
+            android:label="@string/title_placemarkcollection_list"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="locked"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="io.github.fvasco.pinpoi.MainActivity"/>
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="io.github.fvasco.pinpoi.MainActivity" />
 
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="file"/>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-                <data android:host="*"/>
-                <data android:pathPattern="/.*\\.asc"/>
-                <data android:pathPattern="/.*\\.csv"/>
-                <data android:pathPattern="/.*\\.geojson"/>
-                <data android:pathPattern="/.*\\.gpx"/>
-                <data android:pathPattern="/.*\\.kml"/>
-                <data android:pathPattern="/.*\\.kmz"/>
-                <data android:pathPattern="/.*\\.ov2"/>
-                <data android:pathPattern="/.*\\.rss"/>
-                <data android:pathPattern="/.*\\.zip"/>
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*" />
+                <data android:pathPattern="/.*\\.asc" />
+                <data android:pathPattern="/.*\\.csv" />
+                <data android:pathPattern="/.*\\.geojson" />
+                <data android:pathPattern="/.*\\.gpx" />
+                <data android:pathPattern="/.*\\.kml" />
+                <data android:pathPattern="/.*\\.kmz" />
+                <data android:pathPattern="/.*\\.ov2" />
+                <data android:pathPattern="/.*\\.rss" />
+                <data android:pathPattern="/.*\\.zip" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="file"/>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-                <data android:host="*"/>
-                <data android:mimeType="application/vnd.google-earth.kml+xml"/>
-                <data android:mimeType="application/csv"/>
-                <data android:mimeType="application/geo+json"/>
-                <data android:mimeType="application/gpx"/>
-                <data android:mimeType="application/gpx+xml"/>
-                <data android:mimeType="application/rss+xml"/>
-                <data android:mimeType="application/vnd.google-earth.kmz"/>
-                <data android:mimeType="application/zip"/>
-                <data android:mimeType="text/csv"/>
-                <data android:mimeType="text/plain"/>
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*" />
+                <data android:mimeType="application/vnd.google-earth.kml+xml" />
+                <data android:mimeType="application/csv" />
+                <data android:mimeType="application/geo+json" />
+                <data android:mimeType="application/gpx" />
+                <data android:mimeType="application/gpx+xml" />
+                <data android:mimeType="application/rss+xml" />
+                <data android:mimeType="application/vnd.google-earth.kmz" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="text/csv" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
         <activity
-                android:name=".PlacemarkCollectionDetailActivity"
-                android:label="@string/title_placemarkcollection_detail"
-                android:parentActivityName=".PlacemarkCollectionListActivity"
-                android:configChanges="orientation|screenSize|keyboardHidden"
-                android:theme="@style/AppTheme.NoActionBar">
+            android:name=".PlacemarkCollectionDetailActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/title_placemarkcollection_detail"
+            android:parentActivityName=".PlacemarkCollectionListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity"/>
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity" />
         </activity>
     </application>
 

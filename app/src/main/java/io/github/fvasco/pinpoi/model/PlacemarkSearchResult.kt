@@ -10,7 +10,7 @@ class PlacemarkSearchResult(
     val id: Long = 0,
     override val coordinates: Coordinates,
     override val name: String,
+    val note: String?,
     val flagged: Boolean,
-    val hasNote: Boolean,
     val collectionId: Long
 ) : PlacemarkBase

@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
 import android.location.Location
 import android.os.Bundle
@@ -14,8 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
-import android.webkit.WebView
-import android.widget.FrameLayout
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -31,12 +32,16 @@ import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
 import kotlinx.android.synthetic.main.activity_placemark_list.*
 import kotlinx.android.synthetic.main.placemark_list.*
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 import java.text.DecimalFormat
-import java.text.NumberFormat
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
+
 
 /**
  * An activity representing a list of Placemarks. This activity
@@ -47,11 +52,7 @@ import kotlin.math.roundToLong
  * item details side-by-side using two vertical panes.
  */
 class PlacemarkListActivity : AppCompatActivity() {
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
-    private var mTwoPane: Boolean = false
+
     private var showMap: Boolean = false
     private var placemarkIdArray: LongArray? = null
     private var fragment: PlacemarkDetailFragment? = null
@@ -61,7 +62,13 @@ class PlacemarkListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_placemark_list)
-        val preference = getPreferences(Context.MODE_PRIVATE)
+        val preferences = getPreferences(Context.MODE_PRIVATE)
+        val latitude =
+            intent.getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN))
+        val longitude =
+            intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN))
+        searchCoordinate = Coordinates(latitude, longitude)
+        range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -72,29 +79,38 @@ class PlacemarkListActivity : AppCompatActivity() {
 
         showMap = savedInstanceState?.getBoolean(
             ARG_SHOW_MAP,
-            intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFERENCE_SHOW_MAP, false))
+            intent.getBooleanExtra(ARG_SHOW_MAP, preferences.getBoolean(PREFERENCE_SHOW_MAP, false))
         )
-            ?: intent.getBooleanExtra(ARG_SHOW_MAP, preference.getBoolean(PREFERENCE_SHOW_MAP, false))
+            ?: intent.getBooleanExtra(
+                ARG_SHOW_MAP,
+                preferences.getBoolean(PREFERENCE_SHOW_MAP, false)
+            )
         if (showMap) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
                 == PackageManager.PERMISSION_GRANTED
             ) {
-                setupWebView(mapWebView)
+                setupWebView(map)
             } else {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), PERMISSION_SHOW_MAP)
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.INTERNET),
+                    PERMISSION_SHOW_MAP
+                )
             }
         } else {
             setupRecyclerView(placemarkList as RecyclerView)
         }
-        preference.edit { putBoolean(PREFERENCE_SHOW_MAP, showMap) }
+        preferences.edit { putBoolean(PREFERENCE_SHOW_MAP, showMap) }
+    }
 
-        if (findViewById<FrameLayout>(R.id.placemarkDetailContainer) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
-            mTwoPane = true
-        }
+    override fun onResume() {
+        super.onResume()
+        map.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        map.onPause()
     }
 
     override fun onRequestPermissionsResult(
@@ -105,7 +121,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_SHOW_MAP && grantResults.isNotEmpty()
             && grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-            setupWebView(mapWebView)
+            setupWebView(map)
         } else {
             setupRecyclerView(placemarkList as RecyclerView)
         }
@@ -146,122 +162,81 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupWebView(mapWebView: WebView) {
-        mapWebView.visibility = View.VISIBLE
-        mapWebView.addJavascriptInterface(this, "pinpoi")
-        with(mapWebView.settings) {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            setGeolocationEnabled(false)
-            javaScriptCanOpenWindowsAutomatically = false
-            setSupportMultipleWindows(false)
-        }
+    private fun setupWebView(map: MapView) {
+        val context = map.context
+        org.osmdroid.config.Configuration.getInstance().userAgentValue = context.packageName;
+        map.visibility = View.VISIBLE
+        map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
+        map.controller.setCenter(searchCoordinate.toGeoPoint())
+        map.controller.setZoom((ln((40_000_000.0 / range)) / ln(2.0)).coerceIn(0.0, 18.0))
+        map.zoomController.setVisibility(CustomZoomButtonsController.Visibility.SHOW_AND_FADEOUT)
+        map.setMultiTouchControls(true)
 
         searchPoi { placemarksSearchResult ->
-            val leafletVersion = "1.9.2"
-            val zoom: Int = ((ln((40_000_000.0 / range)) / ln(2.0)).toInt()).coerceIn(0, 18)
-            // map each collection id to color name
+            // search center
+            map.overlays.add(Marker(map).apply {
+                position = searchCoordinate.toGeoPoint()
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                setOnMarkerClickListener { _, _ -> true } // do nothing on click
+                icon = resources.getDrawable(R.drawable.map_marker_circle, context.theme)
+            })
+
             val collectionNameMap: Map<Long, String> =
                 PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
                     try {
-                        placemarkCollectionDao.findAllPlacemarkCollection().associate { it.id to it.name }
+                        placemarkCollectionDao.findAllPlacemarkCollection()
+                            .associate { it.id to it.name }
                     } catch (e: Exception) {
-                        Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
+                        Log.e(
+                            PlacemarkCollectionDetailFragment::class.java.simpleName,
+                            "searchPoi progress",
+                            e
+                        )
                         mapOf()
                     }
                 }
 
-            val integerFormat = NumberFormat.getIntegerInstance()
-            val htmlText = buildString(1024 + placemarksSearchResult.size * 256) {
-                append("""<html><head>""")
-                append("""<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />""")
-                append("""<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />""")
-                val mapStyle = "position:absolute; top:0; right:0; bottom:0; left:0;"
-                append("""<link rel="stylesheet" href="https://unpkg.com/leaflet@$leafletVersion/dist/leaflet.css" />""")
-                append("""<script src="https://unpkg.com/leaflet@$leafletVersion/dist/leaflet.js"></script>""")
-                // add tiles fallback https://github.com/ghybs/Leaflet.TileLayer.Fallback
-                append("""<script src="https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js"></script>""")
-                // add icon to map https://github.com/IvanSanchez/Leaflet.Icon.Glyph
-                append("""<script src="https://leaflet.github.io/Leaflet.Icon.Glyph/Leaflet.Icon.Glyph.js"></script>""")
-                append("</html>")
 
-                append("""<body> <div id="map" style="$mapStyle"></div> <script>""")
-                append("""var map = L.map('map').setView([$searchCoordinate], $zoom);""")
-                append(
-                    """L.tileLayer.fallback('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);"""
-                )
-                // search center marker
-                append("L.circle([$searchCoordinate], 1, {color: 'red', fillOpacity: 1}).addTo(map);")
-                // search limit circle
-                append("L.circle([$searchCoordinate], $range, {color: 'red',fillOpacity: 0}).addTo(map);")
-                append("L.circle([$searchCoordinate], ${range / 2}, {color: 'orange',fillOpacity: 0}).addTo(map);\n")
-
-                val collectionColors = HashMap<String, String>()
-                placemarksSearchResult.forEachIndexed { index, placemark ->
+            placemarksSearchResult
+                .sortedWith(compareBy(PlacemarkSearchResult::flagged).thenBy { !it.note.isNullOrEmpty() })
+                .forEach { placemark ->
                     val collectionName = collectionNameMap[placemark.collectionId] ?: ""
-                    val markerColor = collectionColors.getOrPut(collectionName) { colorFor(collectionColors.size) }
-                    val distance = searchCoordinate.distanceTo(placemark.coordinates).roundToLong()
-
-                    val zIndex =
-                        (if (placemark.flagged) 2 * placemarksSearchResult.size else 0) +
-                                (if (placemark.hasNote) placemarksSearchResult.size else 0) +
-                                (placemarksSearchResult.size - index - 1)
-
-                    val glyph = buildString {
-                        if (placemark.hasNote) append("<i>")
-                        if (placemark.flagged) append("<u><b>")
-                        append(index + 1)
-                        if (placemark.flagged) append("</b></u>")
-                        if (placemark.hasNote) append("</i>")
+                    val marker = Marker(map)
+                    marker.id = placemark.id.toString()
+                    marker.title = placemark.name
+                    marker.snippet = collectionName
+                    marker.subDescription = placemark.note
+                    marker.position = placemark.coordinates.toGeoPoint()
+                    marker.relatedObject = placemark
+                    val iconId = when {
+                        placemark.flagged -> R.drawable.map_marker_check
+                        placemark.note != null -> R.drawable.map_marker_star
+                        else -> R.drawable.map_marker
                     }
-
-                    append("L.marker([${placemark.coordinates}],{")
-                    append("icon:L.icon.glyph({glyph:'$glyph', glyphColor:'$markerColor'}), zIndexOffset:$zIndex")
-                    append("""}).addTo(map).bindPopup("""")
-                    append("<a href='javascript:pinpoi.openPlacemark(${placemark.id})'>")
-                    if (placemark.hasNote) append("<i>")
-                    if (placemark.flagged) append("<b>")
-                    append(escapeJavascript(placemark.name))
-                    if (placemark.flagged) append("</b>")
-                    if (placemark.hasNote) append("</i>")
-                    append("</a>")
-                    append("<br>${integerFormat.format(distance)}&nbsp;m - ")
-                    append(escapeJavascript(collectionName))
-                    append("\");\n")
+                    val iconResource =
+                        resources.getDrawable(iconId, context.theme)
+                            .apply {
+                                colorFilter = PorterDuffColorFilter(
+                                    colorFor(collectionName.hashCode()),
+                                    PorterDuff.Mode.SRC_ATOP
+                                )
+                            }
+                    marker.icon = iconResource
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    marker.infoWindow = PoiMarker(map)
+                    map.overlays.add(marker)
                 }
-
-                append("</script> </body> </html>")
-            }
-
-            if (BuildConfig.DEBUG) {
-                Log.i(PlacemarkListActivity::class.java.simpleName, "Map HTML")
-                for (chunk in htmlText.chunked(4_000)) Log.i(PlacemarkListActivity::class.java.simpleName, chunk)
-            }
-
-            runOnUiThread {
-                try {
-                    mapWebView.loadData(htmlText, "text/html; charset=UTF-8", null)
-                } catch (e: Throwable) {
-                    Log.e(PlacemarkListActivity::class.java.simpleName, "mapWebView.loadData", e)
-                    showToast(e)
-                }
-            }
         }
     }
 
     private fun searchPoi(placemarksConsumer: (Collection<PlacemarkSearchResult>) -> Unit) {
         // load parameters
         val preferences = getPreferences(Context.MODE_PRIVATE)
-        val latitude = intent.getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN))
-        val longitude = intent.getFloatExtra(ARG_LONGITUDE, preferences.getFloat(ARG_LONGITUDE, Float.NaN))
-        searchCoordinate = Coordinates(latitude, longitude)
-        range = intent.getIntExtra(ARG_RANGE, preferences.getInt(ARG_RANGE, 0))
         val nameFilter: String = intent.getStringExtra(ARG_NAME_FILTER)
             ?: preferences.getString(ARG_NAME_FILTER, null)
             ?: ""
-        val favourite = intent.getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false))
+        val favourite =
+            intent.getBooleanExtra(ARG_FAVOURITE, preferences.getBoolean(ARG_FAVOURITE, false))
 
         // read collections id or parse from preference
         val collectionIds = intent.getLongArrayExtra(ARG_COLLECTION_IDS)?.toSet()
@@ -270,8 +245,8 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
 
         // save parameters in preferences
         preferences.edit {
-            putFloat(ARG_LATITUDE, latitude)
-            putFloat(ARG_LONGITUDE, longitude)
+            putFloat(ARG_LATITUDE, searchCoordinate.latitude)
+            putFloat(ARG_LONGITUDE, searchCoordinate.longitude)
             putInt(ARG_RANGE, range).putBoolean(ARG_FAVOURITE, favourite)
             putString(ARG_NAME_FILTER, nameFilter)
             putStringSet(ARG_COLLECTION_IDS, collectionIds.map(Long::toString).toSet())
@@ -289,41 +264,37 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
                         "searchPoi progress placemarks.size()=${placemarks.size}"
                     )
                     runOnUiThread {
-                        showToast(getString(R.string.n_placemarks_found, placemarks.size), applicationContext)
+                        showToast(
+                            getString(R.string.n_placemarks_found, placemarks.size),
+                            applicationContext
+                        )
+                        placemarksConsumer(placemarks)
                     }
-                    placemarksConsumer(placemarks)
 
                     // set up placemark id list for left/right swipe in placemark detail
                     placemarkIdArray = placemarks.map { it.id }.toLongArray()
                 } catch (e: Exception) {
-                    Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "searchPoi progress", e)
-                    runOnUiThread { showLongToast(getString(R.string.error_search, e.message), applicationContext) }
+                    Log.e(
+                        PlacemarkCollectionDetailFragment::class.java.simpleName,
+                        "searchPoi progress",
+                        e
+                    )
+                    runOnUiThread {
+                        showLongToast(
+                            getString(R.string.error_search, e.message),
+                            applicationContext
+                        )
+                    }
                 }
             }
         }
     }
 
-    @JavascriptInterface
     fun openPlacemark(placemarkId: Long) {
-        if (mTwoPane) {
-            val arguments = Bundle()
-            arguments.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
-            arguments.putLongArray(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray)
-            fragment = PlacemarkDetailFragment().also { f ->
-                f.arguments = arguments
-            }
-            supportFragmentManager.beginTransaction().replace(R.id.placemarkDetailContainer, fragment!!).commit()
-
-            // show fab
-            fabStar.show()
-            fabMap.show()
-            fabMap.setOnLongClickListener(fragment!!.longClickListener)
-        } else {
-            val intent = Intent(this, PlacemarkDetailActivity::class.java)
-            intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
-            intent.putExtra(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray)
-            this.startActivity(intent)
-        }
+        val intent = Intent(this, PlacemarkDetailActivity::class.java)
+        intent.putExtra(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
+        intent.putExtra(PlacemarkDetailActivity.ARG_PLACEMARK_LIST_ID, placemarkIdArray)
+        this.startActivity(intent)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -343,7 +314,8 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
         fragment?.onMapClick(view)
     }
 
-    inner class SimpleItemRecyclerViewAdapter : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
+    inner class SimpleItemRecyclerViewAdapter :
+        RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
         private val decimalFormat = DecimalFormat()
         private val stringBuilder = StringBuilder()
@@ -361,7 +333,8 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_1, parent, false)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(android.R.layout.simple_list_item_1, parent, false)
             return ViewHolder(view)
         }
 
@@ -369,8 +342,10 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
             val placemark = placemarks!![position]
             holder.placemark = placemark
             Location.distanceBetween(
-                searchCoordinate.latitude.toDouble(), searchCoordinate.longitude.toDouble(),
-                placemark.coordinates.latitude.toDouble(), placemark.coordinates.longitude.toDouble(),
+                searchCoordinate.latitude.toDouble(),
+                searchCoordinate.longitude.toDouble(),
+                placemark.coordinates.latitude.toDouble(),
+                placemark.coordinates.longitude.toDouble(),
                 floatArray
             )
             val distance = floatArray[0]
@@ -402,9 +377,10 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
                 .append(placemark.name)
             holder.view.text = stringBuilder.toString()
             holder.view.typeface = when {
-                placemark.flagged && placemark.hasNote -> Typeface.defaultFromStyle(Typeface.BOLD_ITALIC)
+                placemark.flagged && placemark.note != null ->
+                    Typeface.defaultFromStyle(Typeface.BOLD_ITALIC)
                 placemark.flagged -> Typeface.DEFAULT_BOLD
-                placemark.hasNote -> Typeface.defaultFromStyle(Typeface.ITALIC)
+                placemark.note != null -> Typeface.defaultFromStyle(Typeface.ITALIC)
                 else -> Typeface.DEFAULT
             }
 
@@ -420,6 +396,20 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val view = view.findViewById(android.R.id.text1) as TextView
             var placemark: PlacemarkSearchResult? = null
+        }
+    }
+
+    private inner class PoiMarker(mapView: MapView) :
+        MarkerInfoWindow(R.layout.map_placemark_bublle, mapView) {
+
+        init {
+            val btn = mView.findViewById<View>(R.id.bubble_moreinfo) as Button
+            btn.background = resources.getDrawable(R.drawable.information, view.context.theme)
+            btn.visibility = View.VISIBLE
+            btn.setOnClickListener {
+                val psr = markerReference.relatedObject as PlacemarkSearchResult
+                openPlacemark(psr.id)
+            }
         }
     }
 
@@ -447,9 +437,28 @@ attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contr
 
         // white flag
         private const val CENTER = '\u2690'
-        private val markerColors =
-            arrayOf("white", "orange", "cyan", "red", "yellow", "black", "magenta", "lime", "pink")
 
-        private fun colorFor(value: Int) = markerColors[abs(value) % markerColors.size]
+        private val markerColors =
+            arrayOf(
+                0xFFFFFF, // white
+                0xFFA500, // orange
+                0x00FFFF, // cyan
+                0xADD8E6, // light blue
+                0x0000FF, // blue
+                0xFF0000, // red
+                0xFFFF00, // yellow
+                0x000000, // black
+                0xFF00FF, // magenta
+                0x00FF00, // lime
+                0x008000, // green
+                0x808000, // olive
+                0x800000, // maroon
+                0x800080, // purple
+                0xC0C0C0, // silver
+                0x808080 // gray
+            ).map { it xor 0xFF000000u.toInt() }
+
+        private fun colorFor(value: Int) =
+            markerColors[abs(value) % markerColors.size]
     }
 }
