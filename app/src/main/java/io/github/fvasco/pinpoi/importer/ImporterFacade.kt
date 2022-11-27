@@ -62,8 +62,10 @@ class ImporterFacade(context: Context) {
     fun importPlacemarks(placemarkCollection: PlacemarkCollection): Int {
         val resource = placemarkCollection.source
         val (mimeType, inputStream) = openInputStream(resource)
-        val importer = createImporter(resource, mimeType, fileFormatFilter)
-            ?: throw IOException("Cannot import $resource")
+        val importer =
+            if (ZipImporter.isZipInputStream(inputStream)) ZipImporter()
+            else createImporter(resource, mimeType, fileFormatFilter)
+                ?: throw IOException("Cannot import $resource")
         return importPlacemarks(placemarkCollection, importer, inputStream)
     }
 
@@ -86,7 +88,8 @@ class ImporterFacade(context: Context) {
                     inputStream.use { inputStream ->
                         try {
                             importer.collectionId = placemarkCollection.id
-                            importer.consumer = { placemarkQueue.put(PlacemarkEvent.NewPlacemark(it)) }
+                            importer.consumer =
+                                { placemarkQueue.put(PlacemarkEvent.NewPlacemark(it)) }
                             importer.importPlacemarks(inputStream)
                         } catch (e: Exception) {
                             placemarkQueue.put(PlacemarkEvent.ParseError(e))
@@ -111,7 +114,10 @@ class ImporterFacade(context: Context) {
                     } else {
                         // discard (duplicate?) placemark
                         if (BuildConfig.DEBUG) {
-                            Log.d(ImporterFacade::class.java.simpleName, "Placemark discarded $placemark")
+                            Log.d(
+                                ImporterFacade::class.java.simpleName,
+                                "Placemark discarded $placemark"
+                            )
                         }
                     }
                     placemarkEvent = placemarkQueue.take()
@@ -174,7 +180,8 @@ class ImporterFacade(context: Context) {
                     in FileFormatFilter.KML.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res =
                         KmlImporter()
                     "kmz", "zip" -> res = ZipImporter()
-                    "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res = GeoRssImporter()
+                    "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res =
+                        GeoRssImporter()
                     in FileFormatFilter.GPX.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res =
                         GpxImporter()
                     in FileFormatFilter.OV2.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res =
@@ -196,19 +203,24 @@ class ImporterFacade(context: Context) {
             return res
         }
 
-        fun createImporterFromMimeType(mimeType: String, fileFormatFilter: FileFormatFilter): AbstractImporter? {
+        fun createImporterFromMimeType(
+            mimeType: String,
+            fileFormatFilter: FileFormatFilter
+        ): AbstractImporter? {
             when (mimeType.substringBefore(';')) {
                 "application/json", "application/geo+json" -> return GeoJsonImporter()
             }
             if (mimeType.startsWith("text/")) return FileFormatFilter.CSV_LAT_LON.toAbstractImporter()
 
-            val primarySubtype = mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
+            val primarySubtype =
+                mimeType.substringAfterLast('/').substringAfterLast('.').substringBefore('+')
             when (primarySubtype) {
                 "kmz", "zip", "zip-compressed", "x-zip-compressed" -> return ZipImporter()
                 "xml", "rss" -> return GeoRssImporter()
             }
 
-            return (FileFormatFilter.values().find { primarySubtype in it.validExtensions } ?: fileFormatFilter)
+            return (FileFormatFilter.values().find { primarySubtype in it.validExtensions }
+                ?: fileFormatFilter)
                 .toAbstractImporter()
         }
 
@@ -225,10 +237,12 @@ class ImporterFacade(context: Context) {
 
         private fun openInputStream(resource: String): Source {
             val connection = makeURL(resource).openConnection()
-            connection.addRequestProperty("Accept", supportedMimeType.joinToString(postfix = ", */*;q=0.1"))
+            connection.addRequestProperty(
+                "Accept", supportedMimeType.joinToString(postfix = ", */*;q=0.1")
+            )
             connection.connect()
             val mimeType: String? = connection.getHeaderField("Content-Type")
-            val inputStream: InputStream = connection.getInputStream()
+            val inputStream: InputStream = connection.getInputStream().buffered()
             return Source(mimeType, inputStream)
         }
 

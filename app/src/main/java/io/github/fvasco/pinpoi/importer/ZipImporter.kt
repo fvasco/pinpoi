@@ -36,4 +36,20 @@ class ZipImporter : AbstractImporter() {
             zipEntry = zipInputStream.nextEntry
         }
     }
+
+    companion object {
+
+        fun isZipInputStream(inputStream: InputStream): Boolean {
+            if (!inputStream.markSupported()) return false
+            inputStream.mark(4)
+            try {
+                return inputStream.read() == 0x50
+                        && inputStream.read() == 0x4B
+                        && inputStream.read() == 0x03
+                        && inputStream.read() == 0x04
+            } finally {
+                inputStream.reset()
+            }
+        }
+    }
 }

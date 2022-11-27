@@ -8,8 +8,8 @@ android {
         applicationId 'io.github.fvasco.pinpoi'
         minSdkVersion 24
         targetSdkVersion 32
-        versionCode 82
-        versionName '1.9.0'
+        versionCode 83
+        versionName '1.10.0'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
