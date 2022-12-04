@@ -425,14 +425,15 @@ class PlacemarkListActivity : AppCompatActivity() {
         private const val PERMISSION_SHOW_MAP = 1
 
         // clockwise arrow
-        private val ARROWS = charArrayOf(/*N*/ '\u2191', /*NE*/
-            '\u2197', /*E*/
-            '\u2192', /*SE*/
-            '\u2198', /*S*/
-            '\u2193', /*SW*/
-            '\u2199', /*W*/
-            '\u2190', /*NW*/
-            '\u2196'
+        private val ARROWS = charArrayOf(
+            '\u2191', // N
+            '\u2197', // NE
+            '\u2192', // E
+            '\u2198', // SE
+            '\u2193', // S
+            '\u2199', // SW
+            '\u2190', // W
+            '\u2196' // NW
         )
 
         // white flag
@@ -440,22 +441,19 @@ class PlacemarkListActivity : AppCompatActivity() {
 
         private val markerColors =
             arrayOf(
-                0xFFFFFF, // white
-                0xFFA500, // orange
-                0x00FFFF, // cyan
-                0xADD8E6, // light blue
+                0x000080, // navy
                 0x0000FF, // blue
-                0xFF0000, // red
-                0xFFFF00, // yellow
-                0x000000, // black
-                0xFF00FF, // magenta
-                0x00FF00, // lime
                 0x008000, // green
-                0x808000, // olive
+                0x008080, // teal
                 0x800000, // maroon
                 0x800080, // purple
-                0xC0C0C0, // silver
-                0x808080 // gray
+                0x808000, // olive
+                0x808080, // gray
+                0xA52A2A, // brown
+                0xFF0000, // red
+                0xFF00FF, // magenta
+                0xFFA500, // orange
+                0xFFFF00, // yellow
             ).map { it xor 0xFF000000u.toInt() }
 
         private fun colorFor(value: Int) =
