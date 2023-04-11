@@ -42,8 +42,7 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
         setSupportActionBar(toolbar)
         placemarkDetailContainer.setOnTouchListener(
             OnSwipeTouchListener(
-                this,
-                placemarkDetailContainer.context
+                this, placemarkDetailContainer.context
             )
         )
 

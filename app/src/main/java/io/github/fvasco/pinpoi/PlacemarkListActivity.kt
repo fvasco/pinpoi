@@ -178,7 +178,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                 position = searchCoordinate.toGeoPoint()
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                 setOnMarkerClickListener { _, _ -> true } // do nothing on click
-                icon = resources.getDrawable(R.drawable.map_marker_circle, context.theme)
+                icon = resources.getDrawable(R.drawable.map_marker_here, context.theme)
             })
 
             val collectionNameMap: Map<Long, String> =
@@ -209,8 +209,8 @@ class PlacemarkListActivity : AppCompatActivity() {
                     marker.position = placemark.coordinates.toGeoPoint()
                     marker.relatedObject = placemark
                     val iconId = when {
-                        placemark.flagged -> R.drawable.map_marker_check
-                        placemark.note != null -> R.drawable.map_marker_star
+                        placemark.flagged -> R.drawable.map_marker_favourite
+                        placemark.note != null -> R.drawable.map_marker_note
                         else -> R.drawable.map_marker
                     }
                     val iconResource =
@@ -222,7 +222,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                                 )
                             }
                     marker.icon = iconResource
-                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                     marker.infoWindow = PoiMarker(map)
                     map.overlays.add(marker)
                 }
