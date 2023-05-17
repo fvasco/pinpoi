@@ -18,8 +18,9 @@ abstract class AbstractXmlImporter : AbstractImporter() {
     protected val parser: XmlPullParser = XML_PULL_PARSER_FACTORY.newPullParser()
     protected var placemark: Placemark? = null
     protected var text: String = ""
+    protected var namespace: String = ""
     protected var tag: String = DOCUMENT_TAG
-    private val tagStack = ArrayDeque<String>()
+    private val tagStack = ArrayDeque<Pair<String, String>>()
 
     @Throws(IOException::class)
     override fun importImpl(inputStream: InputStream) {
@@ -31,15 +32,19 @@ abstract class AbstractXmlImporter : AbstractImporter() {
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 when (eventType) {
                     XmlPullParser.START_TAG -> {
-                        tagStack.addLast(tag)
+                        tagStack.addLast(namespace to tag)
+                        namespace = parser.namespace
                         tag = parser.name
                         text = ""
                         handleStartTag()
                     }
-                    XmlPullParser.TEXT -> if (text.isEmpty()) text = parser.text else text += parser.text
+                    XmlPullParser.TEXT -> if (text.isEmpty()) text =
+                        parser.text else text += parser.text
                     XmlPullParser.END_TAG -> {
                         handleEndTag()
-                        tag = tagStack.removeLast()
+                        val namespaceTag = tagStack.removeLast()
+                        namespace = namespaceTag.first
+                        tag = namespaceTag.second
                         text = ""
                     }
                 }
@@ -63,7 +68,7 @@ abstract class AbstractXmlImporter : AbstractImporter() {
 
     protected fun importPlacemark() {
         val p = checkNotNull(placemark) { "No placemark to import" }
-        if (!p.name.isBlank()) {
+        if (p.name.isNotBlank()) {
             importPlacemark(p)
         }
         placemark = null
@@ -76,7 +81,7 @@ abstract class AbstractXmlImporter : AbstractImporter() {
         if (tags.size != tagStack.size - 1) return false
         val iterator = tagStack.descendingIterator()
         for (i in tags.indices.reversed()) {
-            if (tags[i] != iterator.next()) return false
+            if (tags[i] != iterator.next().second) return false
         }
         return true
     }
