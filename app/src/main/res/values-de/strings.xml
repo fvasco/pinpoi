@@ -15,7 +15,7 @@
     <string name="description">Beschreibung</string>
     <string name="fileFormatFilter">Dateiformatfilter</string>
     <string name="update">Update %1$s</string>
-    <string name="update_collection_success">Update erfolgreich %1$s, %2$,d POIs importiert (%3$s)</string>
+    <string name="update_collection_success">Update erfolgreich, %1$,d POIs importiert (%2$s)</string>
     <string name="error_update">Updatefehler %1$s: %2$s</string>
     <string name="error_file_type_unknown">Bitte wählen Sie ein Dateiformat</string>
     <string name="error_search">Suchfehler: %1$s</string>

@@ -86,8 +86,14 @@ class BackupManagerTest {
 
         placemarkCollectionDao.open()
         placemarkDao.open()
-        assertEquals(placemarkCollectionCount, placemarkCollectionDao.findAllPlacemarkCollection().size)
-        assertEquals(placemarkCount, placemarkDao.findAllPlacemarkByCollectionId(placemarkCollectionId).size)
+        assertEquals(
+            placemarkCollectionCount,
+            placemarkCollectionDao.findAllPlacemarkCollection().size
+        )
+        assertEquals(
+            placemarkCount,
+            placemarkDao.findAllPlacemarkByCollectionId(placemarkCollectionId).size
+        )
         placemarkCollectionDao.close()
         placemarkDao.close()
     }

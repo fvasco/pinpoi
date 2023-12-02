@@ -29,9 +29,9 @@ import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.dao.use
+import io.github.fvasco.pinpoi.databinding.ActivityMainBinding
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
-import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -40,7 +40,10 @@ import java.util.regex.Pattern
 import kotlin.math.min
 
 class MainActivity
-    : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener, LocationListener {
+    : AppCompatActivity(), SeekBar.OnSeekBarChangeListener, CompoundButton.OnCheckedChangeListener,
+    LocationListener {
+
+    private lateinit var binding: ActivityMainBinding
     private var selectedPlacemarkCategory: String = ""
     private var selectedPlacemarkCollection: PlacemarkCollection? = null
     private lateinit var locationManager: LocationManager
@@ -50,30 +53,32 @@ class MainActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         locationUtil = LocationUtil(applicationContext)
 
         // widget
-        switchGps.isEnabled = locationManager.allProviders.isNotEmpty()
+        binding.switchGps.isEnabled = locationManager.allProviders.isNotEmpty()
         if (locationUtil.geocoder == null) {
-            searchAddressButton.visibility = View.GONE
+            binding.searchAddressButton.visibility = View.GONE
         }
 
         // setup range seek
-        rangeSeek.max = RANGE_MAX_SHIFT
-        rangeSeek.setOnSeekBarChangeListener(this)
-        onProgressChanged(rangeSeek, rangeSeek.progress, false)
+        binding.rangeSeek.max = RANGE_MAX_SHIFT
+        binding.rangeSeek.setOnSeekBarChangeListener(this)
+        onProgressChanged(binding.rangeSeek, binding.rangeSeek.progress, false)
 
         // restore preference
         val preference = getPreferences(Context.MODE_PRIVATE)
-        switchGps.isChecked = preference.getBoolean(PREFERENCE_GPS, false)
-        latitudeText.setText(preference.getString(PREFERENCE_LATITUDE, "50"))
-        longitudeText.setText(preference.getString(PREFERENCE_LONGITUDE, "10"))
-        nameFilterText.setText(preference.getString(PREFERENCE_NAME_FILTER, null))
-        favouriteCheck.isChecked = preference.getBoolean(PREFERENCE_FAVOURITE, false)
-        showMapCheck.isChecked = preference.getBoolean(PREFERENCE_SHOW_MAP, false)
-        rangeSeek.progress = min(preference.getInt(PREFERENCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
+        binding.switchGps.isChecked = preference.getBoolean(PREFERENCE_GPS, false)
+        binding.latitudeText.setText(preference.getString(PREFERENCE_LATITUDE, "50"))
+        binding.longitudeText.setText(preference.getString(PREFERENCE_LONGITUDE, "10"))
+        binding.nameFilterText.setText(preference.getString(PREFERENCE_NAME_FILTER, null))
+        binding.favouriteCheck.isChecked = preference.getBoolean(PREFERENCE_FAVOURITE, false)
+        binding.showMapCheck.isChecked = preference.getBoolean(PREFERENCE_SHOW_MAP, false)
+        binding.rangeSeek.progress =
+            min(preference.getInt(PREFERENCE_RANGE, RANGE_MAX_SHIFT), RANGE_MAX_SHIFT)
         setPlacemarkCategory(preference.getString(PREFERENCE_CATEGORY, "") ?: "")
         setPlacemarkCollection(preference.getLong(PREFERENCE_COLLECTION, 0))
 
@@ -82,7 +87,8 @@ class MainActivity
             ?.takeIf { it.scheme == "geo" }
             ?.let { intentUri ->
                 Log.d(MainActivity::class.java.simpleName, "Intent data $intentUri")
-                val coordinatePattern = Pattern.compile("([+-]?\\d+\\.\\d+)[, ]([+-]?\\d+\\.\\d+)(?:\\D.*)?")
+                val coordinatePattern =
+                    Pattern.compile("([+-]?\\d+\\.\\d+)[, ]([+-]?\\d+\\.\\d+)(?:\\D.*)?")
                 val paramQ: String? =
                     if (intentUri.isHierarchical) {
                         intentUri
@@ -98,18 +104,21 @@ class MainActivity
                             .matcher(intentUri.toString())
 
                 if (matcher.matches()) {
-                    switchGps.isChecked = false
-                    latitudeText.setText(matcher.group(1))
-                    longitudeText.setText(matcher.group(2))
+                    binding.switchGps.isChecked = false
+                    binding.latitudeText.setText(matcher.group(1))
+                    binding.longitudeText.setText(matcher.group(2))
                 } else if (paramQ != null)
                     openSearchAddress(this, paramQ)
             }
     }
 
     override fun onResume() {
-        switchGps.setOnCheckedChangeListener(this)
+        binding.switchGps.setOnCheckedChangeListener(this)
         setUseLocationManagerListener(
-            switchGps.isChecked && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            binding.switchGps.isChecked && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
                     == PackageManager.PERMISSION_GRANTED
         )
         super.onResume()
@@ -118,13 +127,13 @@ class MainActivity
     override fun onPause() {
         setUseLocationManagerListener(false)
         getPreferences(Context.MODE_PRIVATE).edit {
-            putBoolean(PREFERENCE_GPS, switchGps.isChecked)
-            putString(PREFERENCE_LATITUDE, latitudeText.text.toString())
-            putString(PREFERENCE_LONGITUDE, longitudeText.text.toString())
-            putString(PREFERENCE_NAME_FILTER, nameFilterText.text.toString())
-            putBoolean(PREFERENCE_FAVOURITE, favouriteCheck.isChecked)
-            putBoolean(PREFERENCE_SHOW_MAP, showMapCheck.isChecked)
-            putInt(PREFERENCE_RANGE, rangeSeek.progress)
+            putBoolean(PREFERENCE_GPS, binding.switchGps.isChecked)
+            putString(PREFERENCE_LATITUDE, binding.latitudeText.text.toString())
+            putString(PREFERENCE_LONGITUDE, binding.longitudeText.text.toString())
+            putString(PREFERENCE_NAME_FILTER, binding.nameFilterText.text.toString())
+            putBoolean(PREFERENCE_FAVOURITE, binding.favouriteCheck.isChecked)
+            putBoolean(PREFERENCE_SHOW_MAP, binding.showMapCheck.isChecked)
+            putInt(PREFERENCE_RANGE, binding.rangeSeek.progress)
             putString(PREFERENCE_CATEGORY, selectedPlacemarkCategory)
             putLong(PREFERENCE_COLLECTION, selectedPlacemarkCollection?.id ?: 0)
         }
@@ -181,7 +190,7 @@ class MainActivity
 
     private fun setPlacemarkCategory(placemarkCategory: String) {
         selectedPlacemarkCategory = placemarkCategory
-        categoryButton.text = selectedPlacemarkCategory
+        binding.categoryButton.text = selectedPlacemarkCategory
         if (placemarkCategory != "" && placemarkCategory != selectedPlacemarkCollection?.category) {
             setPlacemarkCollection(null)
         }
@@ -189,13 +198,17 @@ class MainActivity
 
     private fun setPlacemarkCollection(placemarkCollectionId: Long) {
         PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
-            setPlacemarkCollection(placemarkCollectionDao.findPlacemarkCollectionById(placemarkCollectionId))
+            setPlacemarkCollection(
+                placemarkCollectionDao.findPlacemarkCollectionById(
+                    placemarkCollectionId
+                )
+            )
         }
     }
 
     private fun setPlacemarkCollection(placemarkCollection: PlacemarkCollection?) {
         selectedPlacemarkCollection = placemarkCollection
-        collectionButton.text = placemarkCollection?.name
+        binding.collectionButton.text = placemarkCollection?.name
     }
 
     fun openPlacemarkCategoryChooser(view: View) {
@@ -203,7 +216,12 @@ class MainActivity
             val categories = placemarkCollectionDao.findAllPlacemarkCollectionCategory()
             AlertDialog.Builder(view.context)
                 .setTitle(getString(R.string.category))
-                .setItems(arrayOf(getString(R.string.any_filter), *categories.toTypedArray())) { dialog, which ->
+                .setItems(
+                    arrayOf(
+                        getString(R.string.any_filter),
+                        *categories.toTypedArray()
+                    )
+                ) { dialog, which ->
                     dialog.tryDismiss()
                     setPlacemarkCategory(if (which == 0) "" else categories[which - 1])
                 }
@@ -220,7 +238,9 @@ class MainActivity
             for (placemarkCollection in if (selectedPlacemarkCategory.isEmpty())
                 placemarkCollectionDao.findAllPlacemarkCollection()
             else
-                placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)) {
+                placemarkCollectionDao.findAllPlacemarkCollectionInCategory(
+                    selectedPlacemarkCategory
+                )) {
                 if (placemarkCollection.poiCount > 0) {
                     placemarkCollections.add(placemarkCollection)
                     placemarkCollectionNames.add(
@@ -309,7 +329,7 @@ class MainActivity
             .setView(dialogView)
             .setPositiveButton(R.string.search) { dialog, _ ->
                 dialog.tryDismiss()
-                switchGps.isChecked = false
+                binding.switchGps.isChecked = false
                 // clear old coordinates
                 clearLocation()
                 // search new location;
@@ -327,14 +347,17 @@ class MainActivity
                             // if required try to recover location
                             runCatching {
                                 olc = olc.recover(
-                                    latitudeText.text.toString().toDouble(),
-                                    longitudeText.text.toString().toDouble()
+                                    binding.latitudeText.text.toString().toDouble(),
+                                    binding.longitudeText.text.toString().toDouble()
                                 )
                                 // ignore error
                             }
                             val codeArea = olc.decode()
                             onLocationChanged(
-                                LocationUtil.newLocation(codeArea.centerLatitude, codeArea.centerLongitude)
+                                LocationUtil.newLocation(
+                                    latitude = codeArea.centerLatitude,
+                                    longitude = codeArea.centerLongitude
+                                )
                             )
                         } catch (e: Exception) {
                             showProgressDialog(address, context) {
@@ -349,8 +372,8 @@ class MainActivity
                         }
                     } else {
                         // parse coordinate
-                        latitudeText.setText(coordinateMatcherResult.groupValues[1])
-                        longitudeText.setText(coordinateMatcherResult.groupValues[2])
+                        binding.latitudeText.setText(coordinateMatcherResult.groupValues[1])
+                        binding.longitudeText.setText(coordinateMatcherResult.groupValues[2])
                     }
                 }
             }
@@ -362,7 +385,7 @@ class MainActivity
             with(this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager) {
                 showSoftInput(editText, 0)
             }
-        }, 200)
+        }, 300)
     }
 
     private fun chooseAddress(addresses: List<Address>, context: Context) {
@@ -391,7 +414,9 @@ class MainActivity
                         val collections = if (selectedPlacemarkCategory.isEmpty())
                             placemarkCollectionDao.findAllPlacemarkCollection()
                         else
-                            placemarkCollectionDao.findAllPlacemarkCollectionInCategory(selectedPlacemarkCategory)
+                            placemarkCollectionDao.findAllPlacemarkCollectionInCategory(
+                                selectedPlacemarkCategory
+                            )
                         collections.filter { it.poiCount > 0 }.map { it.id }.toLongArray()
                     }
                 } else {
@@ -410,25 +435,31 @@ class MainActivity
                     try {
                         putExtra(
                             PlacemarkListActivity.ARG_LATITUDE,
-                            latitudeText.text.toString().replace(',', '.').toFloat()
+                            binding.latitudeText.text.toString().replace(',', '.').toFloat()
                         )
                     } catch (e: Exception) {
-                        latitudeText.requestFocus()
+                        binding.latitudeText.requestFocus()
                         throw e
                     }
                     try {
                         putExtra(
                             PlacemarkListActivity.ARG_LONGITUDE,
-                            longitudeText.text.toString().replace(',', '.').toFloat()
+                            binding.longitudeText.text.toString().replace(',', '.').toFloat()
                         )
                     } catch (e: Exception) {
-                        longitudeText.requestFocus()
+                        binding.longitudeText.requestFocus()
                         throw e
                     }
-                    putExtra(PlacemarkListActivity.ARG_NAME_FILTER, nameFilterText.text.toString())
-                    putExtra(PlacemarkListActivity.ARG_FAVOURITE, favouriteCheck.isChecked)
-                    putExtra(PlacemarkListActivity.ARG_SHOW_MAP, showMapCheck.isChecked)
-                    putExtra(PlacemarkListActivity.ARG_RANGE, (rangeSeek.progress + RANGE_MIN) * 1000)
+                    putExtra(
+                        PlacemarkListActivity.ARG_NAME_FILTER,
+                        binding.nameFilterText.text.toString()
+                    )
+                    putExtra(PlacemarkListActivity.ARG_FAVOURITE, binding.favouriteCheck.isChecked)
+                    putExtra(PlacemarkListActivity.ARG_SHOW_MAP, binding.showMapCheck.isChecked)
+                    putExtra(
+                        PlacemarkListActivity.ARG_RANGE,
+                        (binding.rangeSeek.progress + RANGE_MIN) * 1000
+                    )
                     putExtra(PlacemarkListActivity.ARG_COLLECTION_IDS, collectionsIds)
                 }
                 context.startActivity(intent)
@@ -457,7 +488,10 @@ class MainActivity
         showProgressDialog(getString(R.string.action_create_backup), this) {
             try {
                 val backupManager =
-                    BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
+                    BackupManager(
+                        PlacemarkCollectionDao(applicationContext),
+                        PlacemarkDao(applicationContext)
+                    )
                 backupManager.create(outputStream)
             } catch (e: Exception) {
                 Log.w(MainActivity::class.java.simpleName, "create backup failed", e)
@@ -478,7 +512,10 @@ class MainActivity
         showProgressDialog(getString(R.string.action_restore_backup), this) {
             try {
                 val backupManager =
-                    BackupManager(PlacemarkCollectionDao(applicationContext), PlacemarkDao(applicationContext))
+                    BackupManager(
+                        PlacemarkCollectionDao(applicationContext),
+                        PlacemarkDao(applicationContext)
+                    )
                 backupManager.restore(inputStream)
                 runOnUiThread { setPlacemarkCollection(null) }
             } catch (e: Exception) {
@@ -508,7 +545,8 @@ class MainActivity
     private fun debugImportCollection() {
         if (!BuildConfig.DEBUG) throw AssertionError()
 
-        val uri = Uri.Builder().scheme("http").authority("my.poi.server").appendEncodedPath("/dir/subdir/poisource.ov2")
+        val uri = Uri.Builder().scheme("http").authority("my.poi.server")
+            .appendEncodedPath("/dir/subdir/poisource.ov2")
             .appendQueryParameter("q", "customValue").build()
         val intent = Intent(Intent.ACTION_VIEW, uri)
         startActivity(intent)
@@ -518,7 +556,7 @@ class MainActivity
      * Init search range label
      */
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-        rangeLabel.text = getString(R.string.search_range, progress + RANGE_MIN)
+        binding.rangeLabel.text = getString(R.string.search_range, progress + RANGE_MIN)
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -528,7 +566,7 @@ class MainActivity
     }
 
     override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-        if (switchGps === buttonView) {
+        if (binding.switchGps === buttonView) {
             setUseLocationManagerListener(isChecked)
         }
     }
@@ -537,7 +575,10 @@ class MainActivity
         var locationManagerListenerEnabled = false
         try {
             if (on) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
                     == PackageManager.PERMISSION_GRANTED
                 ) {
                     clearLocation()
@@ -546,7 +587,10 @@ class MainActivity
                         // search updated location
                         locationManager.getLastKnownLocation(provider)?.let(::onLocationChanged)
                         locationManager.requestLocationUpdates(
-                            provider, LOCATION_TIME_ACCURACY.toLong(), LOCATION_RANGE_ACCURACY.toFloat(), this
+                            provider,
+                            LOCATION_TIME_ACCURACY.toLong(),
+                            LOCATION_RANGE_ACCURACY.toFloat(),
+                            this
                         )
                         locationManagerListenerEnabled = true
                     }
@@ -567,8 +611,8 @@ class MainActivity
             MainActivity::class.java.simpleName,
             "setUseLocationManagerListener.status $locationManagerListenerEnabled"
         )
-        latitudeText.isEnabled = !locationManagerListenerEnabled
-        longitudeText.isEnabled = !locationManagerListenerEnabled
+        binding.latitudeText.isEnabled = !locationManagerListenerEnabled
+        binding.longitudeText.isEnabled = !locationManagerListenerEnabled
     }
 
     override fun onRequestPermissionsResult(
@@ -576,10 +620,11 @@ class MainActivity
         permissions: Array<String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        val granted =
+            grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
         when (requestCode) {
             PERMISSION_GPS_ON -> {
-                switchGps.isChecked = granted
+                binding.switchGps.isChecked = granted
                 setUseLocationManagerListener(granted)
             }
         }
@@ -598,15 +643,15 @@ class MainActivity
                     || lastLocation!!.accuracy < location.accuracy)
         ) {
             lastLocation = location
-            latitudeText.setText(location.latitude.toString())
-            longitudeText.setText(location.longitude.toString())
+            binding.latitudeText.setText(location.latitude.toString())
+            binding.longitudeText.setText(location.longitude.toString())
         }
     }
 
     private fun clearLocation() {
         lastLocation = null
-        latitudeText.text = null
-        longitudeText.text = null
+        binding.latitudeText.text = null
+        binding.longitudeText.text = null
     }
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) = Unit
@@ -640,7 +685,7 @@ class MainActivity
         private const val RANGE_MIN = 5
 
         /**
-         * Greatest [rangeSeek] value,
+         * Greatest `rangeSeek` value,
          * searchable range value is this plus [RANGE_MIN]
          */
         private const val RANGE_MAX_SHIFT = 195

@@ -1,7 +1,6 @@
 package io.github.fvasco.pinpoi
 
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
@@ -9,11 +8,9 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.edit
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
-import io.github.fvasco.pinpoi.util.OnSwipeTouchListener
-import kotlinx.android.synthetic.main.activity_placemark_detail.*
+import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkDetailBinding
 
 /**
  * An activity representing a single Placemark detail screen. This
@@ -21,7 +18,9 @@ import kotlinx.android.synthetic.main.activity_placemark_detail.*
  * item details are presented side-by-side with a list of items
  * in a [PlacemarkListActivity].
  */
-class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeTouchListener {
+class PlacemarkDetailActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityPlacemarkDetailBinding
     private var placemarkId: Long = 0
     private lateinit var fragment: PlacemarkDetailFragment
     private lateinit var placemarkDao: PlacemarkDao
@@ -34,17 +33,13 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_placemark_detail)
+        binding = ActivityPlacemarkDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         placemarkDao = PlacemarkDao(applicationContext)
         placemarkDao.open()
         val mapFab = findViewById<FloatingActionButton>(R.id.fabMap)
         val toolbar = findViewById<Toolbar>(R.id.detailToolbar)
         setSupportActionBar(toolbar)
-        placemarkDetailContainer.setOnTouchListener(
-            OnSwipeTouchListener(
-                this, placemarkDetailContainer.context
-            )
-        )
 
         preferences = getPreferences(Context.MODE_PRIVATE)
         placemarkId = intent.getLongExtra(
@@ -111,11 +106,11 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
     }
 
     private fun resetStarFabIcon() {
-        fragment.resetStarFabIcon(fabStar)
+        fragment.resetStarFabIcon(binding.fabStar)
     }
 
     fun onStarClick(view: View) {
-        fragment.onStarClick(fabStar)
+        fragment.onStarClick(binding.fabStar)
     }
 
     fun onMapClick(view: View) {
@@ -136,21 +131,6 @@ class PlacemarkDetailActivity : AppCompatActivity(), OnSwipeTouchListener.SwipeT
             return true
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onSwipe(direction: Boolean) {
-        placemarkIdArray?.let { placemarkIdArray ->
-            var i = 0
-            while (placemarkIdArray[i] != placemarkId && i < placemarkIdArray.lastIndex) ++i
-            //noinspection PointlessBooleanExpression
-            if (direction == OnSwipeTouchListener.SWIPE_LEFT) ++i else --i
-            if (i in placemarkIdArray.indices) {
-                placemarkId = placemarkIdArray[i]
-                fragment.placemark = placemarkDao.getPlacemark(placemarkId)
-                preferences.edit { putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId) }
-                resetStarFabIcon()
-            }
-        }
     }
 
     companion object {

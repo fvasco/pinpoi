@@ -60,6 +60,7 @@ class KmlImporter : AbstractXmlImporter() {
                     }
                     placemark = null
                 }
+
                 "name" -> p.name = text
                 "description" -> p.description = text
                 "coordinates" -> // read multiple lines if present (point, line, polygon)

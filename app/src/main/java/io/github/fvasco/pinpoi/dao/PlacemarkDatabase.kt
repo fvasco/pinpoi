@@ -9,7 +9,8 @@ import android.database.sqlite.SQLiteOpenHelper
 
  * @author Francesco Vasco
  */
-internal class PlacemarkDatabase(context: Context) : SQLiteOpenHelper(context, "Placemark", null, /*version*/ 2) {
+internal class PlacemarkDatabase(context: Context) :
+    SQLiteOpenHelper(context, "Placemark", null, /*version*/ 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         // Placemark table

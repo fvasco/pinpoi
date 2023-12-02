@@ -41,7 +41,8 @@ class KmlImporterTest : AbstractImporterTestCase() {
                 "        </NetworkLink>\n" +
                 "    </Document>\n" +
                 "</kml>"
-        val list = importPlacemark(KmlImporter(), ByteArrayInputStream(xml.toByteArray(charset("utf-8"))))
+        val list =
+            importPlacemark(KmlImporter(), ByteArrayInputStream(xml.toByteArray(charset("utf-8"))))
         assertEquals(2, list.size)
     }
 }

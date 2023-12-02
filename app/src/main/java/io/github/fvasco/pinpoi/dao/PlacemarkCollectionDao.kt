@@ -6,7 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteOpenHelper
 import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import java.util.*
+import java.util.Locale
 
 /**
  * Dao for [io.github.fvasco.pinpoi.model.PlacemarkCollection]
@@ -85,13 +85,19 @@ class PlacemarkCollectionDao(context: Context) : AbstractDao(context) {
     }
 
     fun insert(pc: PlacemarkCollection) {
-        val id = database!!.insert("PLACEMARK_COLLECTION", null, placemarkCollectionToContentValues(pc))
+        val id =
+            database!!.insert("PLACEMARK_COLLECTION", null, placemarkCollectionToContentValues(pc))
         require(id != -1L) { "Data not valid" }
         pc.id = id
     }
 
     fun update(pc: PlacemarkCollection) {
-        database!!.update("PLACEMARK_COLLECTION", placemarkCollectionToContentValues(pc), "_ID=" + pc.id, null)
+        database!!.update(
+            "PLACEMARK_COLLECTION",
+            placemarkCollectionToContentValues(pc),
+            "_ID=" + pc.id,
+            null
+        )
     }
 
     fun delete(pc: PlacemarkCollection) {

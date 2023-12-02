@@ -11,7 +11,8 @@ import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.Coordinates
 import io.github.fvasco.pinpoi.util.PlacemarkDistanceComparator
 import io.github.fvasco.pinpoi.util.distanceTo
-import java.util.*
+import java.util.SortedSet
+import java.util.TreeSet
 import kotlin.math.roundToInt
 
 /**

@@ -179,15 +179,20 @@ class ImporterFacade(context: Context) {
                 when (path.substringAfterLast('.').lowercase()) {
                     in FileFormatFilter.KML.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.KML) res =
                         KmlImporter()
+
                     "kmz", "zip" -> res = ZipImporter()
                     "xml", "rss" -> if (fileFormatFilter == FileFormatFilter.NONE) res =
                         GeoRssImporter()
+
                     in FileFormatFilter.GPX.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.GPX) res =
                         GpxImporter()
+
                     in FileFormatFilter.OV2.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.OV2) res =
                         Ov2Importer()
+
                     in FileFormatFilter.CSV_LAT_LON.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LAT_LON) res =
                         TextImporter()
+
                     in FileFormatFilter.CSV_LON_LAT.validExtensions -> if (fileFormatFilter == FileFormatFilter.NONE || fileFormatFilter == FileFormatFilter.CSV_LON_LAT) res =
                         TextImporter()
                 }

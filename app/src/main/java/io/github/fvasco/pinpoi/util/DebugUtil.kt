@@ -39,7 +39,8 @@ fun setUpDebugDatabase(context: Context) {
                 placemarkCollection.id = 0
                 placemarkCollection.name = "Placemark Collection '$pci'"
                 placemarkCollection.category = if (pci == 0) "" else "Category " + pci % 7
-                placemarkCollection.description = placemarkCollection.name + " long long long description"
+                placemarkCollection.description =
+                    placemarkCollection.name + " long long long description"
                 placemarkCollection.source = "http://www.example.org/poi-collection-$pci.csv"
                 placemarkCollection.poiCount = pci
                 placemarkCollection.lastUpdate = pci * 10000000L
@@ -64,7 +65,8 @@ fun setUpDebugDatabase(context: Context) {
                         placemarkDao.insert(placemark)
 
                         if ((lat + lon + pci) % 9 == 0) {
-                            val placemarkAnnotation = placemarkDao.loadPlacemarkAnnotation(placemark)
+                            val placemarkAnnotation =
+                                placemarkDao.loadPlacemarkAnnotation(placemark)
                             placemarkAnnotation.flagged = (lat + lon + pci) % 3 == 0
                             placemarkAnnotation.note = "Placemark annotation for " + placemark.name
                             placemarkDao.update(placemarkAnnotation)

@@ -42,7 +42,13 @@ class GeoJsonImporter : AbstractImporter() {
                     append("<p>")
                     append("<b>", Html.escapeHtml(key), "</b>: ")
                     if (value is String && value.startsWith("https://")) {
-                        append("<a href='", TextUtils.htmlEncode(value), "'>", Html.escapeHtml(value), "</a>")
+                        append(
+                            "<a href='",
+                            TextUtils.htmlEncode(value),
+                            "'>",
+                            Html.escapeHtml(value),
+                            "</a>"
+                        )
                     } else {
                         append(Html.escapeHtml(value.toString()))
                     }
@@ -54,7 +60,13 @@ class GeoJsonImporter : AbstractImporter() {
         val coordinate = findCoordinate(geometry.optJSONArray("coordinates")) ?: return
 
         if (name.isNotBlank()) {
-            importPlacemark(Placemark(name = name, description = description, coordinates = coordinate))
+            importPlacemark(
+                Placemark(
+                    name = name,
+                    description = description,
+                    coordinates = coordinate
+                )
+            )
         }
     }
 

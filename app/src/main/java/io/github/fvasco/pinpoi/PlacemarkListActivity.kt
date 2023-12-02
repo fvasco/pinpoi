@@ -15,7 +15,6 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.JavascriptInterface
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -28,10 +27,9 @@ import androidx.recyclerview.widget.RecyclerView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.dao.use
+import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkListBinding
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
 import io.github.fvasco.pinpoi.util.*
-import kotlinx.android.synthetic.main.activity_placemark_list.*
-import kotlinx.android.synthetic.main.placemark_list.*
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -44,15 +42,11 @@ import kotlin.math.roundToInt
 
 
 /**
- * An activity representing a list of Placemarks. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a [PlacemarkDetailActivity] representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
+ * An activity representing a list of Placemarks.
  */
 class PlacemarkListActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityPlacemarkListBinding
     private var showMap: Boolean = false
     private var placemarkIdArray: LongArray? = null
     private var fragment: PlacemarkDetailFragment? = null
@@ -61,7 +55,8 @@ class PlacemarkListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_placemark_list)
+        binding = ActivityPlacemarkListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         val preferences = getPreferences(Context.MODE_PRIVATE)
         val latitude =
             intent.getFloatExtra(ARG_LATITUDE, preferences.getFloat(ARG_LATITUDE, Float.NaN))
@@ -82,14 +77,13 @@ class PlacemarkListActivity : AppCompatActivity() {
             intent.getBooleanExtra(ARG_SHOW_MAP, preferences.getBoolean(PREFERENCE_SHOW_MAP, false))
         )
             ?: intent.getBooleanExtra(
-                ARG_SHOW_MAP,
-                preferences.getBoolean(PREFERENCE_SHOW_MAP, false)
+                ARG_SHOW_MAP, preferences.getBoolean(PREFERENCE_SHOW_MAP, false)
             )
         if (showMap) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
                 == PackageManager.PERMISSION_GRANTED
             ) {
-                setupWebView(map)
+                setupMapView(binding.placemarkList.map)
             } else {
                 ActivityCompat.requestPermissions(
                     this,
@@ -98,19 +92,19 @@ class PlacemarkListActivity : AppCompatActivity() {
                 )
             }
         } else {
-            setupRecyclerView(placemarkList as RecyclerView)
+            setupRecyclerView(binding.placemarkList.placemarkList)
         }
         preferences.edit { putBoolean(PREFERENCE_SHOW_MAP, showMap) }
     }
 
     override fun onResume() {
         super.onResume()
-        map.onResume()
+        binding.placemarkList.map.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        map.onPause()
+        binding.placemarkList.map.onPause()
     }
 
     override fun onRequestPermissionsResult(
@@ -121,9 +115,9 @@ class PlacemarkListActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_SHOW_MAP && grantResults.isNotEmpty()
             && grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-            setupWebView(map)
+            setupMapView(binding.placemarkList.map)
         } else {
-            setupRecyclerView(placemarkList as RecyclerView)
+            setupRecyclerView(binding.placemarkList.placemarkList)
         }
     }
 
@@ -162,7 +156,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupWebView(map: MapView) {
+    private fun setupMapView(map: MapView) {
         val context = map.context
         org.osmdroid.config.Configuration.getInstance().userAgentValue = context.packageName;
         map.visibility = View.VISIBLE
@@ -226,6 +220,10 @@ class PlacemarkListActivity : AppCompatActivity() {
                     marker.infoWindow = PoiMarker(map)
                     map.overlays.add(marker)
                 }
+
+            // force items draw
+            map.invalidate()
+            map.requestLayout()
         }
     }
 
@@ -303,11 +301,11 @@ class PlacemarkListActivity : AppCompatActivity() {
     }
 
     private fun resetStarFabIcon() {
-        fragment?.resetStarFabIcon(fabStar)
+        fragment?.resetStarFabIcon(binding.fabStar)
     }
 
     fun onStarClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        fragment?.onStarClick(fabStar)
+        fragment?.onStarClick(binding.fabStar)
     }
 
     fun onMapClick(view: View) {
@@ -379,6 +377,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             holder.view.typeface = when {
                 placemark.flagged && placemark.note != null ->
                     Typeface.defaultFromStyle(Typeface.BOLD_ITALIC)
+
                 placemark.flagged -> Typeface.DEFAULT_BOLD
                 placemark.note != null -> Typeface.defaultFromStyle(Typeface.ITALIC)
                 else -> Typeface.DEFAULT

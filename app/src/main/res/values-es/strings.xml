@@ -14,7 +14,7 @@
     <string name="source">URL de origen (o ruta del archivo)</string>
     <string name="description">Descripción</string>
     <string name="update">Actualización %1$s</string>
-    <string name="update_collection_success">actualizar éxito%1$s, %2$,d PdI importados (%3$s)</string>
+    <string name="update_collection_success">Actualizar éxito, %1$,d PdI importados (%2$s)</string>
     <string name="fileFormatFilter">Filtro de formato de archivo</string>
     <string name="error_update">Error de actualización %1$s: %2$s</string>
     <string name="error_file_type_unknown">Seleccione un formato de archivo</string>

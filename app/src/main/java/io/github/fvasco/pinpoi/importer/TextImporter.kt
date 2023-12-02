@@ -6,7 +6,6 @@ import io.github.fvasco.pinpoi.util.Coordinates
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
-import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
 import java.util.regex.Pattern
 
@@ -56,8 +55,10 @@ class TextImporter : AbstractImporter() {
                         // remove double double-quotes
                         name = matcher.group(7).replace("\"\"", "\""),
                         coordinates = Coordinates(
-                            matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 5 else 2).toFloat(),
-                            matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 2 else 5).toFloat()
+                            matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 5 else 2)
+                                .toFloat(),
+                            matcher.group(if (fileFormatFilter == FileFormatFilter.CSV_LON_LAT) 2 else 5)
+                                .toFloat()
                         )
                     )
                     importPlacemark(placemark)

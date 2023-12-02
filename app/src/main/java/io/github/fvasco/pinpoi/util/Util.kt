@@ -4,7 +4,8 @@ import io.github.fvasco.pinpoi.BuildConfig
 import java.net.URL
 import java.util.regex.Pattern
 
-private val HTML_PATTERN = Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
+private val HTML_PATTERN =
+    Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
 
 /**
  * Check value and throw assertion error if false

@@ -14,9 +14,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.RecyclerView
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
+import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkcollectionListBinding
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.showToast
@@ -32,17 +32,17 @@ import io.github.fvasco.pinpoi.util.tryDismiss
  */
 class PlacemarkCollectionListActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityPlacemarkcollectionListBinding
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_placemarkcollection_list)
+        binding = ActivityPlacemarkcollectionListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         placemarkCollectionDao = PlacemarkCollectionDao(applicationContext)
         placemarkCollectionDao.open()
 
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        toolbar.title = title
+        binding.toolbar.title = title
 
         // Show the Up button in the action bar.
         val actionBar = supportActionBar
@@ -65,8 +65,9 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        val recyclerView = findViewById<RecyclerView>(R.id.placemarkcollectionList)
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(placemarkCollectionDao.findAllPlacemarkCollection())
+        val recyclerView = binding.placemarkcollectionList.placemarkcollectionList
+        recyclerView.adapter =
+            SimpleItemRecyclerViewAdapter(placemarkCollectionDao.findAllPlacemarkCollection())
     }
 
     fun createPlacemarkCollection(view: View) {
@@ -122,7 +123,8 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         private val stringBuilder = StringBuilder()
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_1, parent, false)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(android.R.layout.simple_list_item_1, parent, false)
             return ViewHolder(view)
         }
 
@@ -139,13 +141,17 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             if (pc.poiCount == 0) {
                 holder.view.paintFlags = holder.view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             } else {
-                holder.view.paintFlags = holder.view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                holder.view.paintFlags =
+                    holder.view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
             }
 
             holder.view.setOnClickListener { view ->
                 val context = view.context
                 val intent = Intent(context, PlacemarkCollectionDetailActivity::class.java)
-                intent.putExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, holder.mItem!!.id)
+                intent.putExtra(
+                    PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
+                    holder.mItem!!.id
+                )
                 context.startActivity(intent)
             }
         }
@@ -158,9 +164,5 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
             val view: TextView = view.findViewById(android.R.id.text1) as TextView
             var mItem: PlacemarkCollection? = null
         }
-    }
-
-    companion object {
-        private const val PERMISSION_UPDATE = 1
     }
 }

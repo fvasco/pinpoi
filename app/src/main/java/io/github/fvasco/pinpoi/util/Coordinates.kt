@@ -4,7 +4,7 @@ import android.location.Location
 import org.osmdroid.util.GeoPoint
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.*
+import java.util.Locale
 
 /**
  * Simple coordinates
@@ -20,7 +20,8 @@ data class Coordinates(val latitude: Float, val longitude: Float) {
 
     companion object {
         val EMPTY = Coordinates(Float.NaN, Float.NaN)
-        private val DECIMAL_FORMAT = DecimalFormat("###.######", DecimalFormatSymbols(Locale.ENGLISH))
+        private val DECIMAL_FORMAT =
+            DecimalFormat("###.######", DecimalFormatSymbols(Locale.ENGLISH))
     }
 }
 

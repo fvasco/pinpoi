@@ -9,8 +9,14 @@ import android.net.Uri
 import android.util.Log
 import io.github.fvasco.pinpoi.PlacemarkDetailActivity
 import io.github.fvasco.pinpoi.model.PlacemarkBase
-import java.io.*
-import java.util.*
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 import kotlin.math.min
 
 /**
@@ -23,7 +29,8 @@ class LocationUtil(private val context: Context) {
     /**
      * Store resolved address
      */
-    private val addressCache = LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
+    private val addressCache =
+        LinkedHashMap<Coordinates, String>(ADDRESS_CACHE_SIZE * 2, .75f, true)
     private val addressCacheFile by lazy { File(context.cacheDir, "addressCache") }
 
     // avoid geocoder cache to reset it on initialization error
@@ -46,7 +53,11 @@ class LocationUtil(private val context: Context) {
         }
         if (addressString == null) {
             val addresses = try {
-                geocoder?.getFromLocation(coordinates.latitude.toDouble(), coordinates.longitude.toDouble(), 1)
+                geocoder?.getFromLocation(
+                    coordinates.latitude.toDouble(),
+                    coordinates.longitude.toDouble(),
+                    1
+                )
                     .orEmpty()
             } catch (e: Exception) {
                 listOf<Address>()
@@ -77,7 +88,10 @@ class LocationUtil(private val context: Context) {
         try {
             // use simple intent (no description) for max compatibility
             var intent =
-                Intent(Intent.ACTION_VIEW, Uri.parse("geo:${placemark.coordinates}?q=${placemark.coordinates}"))
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("geo:${placemark.coordinates}?q=${placemark.coordinates}")
+                )
             if (forceAppChooser) {
                 intent = Intent.createChooser(intent, placemark.name)
             }
@@ -171,7 +185,10 @@ class LocationUtil(private val context: Context) {
                     append(address.adminArea, separator, stringBuilder)
                     append(address.countryCode, separator, stringBuilder)
                     if (stringBuilder.isEmpty())
-                        Coordinates(address.latitude.toFloat(), address.longitude.toFloat()).toString()
+                        Coordinates(
+                            address.latitude.toFloat(),
+                            address.longitude.toFloat()
+                        ).toString()
                     else
                         stringBuilder.toString()
                 } catch (e: Exception) {

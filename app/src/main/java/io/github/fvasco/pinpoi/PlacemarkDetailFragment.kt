@@ -19,10 +19,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
+import io.github.fvasco.pinpoi.databinding.PlacemarkDetailBinding
+import io.github.fvasco.pinpoi.databinding.PlacemarkcollectionDetailBinding
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
-import io.github.fvasco.pinpoi.util.*
-import kotlinx.android.synthetic.main.placemark_detail.*
+import io.github.fvasco.pinpoi.util.LocationUtil
+import io.github.fvasco.pinpoi.util.doAsync
+import io.github.fvasco.pinpoi.util.isHtml
+import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.tryDismiss
 import java.util.concurrent.Future
 
 /**
@@ -32,6 +37,9 @@ import java.util.concurrent.Future
  * on handsets.
  */
 class PlacemarkDetailFragment : Fragment() {
+
+    private lateinit var binding: PlacemarkDetailBinding
+
     // show coordinates
     // show address
     // show placemark collection details
@@ -40,15 +48,18 @@ class PlacemarkDetailFragment : Fragment() {
             saveData()
             field = value
             Log.i(PlacemarkDetailFragment::class.java.simpleName, "open placemark ${value?.id}")
-            placemarkAnnotation = if (value == null) null else placemarkDao.loadPlacemarkAnnotation(value)
+            placemarkAnnotation =
+                if (value == null) null else placemarkDao.loadPlacemarkAnnotation(value)
             val placemarkCollection =
-                if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(value.collectionId)
+                if (value == null) null else placemarkCollectionDao.findPlacemarkCollectionById(
+                    value.collectionId
+                )
             if (value != null) {
                 preferences?.edit { putLong(ARG_PLACEMARK_ID, value.id) }
             }
 
-            placemarkNameText.text = value?.name
-            placemarkDetailText.text = when {
+            binding.placemarkNameText.text = value?.name
+            binding.placemarkDetailText.text = when {
                 value == null -> null
                 value.description.isBlank() -> value.name
                 value.description.isHtml() ->
@@ -58,43 +69,49 @@ class PlacemarkDetailFragment : Fragment() {
 
                 else -> "${value.name}\n\n${value.description}"
             }
-            noteText.setText(placemarkAnnotation?.note)
-            coordinatesText.text =
+            binding.noteText.setText(placemarkAnnotation?.note)
+            binding.coordinatesText.text =
                 if (value == null) null
                 else getString(
                     R.string.location,
-                    Location.convert(value.coordinates.latitude.toDouble(), Location.FORMAT_DEGREES),
-                    Location.convert(value.coordinates.longitude.toDouble(), Location.FORMAT_DEGREES)
+                    Location.convert(
+                        value.coordinates.latitude.toDouble(),
+                        Location.FORMAT_DEGREES
+                    ),
+                    Location.convert(
+                        value.coordinates.longitude.toDouble(),
+                        Location.FORMAT_DEGREES
+                    )
                 )
-            plusCodeText.visibility = View.GONE
+            binding.plusCodeText.visibility = View.GONE
             if (value != null) {
                 val plusCode = OpenLocationCode.encode(
                     value.coordinates.latitude.toDouble(),
                     value.coordinates.longitude.toDouble()
                 )
-                plusCodeText.text = "Plus Code: $plusCode"
-                plusCodeText.visibility = View.VISIBLE
+                binding.plusCodeText.text = "Plus Code: $plusCode"
+                binding.plusCodeText.visibility = View.VISIBLE
             }
             searchAddressFuture?.cancel(true)
-            addressText.text = null
-            addressText.visibility = View.GONE
+            binding.addressText.text = null
+            binding.addressText.visibility = View.GONE
             if (value != null) {
                 searchAddressFuture =
                     LocationUtil(requireContext()).getAddressStringAsync(value.coordinates) { address ->
                         if (!address.isNullOrEmpty()) {
-                            addressText?.visibility = View.VISIBLE
-                            addressText?.text = address
+                            binding.addressText.visibility = View.VISIBLE
+                            binding.addressText.text = address
                         }
                     }
             }
             if (placemarkCollection == null) {
-                collectionDescriptionTitle.visibility = View.GONE
-                collectionDescriptionText.visibility = View.GONE
+                binding.collectionDescriptionTitle.visibility = View.GONE
+                binding.collectionDescriptionText.visibility = View.GONE
             } else {
-                collectionDescriptionTitle.visibility = View.VISIBLE
-                collectionDescriptionText.visibility = View.VISIBLE
-                collectionDescriptionTitle.text = placemarkCollection.name
-                collectionDescriptionText.text = placemarkCollection.description
+                binding.collectionDescriptionTitle.visibility = View.VISIBLE
+                binding.collectionDescriptionText.visibility = View.VISIBLE
+                binding.collectionDescriptionTitle.text = placemarkCollection.name
+                binding.collectionDescriptionText.text = placemarkCollection.description
             }
         }
     val longClickListener: View.OnLongClickListener = View.OnLongClickListener {
@@ -103,15 +120,26 @@ class PlacemarkDetailFragment : Fragment() {
     }
     private lateinit var placemarkDao: PlacemarkDao
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
-    var placemarkAnnotation: PlacemarkAnnotation? = null
-        private set
+    private var placemarkAnnotation: PlacemarkAnnotation? = null
     private var preferences: SharedPreferences? = null
     private var searchAddressFuture: Future<Unit>? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = PlacemarkDetailBinding.inflate(layoutInflater,container,false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         preferences =
-            activity?.getSharedPreferences(PlacemarkDetailFragment::class.java.simpleName, Context.MODE_PRIVATE)
+            activity?.getSharedPreferences(
+                PlacemarkDetailFragment::class.java.simpleName,
+                Context.MODE_PRIVATE
+            )
         placemarkDao = PlacemarkDao(requireContext())
         placemarkCollectionDao = PlacemarkCollectionDao(requireContext())
         placemarkDao.open()
@@ -136,23 +164,16 @@ class PlacemarkDetailFragment : Fragment() {
         super.onDestroy()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.placemark_detail, container, false)
-    }
-
     override fun onStart() {
         super.onStart()
         // By default, these links will appear but not respond to user input.
-        placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
+        binding.placemarkDetailText.movementMethod = LinkMovementMethod.getInstance()
         placemark = placemarkDao.getPlacemark(preferences?.getLong(ARG_PLACEMARK_ID, 0) ?: 0)
     }
 
     override fun onResume() {
         super.onResume()
-        shareButton.setOnClickListener { onShare() }
+        binding.shareButton.setOnClickListener { onShare() }
         resetStarFabIcon(requireActivity().findViewById(R.id.fabStar) as FloatingActionButton)
     }
 
@@ -176,7 +197,7 @@ class PlacemarkDetailFragment : Fragment() {
         if (placemark.description.length in 1..100)
             places.add(placemark.description)
         places.add(placemarkAnnotation?.note)
-        places.add(addressText.text?.toString())
+        places.add(binding.addressText.text?.toString())
         with(placemark.coordinates) {
             places.add(this.toString())
             places.add(
@@ -224,7 +245,9 @@ class PlacemarkDetailFragment : Fragment() {
             R.drawable.ic_bookmark_white
         else
             R.drawable.ic_bookmark_border_white
-        starFab.setImageDrawable(resources.getDrawable(drawable, requireActivity().baseContext.theme))
+        starFab.setImageDrawable(
+            resources.getDrawable(drawable, requireActivity().baseContext.theme)
+        )
     }
 
     fun onStarClick(starFab: FloatingActionButton) {
@@ -238,7 +261,7 @@ class PlacemarkDetailFragment : Fragment() {
     private fun saveData() {
         // save previous annotation
         placemarkAnnotation?.apply {
-            note = noteText.text.toString()
+            note = binding.noteText.text.toString()
             placemarkDao.update(this)
         }
     }

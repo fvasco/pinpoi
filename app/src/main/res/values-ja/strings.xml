@@ -14,7 +14,7 @@
     <string name="source">ソース URL (またはファイルのパス)</string>
     <string name="description">説明</string>
     <string name="update">%1$s を更新</string>
-    <string name="update_collection_success">%1$s を更新しました。 %2$,d POI をインポートしました (%3$s)</string>
+    <string name="update_collection_success">を更新しました。 %1$,d POI をインポートしました (%2$s)</string>
     <string name="fileFormatFilter">ファイルフォーマットフィルター</string>
     <string name="error_update">更新エラー %1$s: %2$s</string>
     <string name="error_file_type_unknown">ファイル形式を選択してください</string>

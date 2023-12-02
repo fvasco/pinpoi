@@ -38,8 +38,10 @@ abstract class AbstractXmlImporter : AbstractImporter() {
                         text = ""
                         handleStartTag()
                     }
+
                     XmlPullParser.TEXT -> if (text.isEmpty()) text =
                         parser.text else text += parser.text
+
                     XmlPullParser.END_TAG -> {
                         handleEndTag()
                         val namespaceTag = tagStack.removeLast()

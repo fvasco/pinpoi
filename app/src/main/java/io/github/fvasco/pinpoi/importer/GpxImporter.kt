@@ -18,6 +18,7 @@ class GpxImporter : AbstractXmlImporter() {
                     parser.getAttributeValue(null, "lon").toFloat()
                 )
             }
+
             "link" -> placemark?.let { placemark ->
                 if (placemark.description.isBlank()) {
                     placemark.description = parser.getAttributeValue(null, "href") ?: ""

@@ -77,7 +77,7 @@ public final class OpenLocationCode {
     // The maximum value for longitude in degrees.
     private static final BigDecimal LONGITUDE_MAX = new BigDecimal(180);
 
-    // Maxiumum code length using just lat/lng pair encoding.
+    // Maximum code length using just lat/lng pair encoding.
     private static final int PAIR_CODE_LENGTH = 10;
 
     // Number of columns in the grid refinement method.
@@ -272,14 +272,14 @@ public final class OpenLocationCode {
         // Check first two characters: only some values from the alphabet are permitted.
         if (separatorPosition == 8) {
             // First latitude character can only have first 9 values.
-            Integer index0 = CODE_ALPHABET.indexOf(code.charAt(0));
-            if (index0 == null || index0 > 8) {
+            int index0 = CODE_ALPHABET.indexOf(code.charAt(0));
+            if (index0 > 8) {
                 return false;
             }
 
             // First longitude character can only have first 18 values.
-            Integer index1 = CODE_ALPHABET.indexOf(code.charAt(1));
-            if (index1 == null || index1 > 17) {
+            int index1 = CODE_ALPHABET.indexOf(code.charAt(1));
+            if (index1 > 17) {
                 return false;
             }
         }

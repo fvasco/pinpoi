@@ -36,7 +36,10 @@ class Ov2Importer : AbstractImporter() {
                 // it is a simple POI record
                 2, 3 -> {
                     val total = readIntLE(dataInputStream)
-                    Log.d(Ov2Importer::class.java.simpleName, "Process record type $rectype total $total")
+                    Log.d(
+                        Ov2Importer::class.java.simpleName,
+                        "Process record type $rectype total $total"
+                    )
                     var nameLength = total - 14
 
                     // read lon, lat
@@ -74,7 +77,8 @@ class Ov2Importer : AbstractImporter() {
                     }
                     val placemark = Placemark()
                     placemark.name = TextImporter.toString(nameBuffer, 0, nameLength)
-                    placemark.coordinates = Coordinates(latitudeInt / 100000f, longitudeInt / 100000f)
+                    placemark.coordinates =
+                        Coordinates(latitudeInt / 100000f, longitudeInt / 100000f)
                     importPlacemark(placemark)
                 }
 
@@ -86,7 +90,10 @@ class Ov2Importer : AbstractImporter() {
 
                 else -> {
                     val total = readIntLE(dataInputStream)
-                    Log.w(Ov2Importer::class.java.simpleName, "Skip record type $rectype total $total")
+                    Log.w(
+                        Ov2Importer::class.java.simpleName,
+                        "Skip record type $rectype total $total"
+                    )
                     require(total > 4)
                     dataInputStream.skipBytes(total - 4)
                 }

@@ -1,14 +1,14 @@
 package io.github.fvasco.pinpoi.util
 
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
-import java.util.*
 
 /**
  * Compare placemark using distance from a specific [Coordinates]
 
  * @author Francesco Vasco
  */
-class PlacemarkDistanceComparator(private val center: Coordinates) : Comparator<PlacemarkSearchResult> {
+class PlacemarkDistanceComparator(private val center: Coordinates) :
+    Comparator<PlacemarkSearchResult> {
 
     override fun compare(plhs: PlacemarkSearchResult, prhs: PlacemarkSearchResult): Int {
         val lhs = plhs.coordinates

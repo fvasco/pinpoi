@@ -27,7 +27,9 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <include layout="@layout/placemark_list" />
+        <include
+            android:id="@+id/placemarkList"
+            layout="@layout/placemark_list" />
     </FrameLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -37,8 +39,8 @@
         android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="onStarClick"
-        app:srcCompat="@drawable/ic_bookmark_border_white"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_bookmark_border_white" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabMap"
@@ -47,7 +49,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="onMapClick"
-        app:srcCompat="@drawable/ic_map_white"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_map_white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkcollectionDetailBinding
+import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkcollectionListBinding
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.tryDismiss
 
@@ -23,14 +25,16 @@ import io.github.fvasco.pinpoi.util.tryDismiss
  */
 class PlacemarkCollectionDetailActivity : AppCompatActivity() {
 
+    private lateinit var binding:ActivityPlacemarkcollectionDetailBinding
+
     private var fragment: PlacemarkCollectionDetailFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_placemarkcollection_detail)
+        binding = ActivityPlacemarkcollectionDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val toolbar = findViewById<Toolbar>(R.id.detailToolbar)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(binding.detailToolbar)
 
         // Show the Up button in the action bar.
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -44,18 +48,23 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         //
         // http://developer.android.com/guide/components/fragments.html
         //
+
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             val arguments = Bundle()
             arguments.putLong(
                 PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
-                intent.getLongExtra(PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID, 0)
+                intent.getLongExtra(
+                    PlacemarkCollectionDetailFragment.ARG_PLACEMARK_COLLECTION_ID,
+                    0
+                )
             )
             fragment = PlacemarkCollectionDetailFragment().apply {
                 this.arguments = arguments
             }
-            supportFragmentManager.beginTransaction().add(R.id.placemarkcollectionDetailContainer, fragment!!).commit()
+            supportFragmentManager.beginTransaction()
+                .add(R.id.placemarkcollectionDetailContainer, fragment!!).commit()
         }
     }
 
@@ -110,7 +119,11 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
     fun updatePlacemarkCollection(@Suppress("UNUSED_PARAMETER") view: View?) {
         fragment?.let { fragment ->
             val permission = fragment.requiredPermissionToUpdatePlacemarkCollection
-            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    permission
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 fragment.updatePlacemarkCollection()
             } else {
                 // request permission
@@ -119,7 +132,11 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {

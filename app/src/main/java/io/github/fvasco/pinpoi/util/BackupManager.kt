@@ -68,7 +68,10 @@ class BackupManager(private vararg val daos: AbstractDao) {
                         val databaseName = databasePath.name
                         if (databaseName == zipEntry.name) {
                             try {
-                                Log.i(BackupManager::class.java.simpleName, "restore database $databaseName")
+                                Log.i(
+                                    BackupManager::class.java.simpleName,
+                                    "restore database $databaseName"
+                                )
                                 FileOutputStream(databasePath).use { databaseOutputStream ->
                                     dao.lock()
                                     ZipGuardInputStream(zipInputStream).copyTo(databaseOutputStream)

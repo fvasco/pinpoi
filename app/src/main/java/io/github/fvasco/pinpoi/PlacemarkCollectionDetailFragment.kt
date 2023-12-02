@@ -17,15 +17,19 @@ import androidx.fragment.app.Fragment
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.dao.use
+import io.github.fvasco.pinpoi.databinding.PlacemarkcollectionDetailBinding
 import io.github.fvasco.pinpoi.importer.AbstractImporter
 import io.github.fvasco.pinpoi.importer.FileFormatFilter
 import io.github.fvasco.pinpoi.importer.ImporterFacade
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.*
-import kotlinx.android.synthetic.main.placemarkcollection_detail.*
+import io.github.fvasco.pinpoi.util.ProgressDialog
+import io.github.fvasco.pinpoi.util.doAsync
+import io.github.fvasco.pinpoi.util.runOnUiThread
+import io.github.fvasco.pinpoi.util.showLongToast
+import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.tryDismiss
 import java.io.InputStream
 import java.text.DecimalFormat
-
 
 /**
  * A fragment representing a single Placemark Collection detail screen.
@@ -34,9 +38,20 @@ import java.text.DecimalFormat
  * on handsets.
  */
 class PlacemarkCollectionDetailFragment : Fragment() {
+
+    private lateinit var binding: PlacemarkcollectionDetailBinding
     private lateinit var placemarkCollectionDao: PlacemarkCollectionDao
     lateinit var placemarkCollection: PlacemarkCollection
         private set
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = PlacemarkcollectionDetailBinding.inflate(layoutInflater,container,false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -55,16 +70,9 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.placemarkcollection_detail, container, false)
-    }
-
     override fun onStart() {
         super.onStart()
-        categoryText.setAdapter(
+        binding.categoryText.setAdapter(
             ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
@@ -72,10 +80,10 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             )
         )
 
-        descriptionText.setText(placemarkCollection.description)
-        sourceText.setText(placemarkCollection.source)
-        categoryText.setText(placemarkCollection.category)
-        fileFormatFilterButton.text = placemarkCollection.fileFormatFilter.toString()
+        binding.descriptionText.setText(placemarkCollection.description)
+        binding.sourceText.setText(placemarkCollection.source)
+        binding.categoryText.setText(placemarkCollection.category)
+        binding.fileFormatFilterButton.text = placemarkCollection.fileFormatFilter.toString()
         showUpdatedCollectionInfo()
 
         if (placemarkCollection.poiCount == 0) {
@@ -85,7 +93,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        fileFormatFilterButton.setOnClickListener { openFileFormatFilterChooser() }
+        binding.fileFormatFilterButton.setOnClickListener { openFileFormatFilterChooser() }
     }
 
     override fun onPause() {
@@ -107,9 +115,9 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     fun savePlacemarkCollection() {
-        placemarkCollection.description = descriptionText.text.toString()
-        placemarkCollection.source = sourceText.text.toString()
-        placemarkCollection.category = categoryText.text.toString()
+        placemarkCollection.description = binding.descriptionText.text.toString()
+        placemarkCollection.source = binding.sourceText.text.toString()
+        placemarkCollection.category = binding.categoryText.text.toString()
 
         try {
             if (placemarkCollection.id == 0L) {
@@ -118,7 +126,11 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 placemarkCollectionDao.update(placemarkCollection)
             }
         } catch (e: Exception) {
-            Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "savePlacemarkCollection", e)
+            Log.e(
+                PlacemarkCollectionDetailFragment::class.java.simpleName,
+                "savePlacemarkCollection",
+                e
+            )
             Toast.makeText(activity, R.string.validation_error, Toast.LENGTH_SHORT).show()
         }
 
@@ -128,16 +140,17 @@ class PlacemarkCollectionDetailFragment : Fragment() {
      * Update screen with poi count and last update
      */
     private fun showUpdatedCollectionInfo() {
-        collectionNameText.text = placemarkCollection.name
+        binding.collectionNameText.text = placemarkCollection.name
         val poiCount = placemarkCollection.poiCount
-        poiCountText.text = getString(R.string.poi_count, poiCount)
-        lastUpdateText.text = getString(R.string.last_update, placemarkCollection.lastUpdate)
-        lastUpdateText.visibility = if (poiCount == 0) View.GONE else View.VISIBLE
+        binding.poiCountText.text = getString(R.string.poi_count, poiCount)
+        binding.lastUpdateText.text =
+            getString(R.string.last_update, placemarkCollection.lastUpdate)
+        binding.lastUpdateText.visibility = if (poiCount == 0) View.GONE else View.VISIBLE
     }
 
     val requiredPermissionToUpdatePlacemarkCollection: String
         get() {
-            val url = sourceText.text.toString()
+            val url = binding.sourceText.text.toString()
             return if (url.startsWith("/") || url.startsWith("file:/"))
                 Manifest.permission.READ_EXTERNAL_STORAGE
             else
@@ -182,7 +195,6 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                     showLongToast(
                         getString(
                             R.string.update_collection_success,
-                            placemarkCollection.name,
                             count,
                             DecimalFormat("+0;-0").format(count - oldCount)
                         ), context
@@ -190,10 +202,20 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(PlacemarkCollectionDetailFragment::class.java.simpleName, "updatePlacemarkCollection", e)
+            Log.e(
+                PlacemarkCollectionDetailFragment::class.java.simpleName,
+                "updatePlacemarkCollection",
+                e
+            )
             runOnUiThread {
                 AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
-                    .setMessage(getString(R.string.error_update, placemarkCollection.name, e.message))
+                    .setMessage(
+                        getString(
+                            R.string.error_update,
+                            placemarkCollection.name,
+                            e.message
+                        )
+                    )
                     .show()
             }
         } finally {
@@ -243,7 +265,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
 
     fun setFileFormatFilter(fileFormatFilter: FileFormatFilter) {
         placemarkCollection.fileFormatFilter = fileFormatFilter
-        fileFormatFilterButton.text = fileFormatFilter.toString()
+        binding.fileFormatFilterButton.text = fileFormatFilter.toString()
     }
 
     fun openFileChooser() {
@@ -262,9 +284,17 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             val uri = data?.data ?: return
             val inputStream = context?.contentResolver?.openInputStream(uri) ?: return
             val type = context?.contentResolver?.getType(uri)
-            Log.d(PlacemarkCollectionDetailFragment::class.java.simpleName, "Import detected type: $type")
+            Log.d(
+                PlacemarkCollectionDetailFragment::class.java.simpleName,
+                "Import detected type: $type"
+            )
             val importer =
-                type?.let { ImporterFacade.createImporterFromMimeType(it, placemarkCollection.fileFormatFilter) }
+                type?.let {
+                    ImporterFacade.createImporterFromMimeType(
+                        it,
+                        placemarkCollection.fileFormatFilter
+                    )
+                }
             if (importer == null) {
                 if (placemarkCollection.fileFormatFilter == FileFormatFilter.NONE)
                     AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
@@ -272,10 +302,16 @@ class PlacemarkCollectionDetailFragment : Fragment() {
                         .show()
                 else
                     AlertDialog.Builder(this@PlacemarkCollectionDetailFragment.context)
-                        .setMessage(getString(R.string.error_update, placemarkCollection.name, "Mime-Type: $type"))
+                        .setMessage(
+                            getString(
+                                R.string.error_update,
+                                placemarkCollection.name,
+                                "Mime-Type: $type"
+                            )
+                        )
                         .show()
             } else {
-                sourceText.setText("")
+                binding.sourceText.setText("")
                 val progressDialog = ProgressDialog(requireContext())
                 doAsync {
                     updatePlacemarkCollectionImpl(progressDialog, importer to inputStream)
@@ -290,7 +326,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             ?.primaryClip
             ?.takeIf { it.itemCount > 0 }
             ?.getItemAt(0)
-        if (item != null) sourceText.setText(item.text)
+        if (item != null) binding.sourceText.setText(item.text)
     }
 
     companion object {

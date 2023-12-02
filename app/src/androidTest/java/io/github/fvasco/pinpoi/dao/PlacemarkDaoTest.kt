@@ -153,7 +153,10 @@ class PlacemarkDaoTest {
                 dao.insert(p)
 
                 val referenceLocation =
-                    Coordinates((lat + 4 * cos(lon.toDouble())).toFloat(), (lon + 3 * cos(lat.toDouble())).toFloat())
+                    Coordinates(
+                        (lat + 4 * cos(lon.toDouble())).toFloat(),
+                        (lon + 3 * cos(lat.toDouble())).toFloat()
+                    )
                 val placemarks = dao.findAllPlacemarkNear(
                     referenceLocation,
                     referenceLocation.distanceTo(p.coordinates).toDouble(), setOf(1L)
