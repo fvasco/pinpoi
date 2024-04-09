@@ -49,7 +49,7 @@ class PlacemarkCollectionDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = PlacemarkcollectionDetailBinding.inflate(layoutInflater,container,false)
+        binding = PlacemarkcollectionDetailBinding.inflate(layoutInflater, container, false)
         return binding.root
     }
 
@@ -102,16 +102,13 @@ class PlacemarkCollectionDetailFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putLong(ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.id)
         super.onSaveInstanceState(outState)
+        outState.putLong(ARG_PLACEMARK_COLLECTION_ID, placemarkCollection.id)
     }
 
     override fun onDestroy() {
-        try {
-            placemarkCollectionDao.close()
-        } finally {
-            super.onDestroy()
-        }
+        super.onDestroy()
+        placemarkCollectionDao.close()
     }
 
     fun savePlacemarkCollection() {
@@ -176,10 +173,15 @@ class PlacemarkCollectionDetailFragment : Fragment() {
             importerFacade.fileFormatFilter = placemarkCollection.fileFormatFilter
             val count =
                 if (importerAndInputStream == null) {
-                    importerFacade.importPlacemarks(placemarkCollection)
+                    importerFacade.importPlacemarks(placemarkCollection, requireContext())
                 } else {
                     val (importer, inputStream) = importerAndInputStream
-                    importerFacade.importPlacemarks(placemarkCollection, importer, inputStream)
+                    importerFacade.importPlacemarks(
+                        placemarkCollection,
+                        importer,
+                        inputStream,
+                        requireContext()
+                    )
                 }
 
             runOnUiThread {

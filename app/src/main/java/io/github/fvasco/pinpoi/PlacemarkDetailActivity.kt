@@ -91,13 +91,13 @@ class PlacemarkDetailActivity : AppCompatActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
         super.onSaveInstanceState(outState)
+        outState.putLong(PlacemarkDetailFragment.ARG_PLACEMARK_ID, placemarkId)
     }
 
     override fun onDestroy() {
-        placemarkDao.close()
         super.onDestroy()
+        placemarkDao.close()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

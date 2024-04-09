@@ -262,6 +262,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                         "searchPoi progress placemarks.size()=${placemarks.size}"
                     )
                     runOnUiThread {
+                        if (isFinishing) return@runOnUiThread
                         showToast(
                             getString(R.string.n_placemarks_found, placemarks.size),
                             applicationContext
@@ -278,6 +279,7 @@ class PlacemarkListActivity : AppCompatActivity() {
                         e
                     )
                     runOnUiThread {
+                        if (isFinishing) return@runOnUiThread
                         showLongToast(
                             getString(R.string.error_search, e.message),
                             applicationContext

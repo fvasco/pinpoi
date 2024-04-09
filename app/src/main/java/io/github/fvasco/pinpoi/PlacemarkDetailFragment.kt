@@ -159,9 +159,9 @@ class PlacemarkDetailFragment : Fragment() {
     }
 
     override fun onDestroy() {
+        super.onDestroy()
         placemarkDao.close()
         placemarkCollectionDao.close()
-        super.onDestroy()
     }
 
     override fun onStart() {
@@ -178,10 +178,10 @@ class PlacemarkDetailFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
         placemark?.let { placemark ->
             outState.putLong(ARG_PLACEMARK_ID, placemark.id)
         }
-        super.onSaveInstanceState(outState)
     }
 
     fun onMapClick(view: View) {

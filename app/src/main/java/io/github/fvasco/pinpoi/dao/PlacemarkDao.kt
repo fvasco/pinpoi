@@ -3,6 +3,7 @@ package io.github.fvasco.pinpoi.dao
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
@@ -167,8 +168,11 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         }
     }
 
-    fun insert(p: Placemark): Boolean {
-        val id = database!!.insert("PLACEMARK", null, placemarkToContentValues(p))
+    fun insert(p: Placemark, conflictAlgorithm: Int = SQLiteDatabase.CONFLICT_FAIL): Boolean {
+        val id = database!!.insertWithOnConflict(
+            "PLACEMARK", null,
+            placemarkToContentValues(p), conflictAlgorithm
+        )
         return id > 0
     }
 
@@ -236,9 +240,9 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
     companion object {
 
         /**
-         * Max result for [.findAllPlacemarkNear]
+         * Max result for [findAllPlacemarkNear]
          */
-        private const val MAX_NEAR_RESULT = 1_000
+        private const val MAX_NEAR_RESULT = 300
 
         // 2^20
         private const val COORDINATE_MULTIPLIER = 1048576f

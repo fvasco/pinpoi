@@ -1,6 +1,7 @@
 package io.github.fvasco.pinpoi.importer
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.util.Log
 import io.github.fvasco.pinpoi.BuildConfig
@@ -9,6 +10,7 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import io.github.fvasco.pinpoi.util.*
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
@@ -59,33 +61,36 @@ class ImporterFacade(context: Context) {
      * @return imported [io.github.fvasco.pinpoi.model.Placemark]
      */
     @Throws(IOException::class)
-    fun importPlacemarks(placemarkCollection: PlacemarkCollection): Int {
+    fun importPlacemarks(placemarkCollection: PlacemarkCollection, context: Context): Int {
         val resource = placemarkCollection.source
         val (mimeType, inputStream) = openInputStream(resource)
         val importer =
             if (ZipImporter.isZipInputStream(inputStream)) ZipImporter()
             else createImporter(resource, mimeType, fileFormatFilter)
                 ?: throw IOException("Cannot import $resource")
-        return importPlacemarks(placemarkCollection, importer, inputStream)
+        return importPlacemarks(placemarkCollection, importer, inputStream, context)
     }
 
     fun importPlacemarks(
         placemarkCollection: PlacemarkCollection,
         importer: AbstractImporter,
-        inputStream: InputStream
+        inputStream: InputStream,
+        context: Context
     ): Int {
         placemarkCollectionDao.open()
-        val placemarkQueue = ArrayBlockingQueue<PlacemarkEvent>(256)
+        val placemarkQueue = ArrayBlockingQueue<PlacemarkEvent>(64)
         try {
-            progressDialog?.also { pd ->
-                runOnUiThread {
-                    pd.show()
-                }
-            }
+            runOnUiThread { progressDialog?.show() }
+
+            // copy data locally to avoid network issue
+            val tempFile = File(context.cacheDir, "importPlacemarks.tmp");
+            tempFile.delete()
+            tempFile.outputStream().buffered(8 * 1024).use(inputStream::copyTo)
+
             // insert new placemarks
             val importFuture = doAsync {
                 try {
-                    inputStream.use { inputStream ->
+                    tempFile.inputStream().buffered().use { inputStream ->
                         try {
                             importer.collectionId = placemarkCollection.id
                             importer.consumer =
@@ -109,7 +114,7 @@ class ImporterFacade(context: Context) {
                 var placemarkEvent = placemarkQueue.take()
                 while (placemarkEvent is PlacemarkEvent.NewPlacemark) {
                     val placemark = placemarkEvent.placemark
-                    if (placemarkDao.insert(placemark)) {
+                    if (placemarkDao.insert(placemark, SQLiteDatabase.CONFLICT_IGNORE)) {
                         ++placemarkCount
                     } else {
                         // discard (duplicate?) placemark
@@ -140,12 +145,13 @@ class ImporterFacade(context: Context) {
                 importFuture.cancel(true)
                 placemarkDaoDatabase.endTransaction()
                 placemarkDao.close()
+                tempFile.delete()
             }
         } finally {
             try {
                 placemarkCollectionDao.close()
             } finally {
-                if (progressDialog != null) runOnUiThread { progressDialog?.tryDismiss() }
+                runOnUiThread { progressDialog?.tryDismiss() }
             }
         }
     }
