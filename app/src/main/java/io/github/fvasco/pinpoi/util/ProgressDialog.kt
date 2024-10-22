@@ -1,21 +1,18 @@
 package io.github.fvasco.pinpoi.util
 
+import android.animation.ValueAnimator
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.view.Gravity
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 
-
 class ProgressDialog(context: Context) : DialogInterface {
 
     private val dialog: AlertDialog
-
-    private val progressBar = ProgressBar(context)
 
     private val tvText = TextView(context)
 
@@ -25,24 +22,23 @@ class ProgressDialog(context: Context) : DialogInterface {
         ll.orientation = LinearLayout.HORIZONTAL
         ll.setPadding(llPadding, llPadding, llPadding, llPadding)
         ll.gravity = Gravity.CENTER
-        var llParam = LinearLayout.LayoutParams(
+        val llParam = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
         llParam.gravity = Gravity.CENTER
         ll.layoutParams = llParam
 
-        progressBar.isIndeterminate = true
-        progressBar.setPadding(0, 0, llPadding, 0)
-        progressBar.layoutParams = llParam
-        llParam = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        llParam.gravity = Gravity.CENTER
+        // avoid progress bar when animation has been disabled
+        if (ValueAnimator.areAnimatorsEnabled()) {
+            val progressBar = ProgressBar(context)
+            progressBar.isIndeterminate = true
+            progressBar.setPadding(0, 0, llPadding, 0)
+            progressBar.layoutParams = llParam
+            ll.addView(progressBar)
+        }
 
         tvText.layoutParams = llParam
-        ll.addView(progressBar)
         ll.addView(tvText)
 
         val builder = AlertDialog.Builder(context)

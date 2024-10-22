@@ -9,11 +9,9 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkcollectionDetailBinding
-import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkcollectionListBinding
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.tryDismiss
 
@@ -168,7 +166,7 @@ class PlacemarkCollectionDetailActivity : AppCompatActivity() {
                 .setPositiveButton(R.string.ok) { dialog, _ ->
                     dialog.tryDismiss()
                     fragment.deletePlacemarkCollection()
-                    onBackPressed()
+                    onBackPressedDispatcher.onBackPressed()
                 }
                 .setNegativeButton(R.string.cancel, DismissOnClickListener)
                 .show()

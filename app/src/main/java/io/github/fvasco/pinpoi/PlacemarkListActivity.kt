@@ -395,7 +395,7 @@ class PlacemarkListActivity : AppCompatActivity() {
         override fun getItemCount() = placemarks?.size ?: 0
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val view = view.findViewById(android.R.id.text1) as TextView
+            val view: TextView = view.findViewById(android.R.id.text1)
             var placemark: PlacemarkSearchResult? = null
         }
     }

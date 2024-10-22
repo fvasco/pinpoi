@@ -161,7 +161,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
         }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val view: TextView = view.findViewById(android.R.id.text1) as TextView
+            val view: TextView = view.findViewById(android.R.id.text1)
             var mItem: PlacemarkCollection? = null
         }
     }

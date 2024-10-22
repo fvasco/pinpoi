@@ -5,7 +5,9 @@ import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,7 +49,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
     fun testImportPlacemarksKml() {
         val pc = insertPlacemarkCollection("test2.kml")
         val importerFacade = ImporterFacade(context)
-        val count = importerFacade.importPlacemarks(pc)
+        val count = importerFacade.importPlacemarks(pc, context)
         assertEquals(2, count)
 
         assertEquals(count, pc.poiCount)
@@ -64,7 +66,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
         pc.poiCount = 10
         val importerFacade = ImporterFacade(context)
         try {
-            importerFacade.importPlacemarks(pc)
+            importerFacade.importPlacemarks(pc, context)
             fail()
         } catch (e: IOException) {
             // ok
@@ -78,7 +80,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
     fun testImportPlacemarksAsc() {
         val pc = insertPlacemarkCollection("asc.txt")
         val importerFacade = ImporterFacade(context)
-        val count = importerFacade.importPlacemarks(pc)
+        val count = importerFacade.importPlacemarks(pc, context)
         assertEquals(3, count)
         assertEquals(count, pc.poiCount)
         assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(pc.id).size)
@@ -88,7 +90,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
     fun testImportPlacemarksCsvLanLon() {
         val pc = insertPlacemarkCollection("csv.txt")
         val importerFacade = ImporterFacade(context)
-        val count = importerFacade.importPlacemarks(pc)
+        val count = importerFacade.importPlacemarks(pc, context)
         importerFacade.fileFormatFilter = FileFormatFilter.CSV_LAT_LON
         assertEquals(3, count)
         assertEquals(count, pc.poiCount)
@@ -100,7 +102,7 @@ class ImporterFacadeTest : AbstractImporterTestCase() {
         val pc = insertPlacemarkCollection("csv.txt")
         val importerFacade = ImporterFacade(context)
         importerFacade.fileFormatFilter = FileFormatFilter.CSV_LON_LAT
-        val count = importerFacade.importPlacemarks(pc)
+        val count = importerFacade.importPlacemarks(pc, context)
         assertEquals(4, count)
         assertEquals(count, pc.poiCount)
         assertEquals(count, placemarkDao.findAllPlacemarkByCollectionId(pc.id).size)
