@@ -2,7 +2,6 @@ package io.github.fvasco.pinpoi.util
 
 import android.content.Context
 import android.util.Log
-import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
@@ -15,7 +14,7 @@ import kotlin.math.sin
  * @author Francesco Vasco
  */
 fun setUpDebugDatabase(context: Context) {
-    if (!BuildConfig.DEBUG) throw AssertionError()
+    if (!DEBUG) throw AssertionError()
 
     val placemarkCollectionDao = PlacemarkCollectionDao(context)
     placemarkCollectionDao.open()
@@ -45,7 +44,7 @@ fun setUpDebugDatabase(context: Context) {
                 placemarkCollection.poiCount = pci
                 placemarkCollection.lastUpdate = pci * 10000000L
                 placemarkCollectionDao.insert(placemarkCollection)
-                Log.i("setUpDebugDatabase", "inserted " + placemarkCollection)
+                Log.i("setUpDebugDatabase", "inserted $placemarkCollection")
 
                 val placemark = Placemark()
                 for (lat in -60..60) {

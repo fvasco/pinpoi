@@ -4,7 +4,6 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.util.Log
-import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.model.Placemark
@@ -118,7 +117,7 @@ class ImporterFacade(context: Context) {
                         ++placemarkCount
                     } else {
                         // discard (duplicate?) placemark
-                        if (BuildConfig.DEBUG) {
+                        if (DEBUG) {
                             Log.d(
                                 ImporterFacade::class.java.simpleName,
                                 "Placemark discarded $placemark"

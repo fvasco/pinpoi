@@ -1,8 +1,19 @@
 package io.github.fvasco.pinpoi.util
 
-import io.github.fvasco.pinpoi.BuildConfig
+import android.content.Context
+import android.view.ViewGroup
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.net.URL
 import java.util.regex.Pattern
+
+const val DEBUG = false
 
 private val HTML_PATTERN =
     Pattern.compile("<(\\w+)(\\s[^<>]*)?>.*<\\/\\1>|<\\w+(\\s[^<>]*)?/>", Pattern.DOTALL)
@@ -11,7 +22,7 @@ private val HTML_PATTERN =
  * Check value and throw assertion error if false
  */
 fun assertDebug(check: Boolean, value: Any? = null) {
-    if (BuildConfig.DEBUG && !check)
+    if (DEBUG && !check)
         throw AssertionError(value?.toString())
 }
 
@@ -41,21 +52,27 @@ fun append(text: CharSequence?, separator: CharSequence?, stringBuilder: StringB
     }
 }
 
-/**
- * Escape text for Javascript
- */
-fun escapeJavascript(text: CharSequence) = buildString(text.length + text.length / 3) {
-    for (c in text) {
-        when (c) {
-            // html escape
-            '&' -> append("&amp;")
-            '<' -> append("&lt;")
-            '>' -> append("&gt;")
-            '\'' -> append("&apos;")
-            '"' -> append("&quot;")
-
-            else -> append(c)
-        }
+// Initialize the Google Mobile Ads SDK on a background thread.
+fun Context.initAdMob(adViewContainer: ViewGroup, adUnitId: String, adSize: AdSize) {
+    if (DEBUG) {
+        val testDeviceIds = listOf("33BE2250B43518CCDA7DE426D04EE231")
+        val configuration = RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
+        MobileAds.setRequestConfiguration(configuration)
+    }
+    // Create a new ad view.
+    val adView = AdView(this)
+    adView.adUnitId =
+        if (DEBUG) "ca-app-pub-3940256099942544/9214589741"
+        else adUnitId
+    adView.setAdSize(adSize)
+    // Replace ad container with new ad view.
+    adViewContainer.removeAllViews()
+    adViewContainer.addView(adView)
+    // Start loading the ad in the background.
+    val adRequest = AdRequest.Builder().build()
+    adView.loadAd(adRequest)
+    GlobalScope.launch(Dispatchers.IO) {
+        MobileAds.initialize(this@initAdMob) {}
     }
 }
 

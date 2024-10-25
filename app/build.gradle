@@ -5,10 +5,10 @@ android {
     compileSdk 34
     defaultConfig {
         applicationId 'io.github.fvasco.pinpoi'
-        minSdkVersion 24
+        minSdkVersion 29
         targetSdk 34
-        versionCode 91
-        versionName '1.10.7'
+        versionCode 93
+        versionName '1.11.0'
         testApplicationId 'io.github.fvasco.pinpoi_test'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -55,6 +55,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'org.osmdroid:osmdroid-android:6.1.17'
+    implementation("com.google.android.gms:play-services-ads:23.3.0")
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:4.8.0'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'

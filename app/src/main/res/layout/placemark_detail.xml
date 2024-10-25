@@ -51,6 +51,12 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
+    <FrameLayout
+        android:id="@+id/ad_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp" />
+
     <TextView
         android:id="@+id/collectionDescriptionTitle"
         style="?android:attr/textAppearanceLarge"

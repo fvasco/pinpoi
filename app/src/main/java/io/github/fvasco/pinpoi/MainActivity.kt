@@ -20,18 +20,32 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.Button
+import android.widget.CompoundButton
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import com.google.android.gms.ads.AdSize
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.dao.use
 import io.github.fvasco.pinpoi.databinding.ActivityMainBinding
 import io.github.fvasco.pinpoi.model.PlacemarkCollection
-import io.github.fvasco.pinpoi.util.*
+import io.github.fvasco.pinpoi.util.BackupManager
+import io.github.fvasco.pinpoi.util.DEBUG
+import io.github.fvasco.pinpoi.util.DismissOnClickListener
+import io.github.fvasco.pinpoi.util.LocationUtil
+import io.github.fvasco.pinpoi.util.initAdMob
+import io.github.fvasco.pinpoi.util.setUpDebugDatabase
+import io.github.fvasco.pinpoi.util.showLongToast
+import io.github.fvasco.pinpoi.util.showProgressDialog
+import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.tryDismiss
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -110,6 +124,11 @@ class MainActivity
                 } else if (paramQ != null)
                     openSearchAddress(this, paramQ)
             }
+        initAdMob(
+            adViewContainer = binding.adViewContainer,
+            adUnitId = "ca-app-pub-9366320490821807/9506426799",
+            adSize = AdSize.LARGE_BANNER
+        )
     }
 
     override fun onResume() {
@@ -144,7 +163,7 @@ class MainActivity
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         // on debug show debug menu
-        menu.findItem(R.id.menu_debug).isVisible = BuildConfig.DEBUG
+        menu.findItem(R.id.menu_debug).isVisible = DEBUG
         return true
     }
 
@@ -179,7 +198,7 @@ class MainActivity
             }
 
             R.id.action_web_site -> {
-                // branch gh-pages
+                // see branch gh-pages
                 val intent = Intent(Intent.ACTION_VIEW)
                 intent.data = Uri.parse("https://fvasco.github.io/pinpoi")
                 startActivity(intent)
@@ -543,7 +562,7 @@ class MainActivity
     }
 
     private fun debugImportCollection() {
-        if (!BuildConfig.DEBUG) throw AssertionError()
+        if (!DEBUG) throw AssertionError()
 
         val uri = Uri.Builder().scheme("http").authority("my.poi.server")
             .appendEncodedPath("/dir/subdir/poisource.ov2")

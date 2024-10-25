@@ -1,6 +1,5 @@
 package io.github.fvasco.pinpoi.util
 
-import android.animation.ValueAnimator
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
@@ -29,14 +28,11 @@ class ProgressDialog(context: Context) : DialogInterface {
         llParam.gravity = Gravity.CENTER
         ll.layoutParams = llParam
 
-        // avoid progress bar when animation has been disabled
-        if (ValueAnimator.areAnimatorsEnabled()) {
-            val progressBar = ProgressBar(context)
-            progressBar.isIndeterminate = true
-            progressBar.setPadding(0, 0, llPadding, 0)
-            progressBar.layoutParams = llParam
-            ll.addView(progressBar)
-        }
+        val progressBar = ProgressBar(context)
+        progressBar.isIndeterminate = true
+        progressBar.setPadding(0, 0, llPadding, 0)
+        progressBar.layoutParams = llParam
+        ll.addView(progressBar)
 
         tvText.layoutParams = llParam
         ll.addView(tvText)

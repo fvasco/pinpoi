@@ -15,16 +15,17 @@ import android.view.ViewGroup
 import androidx.core.content.edit
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import com.google.android.gms.ads.AdSize
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.databinding.PlacemarkDetailBinding
-import io.github.fvasco.pinpoi.databinding.PlacemarkcollectionDetailBinding
 import io.github.fvasco.pinpoi.model.Placemark
 import io.github.fvasco.pinpoi.model.PlacemarkAnnotation
 import io.github.fvasco.pinpoi.util.LocationUtil
 import io.github.fvasco.pinpoi.util.doAsync
+import io.github.fvasco.pinpoi.util.initAdMob
 import io.github.fvasco.pinpoi.util.isHtml
 import io.github.fvasco.pinpoi.util.showToast
 import io.github.fvasco.pinpoi.util.tryDismiss
@@ -129,7 +130,12 @@ class PlacemarkDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = PlacemarkDetailBinding.inflate(layoutInflater,container,false)
+        binding = PlacemarkDetailBinding.inflate(layoutInflater, container, false)
+        requireContext().initAdMob(
+            adViewContainer = binding.adViewContainer,
+            adUnitId = "ca-app-pub-9366320490821807/8666389355",
+            adSize = AdSize.LARGE_BANNER
+        )
         return binding.root
     }
 

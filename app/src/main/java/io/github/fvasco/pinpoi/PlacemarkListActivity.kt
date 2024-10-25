@@ -29,7 +29,12 @@ import io.github.fvasco.pinpoi.dao.PlacemarkDao
 import io.github.fvasco.pinpoi.dao.use
 import io.github.fvasco.pinpoi.databinding.ActivityPlacemarkListBinding
 import io.github.fvasco.pinpoi.model.PlacemarkSearchResult
-import io.github.fvasco.pinpoi.util.*
+import io.github.fvasco.pinpoi.util.Coordinates
+import io.github.fvasco.pinpoi.util.LocationUtil
+import io.github.fvasco.pinpoi.util.showLongToast
+import io.github.fvasco.pinpoi.util.showProgressDialog
+import io.github.fvasco.pinpoi.util.showToast
+import io.github.fvasco.pinpoi.util.toGeoPoint
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView

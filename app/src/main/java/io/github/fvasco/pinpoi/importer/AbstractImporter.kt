@@ -1,8 +1,8 @@
 package io.github.fvasco.pinpoi.importer
 
 import android.util.Log
-import io.github.fvasco.pinpoi.BuildConfig
 import io.github.fvasco.pinpoi.model.Placemark
+import io.github.fvasco.pinpoi.util.DEBUG
 import java.io.InputStream
 
 /**
@@ -38,11 +38,11 @@ abstract class AbstractImporter {
             placemark.name = name
             placemark.description = description
             placemark.collectionId = collectionId
-            if (BuildConfig.DEBUG) {
+            if (DEBUG) {
                 Log.d(AbstractImporter::class.java.simpleName, "importPlacemark $placemark")
             }
             consumer!!(placemark)
-        } else if (BuildConfig.DEBUG) {
+        } else if (DEBUG) {
             Log.d(AbstractImporter::class.java.simpleName, "importPlacemark skip $placemark")
         }
     }
