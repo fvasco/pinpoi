@@ -47,9 +47,20 @@
         android:layout_gravity="center_vertical|start"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="onStarClick"
-        app:srcCompat="@drawable/ic_bookmark_border_white"
         app:layout_anchor="@+id/placemarkDetailContainer"
-        app:layout_anchorGravity="top|end" />
+        app:layout_anchorGravity="top|end"
+        app:srcCompat="@drawable/ic_bookmark_border_white" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabShare"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|start"
+        android:layout_margin="@dimen/fab_margin"
+        android:onClick="onShareClick"
+        android:src="@android:drawable/ic_menu_share"
+        app:layout_anchor="@+id/placemarkDetailContainer"
+        app:layout_anchorGravity="bottom|start" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabMap"
@@ -58,8 +69,8 @@
         android:layout_gravity="center_vertical|start"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="onMapClick"
-        app:srcCompat="@drawable/ic_map_white"
         app:layout_anchor="@+id/placemarkDetailContainer"
-        app:layout_anchorGravity="bottom|end" />
+        app:layout_anchorGravity="bottom|end"
+        app:srcCompat="@drawable/ic_map_white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

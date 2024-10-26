@@ -53,8 +53,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/text_margin"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="@dimen/text_margin">
 
         <TextView
             android:layout_width="0dp"
@@ -77,36 +77,36 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:labelFor="@+id/sourceText"
             android:padding="@dimen/text_margin"
             android:text="@string/source" />
 
         <LinearLayout
-            android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true">
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/pasteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="Paste file"
-                app:srcCompat="?android:attr/actionModePasteDrawable"
-                android:onClick="pasteUrl" />
+                android:onClick="pasteUrl"
+                app:srcCompat="?android:attr/actionModePasteDrawable" />
 
             <ImageButton
                 android:id="@+id/browseButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="Browse file"
-                app:srcCompat="@drawable/ic_search_white"
-                android:onClick="openFileChooser" />
+                android:onClick="openFileChooser"
+                app:srcCompat="@drawable/ic_search_white" />
         </LinearLayout>
     </RelativeLayout>
 

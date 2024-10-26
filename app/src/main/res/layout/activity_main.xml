@@ -19,7 +19,7 @@
             android:focusableInTouchMode="true"
             android:orientation="vertical">
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchGps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -162,17 +162,12 @@
                 android:layout_height="wrap_content"
                 android:text="@string/show_map" />
 
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="32dp" />
-
-            <FrameLayout
+            <LinearLayout
                 android:id="@+id/ad_view_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent" />
+                android:orientation="vertical"
+                android:paddingTop="32dp" />
 
             <Space
                 android:layout_width="match_parent"

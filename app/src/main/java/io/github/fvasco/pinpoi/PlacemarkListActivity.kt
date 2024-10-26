@@ -88,7 +88,7 @@ class PlacemarkListActivity : AppCompatActivity() {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
                 == PackageManager.PERMISSION_GRANTED
             ) {
-                setupMapView(binding.placemarkList.map)
+                setupMapView(binding.placemarkFrameList.map)
             } else {
                 ActivityCompat.requestPermissions(
                     this,
@@ -97,19 +97,19 @@ class PlacemarkListActivity : AppCompatActivity() {
                 )
             }
         } else {
-            setupRecyclerView(binding.placemarkList.placemarkList)
+            setupRecyclerView(binding.placemarkFrameList.placemarkList)
         }
         preferences.edit { putBoolean(PREFERENCE_SHOW_MAP, showMap) }
     }
 
     override fun onResume() {
         super.onResume()
-        binding.placemarkList.map.onResume()
+        binding.placemarkFrameList.map.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        binding.placemarkList.map.onPause()
+        binding.placemarkFrameList.map.onPause()
     }
 
     override fun onRequestPermissionsResult(
@@ -120,9 +120,9 @@ class PlacemarkListActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_SHOW_MAP && grantResults.isNotEmpty()
             && grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-            setupMapView(binding.placemarkList.map)
+            setupMapView(binding.placemarkFrameList.map)
         } else {
-            setupRecyclerView(binding.placemarkList.placemarkList)
+            setupRecyclerView(binding.placemarkFrameList.placemarkList)
         }
     }
 
@@ -172,14 +172,6 @@ class PlacemarkListActivity : AppCompatActivity() {
         map.setMultiTouchControls(true)
 
         searchPoi { placemarksSearchResult ->
-            // search center
-            map.overlays.add(Marker(map).apply {
-                position = searchCoordinate.toGeoPoint()
-                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                setOnMarkerClickListener { _, _ -> true } // do nothing on click
-                icon = resources.getDrawable(R.drawable.map_marker_here, context.theme)
-            })
-
             val collectionNameMap: Map<Long, String> =
                 PlacemarkCollectionDao(applicationContext).use { placemarkCollectionDao ->
                     try {
@@ -194,7 +186,6 @@ class PlacemarkListActivity : AppCompatActivity() {
                         mapOf()
                     }
                 }
-
 
             placemarksSearchResult
                 .sortedWith(compareBy(PlacemarkSearchResult::flagged).thenBy { !it.note.isNullOrEmpty() })
@@ -225,6 +216,14 @@ class PlacemarkListActivity : AppCompatActivity() {
                     marker.infoWindow = PoiMarker(map)
                     map.overlays.add(marker)
                 }
+
+            // search center
+            map.overlays.add(Marker(map).apply {
+                position = searchCoordinate.toGeoPoint()
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                setOnMarkerClickListener { _, _ -> true } // do nothing on click
+                icon = resources.getDrawable(R.drawable.map_marker_here, context.theme)
+            })
 
             // force items draw
             map.invalidate()

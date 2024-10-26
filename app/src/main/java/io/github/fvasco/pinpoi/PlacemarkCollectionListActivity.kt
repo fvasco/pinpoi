@@ -65,7 +65,7 @@ class PlacemarkCollectionListActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        val recyclerView = binding.placemarkcollectionList.placemarkcollectionList
+        val recyclerView = binding.placemarkCollectionFrameList.placemarkcollectionList
         recyclerView.adapter =
             SimpleItemRecyclerViewAdapter(placemarkCollectionDao.findAllPlacemarkCollection())
     }

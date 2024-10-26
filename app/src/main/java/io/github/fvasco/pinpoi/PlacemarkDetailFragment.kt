@@ -179,8 +179,7 @@ class PlacemarkDetailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        binding.shareButton.setOnClickListener { onShare() }
-        resetStarFabIcon(requireActivity().findViewById(R.id.fabStar) as FloatingActionButton)
+        resetStarFabIcon(requireActivity().findViewById(R.id.fabStar)!!)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -196,7 +195,7 @@ class PlacemarkDetailFragment : Fragment() {
         }
     }
 
-    fun onShare() {
+    fun onShareClick(view: View) {
         val placemark = placemark ?: return
         val view = view ?: return
         val places = mutableListOf<String?>(placemark.name)

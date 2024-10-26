@@ -117,6 +117,10 @@ class PlacemarkDetailActivity : AppCompatActivity() {
         fragment.onMapClick(view)
     }
 
+    fun onShareClick(view: View) {
+        fragment.onShareClick(view)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {

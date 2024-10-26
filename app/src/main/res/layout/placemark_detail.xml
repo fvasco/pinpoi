@@ -51,12 +51,6 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <FrameLayout
-        android:id="@+id/ad_view_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="16dp" />
-
     <TextView
         android:id="@+id/collectionDescriptionTitle"
         style="?android:attr/textAppearanceLarge"
@@ -69,14 +63,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <ImageButton
-        android:id="@+id/shareButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/ad_view_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clickable="true"
-        android:focusable="true"
-        android:src="@android:drawable/ic_menu_share"
-        android:text="" />
+        android:orientation="vertical"
+        android:paddingTop="32dp" />
 
     <Space
         android:layout_width="match_parent"

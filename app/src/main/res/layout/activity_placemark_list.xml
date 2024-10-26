@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    tools:context="io.github.fvasco.pinpoi.PlacemarkListActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
@@ -28,7 +28,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <include
-            android:id="@+id/placemarkList"
+            android:id="@+id/placemark_frame_list"
             layout="@layout/placemark_list" />
     </FrameLayout>
 
@@ -41,15 +41,5 @@
         android:onClick="onStarClick"
         android:visibility="gone"
         app:srcCompat="@drawable/ic_bookmark_border_white" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabMap"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:onClick="onMapClick"
-        android:visibility="gone"
-        app:srcCompat="@drawable/ic_map_white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

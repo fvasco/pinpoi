@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    tools:context="io.github.fvasco.pinpoi.PlacemarkCollectionListActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
@@ -27,17 +27,9 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <include android:id="@+id/placemarkcollectionList" layout="@layout/placemarkcollection_list" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabUpdate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_margin="@dimen/fab_margin"
-            android:onClick="updatePlacemarkCollection"
-            app:srcCompat="@drawable/ic_refresh_white"
-            android:visibility="gone" />
+        <include
+            android:id="@+id/placemark_collection_frame_list"
+            layout="@layout/placemarkcollection_list" />
     </FrameLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
