@@ -49,5 +49,6 @@
     <string name="any_filter">(すべて)</string>
     <string name="show_map">地図を表示</string>
     <string name="web_site">Web サイト</string>
+    <string name="privacy_settings">プライバシー設定</string>
     <string name="advertising">広告</string>
 </resources>

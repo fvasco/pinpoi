@@ -33,6 +33,9 @@
         </menu>
     </item>
     <item
+        android:id="@+id/privacy_settings"
+        android:title="@string/privacy_settings" />
+    <item
         android:id="@+id/action_web_site"
         android:title="@string/web_site" />
 </menu>

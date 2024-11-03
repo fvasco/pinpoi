@@ -13,6 +13,8 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.UserMessagingPlatform
 import io.github.fvasco.pinpoi.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -59,6 +61,10 @@ fun append(text: CharSequence?, separator: CharSequence?, stringBuilder: StringB
     }
 }
 
+// Show a privacy options button if required.
+val ConsentInformation.isPrivacyOptionsRequired: Boolean
+    get() = privacyOptionsRequirementStatus == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
+
 // Initialize the Google Mobile Ads SDK on a background thread.
 fun Context.initAdMob(adViewContainer: ViewGroup, adUnitId: String, adSize: AdSize) {
     if (DEBUG) {
@@ -66,6 +72,10 @@ fun Context.initAdMob(adViewContainer: ViewGroup, adUnitId: String, adSize: AdSi
         val configuration = RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
         MobileAds.setRequestConfiguration(configuration)
     }
+
+    val consentInformation: ConsentInformation =
+        UserMessagingPlatform.getConsentInformation(this)
+    if (!consentInformation.canRequestAds()) return
 
     // Create a new ad view.
     val adView = AdView(this)

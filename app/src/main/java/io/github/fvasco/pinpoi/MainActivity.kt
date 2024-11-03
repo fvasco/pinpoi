@@ -30,6 +30,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.AdSize
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
 import com.google.openlocationcode.OpenLocationCode
 import io.github.fvasco.pinpoi.dao.PlacemarkCollectionDao
 import io.github.fvasco.pinpoi.dao.PlacemarkDao
@@ -41,6 +44,7 @@ import io.github.fvasco.pinpoi.util.DEBUG
 import io.github.fvasco.pinpoi.util.DismissOnClickListener
 import io.github.fvasco.pinpoi.util.LocationUtil
 import io.github.fvasco.pinpoi.util.initAdMob
+import io.github.fvasco.pinpoi.util.isPrivacyOptionsRequired
 import io.github.fvasco.pinpoi.util.setUpDebugDatabase
 import io.github.fvasco.pinpoi.util.showLongToast
 import io.github.fvasco.pinpoi.util.showProgressDialog
@@ -124,11 +128,30 @@ class MainActivity
                 } else if (paramQ != null)
                     openSearchAddress(this, paramQ)
             }
-        initAdMob(
-            adViewContainer = binding.adViewContainer,
-            adUnitId = "ca-app-pub-9366320490821807/9506426799",
-            adSize = AdSize.LARGE_BANNER
-        )
+
+        if (!PlacemarkDao(this).use { it.isEmpty() }) {
+            // check privacy consent
+            val consentInformation: ConsentInformation =
+                UserMessagingPlatform.getConsentInformation(this)
+            consentInformation.requestConsentInfoUpdate(
+                this, ConsentRequestParameters.Builder().build(),
+                {
+                    UserMessagingPlatform.loadAndShowConsentFormIfRequired(
+                        this@MainActivity
+                    ) {
+                        if (consentInformation.isPrivacyOptionsRequired) {
+                            // Regenerate the options menu to include a privacy setting.
+                            invalidateOptionsMenu();
+                        }
+                        initAdMob(
+                            adViewContainer = binding.adViewContainer,
+                            adUnitId = "ca-app-pub-9366320490821807/9506426799",
+                            adSize = AdSize.LARGE_BANNER
+                        )
+                    }
+                },
+                {})
+        }
     }
 
     override fun onResume() {
@@ -164,6 +187,8 @@ class MainActivity
         menuInflater.inflate(R.menu.menu_main, menu)
         // on debug show debug menu
         menu.findItem(R.id.menu_debug).isVisible = DEBUG
+        menu.findItem(R.id.privacy_settings).isVisible =
+            UserMessagingPlatform.getConsentInformation(this).isPrivacyOptionsRequired
         return true
     }
 
@@ -171,30 +196,35 @@ class MainActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify restoreBackup parent activity in AndroidManifest.xml.
-        when (item.itemId) {
+        return when (item.itemId) {
             R.id.action_placemark_collections -> {
                 onManagePlacemarkCollections()
-                return true
+                true
             }
 
             R.id.create_backup -> {
                 showCreateBackupConfirm()
-                return true
+                true
             }
 
             R.id.restore_backup -> {
                 showRestoreBackupConfirm()
-                return true
+                true
             }
 
             R.id.debug_create_db -> {
                 setUpDebugDatabase(this)
-                return true
+                true
             }
 
             R.id.debug_import_collection -> {
                 debugImportCollection()
-                return true
+                true
+            }
+
+            R.id.privacy_settings -> {
+                UserMessagingPlatform.showPrivacyOptionsForm(this) {}
+                true
             }
 
             R.id.action_web_site -> {
@@ -202,9 +232,11 @@ class MainActivity
                 val intent = Intent(Intent.ACTION_VIEW)
                 intent.data = Uri.parse("https://fvasco.github.io/pinpoi")
                 startActivity(intent)
+                true
             }
+
+            else -> super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 
     private fun setPlacemarkCategory(placemarkCategory: String) {

@@ -30,6 +30,10 @@ class PlacemarkDao(context: Context) : AbstractDao(context) {
         return PlacemarkDatabase(context)
     }
 
+    fun isEmpty(): Boolean =
+        database!!.query("PLACEMARK", arrayOf("_ID"), null, null, null, null, null, "1")
+            .use { cursor -> cursor.isAfterLast }
+
     fun findAllPlacemarkByCollectionId(collectionId: Long): List<Placemark> {
         database!!.query(
             "PLACEMARK", null,

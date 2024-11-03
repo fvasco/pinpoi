@@ -49,5 +49,6 @@
     <string name="any_filter">(qualsiasi)</string>
     <string name="show_map">Visualizza la mappa</string>
     <string name="web_site">Sito web</string>
+    <string name="privacy_settings">Impostazioni sulla privacy</string>
     <string name="advertising">Pubblicità</string>
 </resources>
